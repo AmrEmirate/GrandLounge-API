@@ -1,5 +1,5 @@
 import { PropertyCategory } from '@prisma/client';
-import prisma from '../configs/db';
+import prisma from '../config/db';
 import ApiError from '../utils/apiError';
 
 export const createCategory = async (name: string): Promise<PropertyCategory> => {

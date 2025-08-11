@@ -7,7 +7,7 @@ import logger from "./utils/logger";
 import mainRouter from "./routers"; 
 import ApiError from "./utils/apiError";
 import passport from 'passport';
-import './configs/passport'; 
+import './config/passport'; 
 
 import UploadPaymentRouter from "./routers/uploadPayment.router";
 

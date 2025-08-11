@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { createOrder } from '../controllers/transactionController';
-import { protect, isVerified } from '../middlewares/authMiddleware'; 
+import { protect, isVerified } from '../middleware/authMiddleware'; 
 
 const router = Router();
 

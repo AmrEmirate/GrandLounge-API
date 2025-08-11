@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt';
-import prisma from '../configs/db';
+import prisma from '../config/db';
 import ApiError from '../utils/apiError';
 import asyncHandler from '../utils/asyncHandler';
-import { UserRole } from '@prisma/client'; 
+import { UserRole } from '../generated/prisma';
 
 export const protect = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];

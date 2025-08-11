@@ -5,7 +5,7 @@ import {
   updatePropertyCategory,
   deletePropertyCategory,
 } from '../controllers/tenantController';
-import { protect, isTenant } from '../middlewares/authMiddleware';
+import { protect, isTenant } from '../middleware/authMiddleware';
 
 const router = Router();
 

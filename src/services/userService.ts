@@ -1,4 +1,4 @@
-import prisma from '../configs/db';
+import prisma from '../config/db';
 import ApiError from '../utils/apiError';
 import bcrypt from 'bcrypt';
 import { resendVerificationEmail } from './authService'; 
