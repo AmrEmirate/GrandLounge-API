@@ -1,32 +1,19 @@
 import { UserRole } from '@prisma/client';
-import prisma from '../configs/db';
 import { compileTemplate, transporter } from '../configs/nodemailer';
 import ApiError from '../utils/apiError';
 import { generateToken } from '../utils/jwt';
 import bcrypt from 'bcrypt';
+import * as accountRepo from '../repositories/accountRepository';
+import * as tokenRepo from '../repositories/tokenRepository';
 
 export const register = async (name: string, email: string, role: UserRole) => {
-  const existingUser = await prisma.account.findUnique({ where: { email } });
+  const existingUser = await accountRepo.findAccountByEmail(email);
   if (existingUser) {
     throw new ApiError(400, 'Email already registered');
   }
 
-  const account = await prisma.account.create({
-    data: {
-      name,
-      email,
-      role,
-      password: '', 
-    },
-  });
-
-  const verificationToken = await prisma.verificationToken.create({
-    data: {
-      accountId: account.id,
-      token: generateToken({ id: account.id }, '1h'),
-      expires: new Date(Date.now() + 3600000), // 1 hour
-    },
-  });
+  const account = await accountRepo.createAccount(name, email, role);
+  const verificationToken = await tokenRepo.createVerificationToken(account.id, generateToken({ id: account.id }, '1h'));
 
   const verificationLink = `http://localhost:3000/verify?token=${verificationToken.token}`;
   const emailBody = compileTemplate('verification', { name, verificationLink });
@@ -41,33 +28,22 @@ export const register = async (name: string, email: string, role: UserRole) => {
 };
 
 export const verifyEmailAndSetPassword = async (token: string, password: string) => {
-  const verificationToken = await prisma.verificationToken.findFirst({
-    where: {
-      token,
-      expires: {
-        gt: new Date(),
-      },
-    },
-  });
-
+  const verificationToken = await tokenRepo.findVerificationToken(token);
   if (!verificationToken) {
     throw new ApiError(400, 'Invalid or expired token');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  await prisma.account.update({
-    where: { id: verificationToken.accountId },
-    data: {
-      isVerified: true,
-      password: hashedPassword,
-    },
+  await accountRepo.updateAccount(verificationToken.accountId, {
+    isVerified: true,
+    password: hashedPassword,
   });
 
-  await prisma.verificationToken.delete({ where: { id: verificationToken.id } });
+  await tokenRepo.deleteVerificationToken(verificationToken.id);
 };
 
 export const login = async (email: string, password: string) => {
-  const account = await prisma.account.findUnique({ where: { email } });
+  const account = await accountRepo.findAccountByEmail(email);
   if (!account || !account.isVerified) {
     throw new ApiError(401, 'Invalid credentials or email not verified');
   }
@@ -79,30 +55,20 @@ export const login = async (email: string, password: string) => {
 
   return {
     token: generateToken({ id: account.id }),
-    account: {
-      id: account.id,
-      name: account.name,
-      email: account.email,
-      role: account.role,
-    },
+    account: { id: account.id, name: account.name, email: account.email, role: account.role },
   };
 };
 
 export const forgotPassword = async (email: string) => {
-    const account = await prisma.account.findUnique({ where: { email } });
+    const account = await accountRepo.findAccountByEmail(email);
     if (!account) {
-        throw new ApiError(404, 'Account not found');
+      throw new ApiError(404, 'Account not found');
     }
-    const resetToken = await prisma.passwordResetToken.create({
-        data: {
-            accountId: account.id,
-            token: generateToken({ id: account.id }, '1h'),
-            expires: new Date(Date.now() + 3600000), // 1 hour
-        },
-    });
 
+    const resetToken = await tokenRepo.createPasswordResetToken(account.id, generateToken({ id: account.id }, '1h'));
     const resetLink = `http://localhost:3000/reset-password?token=${resetToken.token}`;
     const emailBody = compileTemplate('resetPassword', { name: account.name, resetLink });
+
     await transporter.sendMail({
         to: email,
         subject: 'Password Reset',
@@ -111,49 +77,22 @@ export const forgotPassword = async (email: string) => {
 };
 
 export const resetPassword = async (token: string, password: string) => {
-    const resetToken = await prisma.passwordResetToken.findFirst({
-        where: {
-            token,
-            expires: {
-                gt: new Date(),
-            },
-        },
-    });
-
+    const resetToken = await tokenRepo.findPasswordResetToken(token);
     if (!resetToken) {
-        throw new ApiError(400, 'Invalid or expired token');
+      throw new ApiError(400, 'Invalid or expired token');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await prisma.account.update({
-        where: { id: resetToken.accountId },
-        data: {
-            password: hashedPassword,
-        },
-    });
-
-    await prisma.passwordResetToken.delete({ where: { id: resetToken.id } });
+    await accountRepo.updateAccount(resetToken.accountId, { password: hashedPassword });
+    await tokenRepo.deletePasswordResetToken(resetToken.id);
 };
 
 export const resendVerificationEmail = async (email: string) => {
-  const account = await prisma.account.findUnique({ where: { email } });
+  const account = await accountRepo.findAccountByEmail(email);
+  if (!account) return;
+  if (account.isVerified) throw new ApiError(400, 'This account is already verified.');
 
-  if (!account) {
-    return;
-  }
-
-  if (account.isVerified) {
-    throw new ApiError(400, 'This account is already verified.');
-  }
-
-  const verificationToken = await prisma.verificationToken.create({
-    data: {
-      accountId: account.id,
-      token: generateToken({ id: account.id }, '1h'),
-      expires: new Date(Date.now() + 3600000),
-    },
-  });
-
+  const verificationToken = await tokenRepo.createVerificationToken(account.id, generateToken({ id: account.id }, '1h'));
   const verificationLink = `http://localhost:3000/verify?token=${verificationToken.token}`;
   const emailBody = compileTemplate('verification', { name: account.name, verificationLink });
 

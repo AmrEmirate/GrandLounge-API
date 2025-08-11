@@ -29,7 +29,7 @@ class App {
 
     private routes(): void {
         this.app.get("/", (req: Request, res: Response) => {
-            res.status(200).send("<h1>Welcome to Final Project</h1>");
+            res.status(200).send("<h1>Welcome to Final Project Grand Lodge</h1>");
         });
 
         this.app.use("/api", mainRouter); 
