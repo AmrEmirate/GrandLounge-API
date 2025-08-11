@@ -2,6 +2,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -76,6 +77,9 @@ model Property {
   
   categoryId  Int
   category    PropertyCategory @relation(fields: [categoryId], references: [id])
+
+  @@index([tenantId])
+  @@index([categoryId])
   
   rooms       Room[]
   reviews     Review[]
@@ -96,6 +100,8 @@ model Room {
   specialPrices   SpecialPrice[]
   availabilities  RoomAvailability[]
   transactions    Transaction[]
+  
+  @@index([propertyId])
 }
 
 model SpecialPrice {
@@ -113,7 +119,7 @@ model SpecialPrice {
 model RoomAvailability {
   id        Int               @id @default(autoincrement())
   date      DateTime          @db.Date
-  status    AvailabilityStatus @default(UNAVAILABLE)
+  status    AvailabilityStatus @default(AVAILABLE)
 
   roomId    Int
   room      Room              @relation(fields: [roomId], references: [id], onDelete: Cascade)
@@ -128,7 +134,6 @@ model Transaction {
   endDate       DateTime          @db.Date
   totalPrice    Float
   status        TransactionStatus @default(MENUNGGU_PEMBAYARAN)
-  paymentProof  String?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
@@ -137,8 +142,26 @@ model Transaction {
   roomId        Int
   room          Room              @relation(fields: [roomId], references: [id])
 
+  paymentProof  PaymentProof?
+
   review        Review?
+
+  
+  @@index([accountId])
+  @@index([roomId])
 }
+
+model PaymentProof {
+  id            String      @id @default(uuid())
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId String      @unique
+  fileUrl       String
+  fileName      String?
+  fileSize      Int?        
+  fileType      String?    
+  uploadedAt    DateTime    @default(now())
+}
+
 
 model Review {
   id          Int      @id @default(autoincrement())
@@ -155,6 +178,9 @@ model Review {
 
   propertyId    Int
   property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([propertyId])
 }
 
 model VerificationToken {
