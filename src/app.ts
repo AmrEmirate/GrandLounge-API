@@ -3,6 +3,10 @@ dotenv.config();
 import cors from "cors";
 import express, { Application, Request, Response, NextFunction } from "express";
 import logger from "./utils/logger";
+import mainRouter from "./routers"; 
+import ApiError from "./utils/apiError";
+import passport from 'passport';
+import './configs/passport'; 
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -19,12 +23,16 @@ class App {
     private configure(): void {
         this.app.use(cors());
         this.app.use(express.json());
+        this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(passport.initialize()); 
     }
 
     private routes(): void {
         this.app.get("/", (req: Request, res: Response) => {
-            res.status(200).json("<h1>Welcome to Final Project</h1>")
-        })
+            res.status(200).send("<h1>Welcome to Final Project</h1>");
+        });
+
+        this.app.use("/api", mainRouter); 
     }
 
     private errorHandler(): void {
@@ -32,10 +40,17 @@ class App {
             logger.error(
                 `${req.method} ${req.path}: ${error.message} ${JSON.stringify(error)}`
             );
-            res.status(error.statusCode || 500).json({
-                success: false,
-                error: error.message || "Internal Server Error"
-            });
+            if (error instanceof ApiError) {
+                res.status(error.statusCode).json({
+                    success: false,
+                    error: error.message,
+                });
+            } else {
+                res.status(500).json({
+                    success: false,
+                    error: "Internal Server Error",
+                });
+            }
         });
     }
 
@@ -46,4 +61,4 @@ class App {
     }
 }
 
-export default App
+export default App;
