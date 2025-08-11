@@ -3,6 +3,7 @@ dotenv.config();
 import cors from "cors";
 import express, { Application, Request, Response, NextFunction } from "express";
 import logger from "./utils/logger";
+import UploadPaymentRouter from "./routers/uploadPayment.router";
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -22,9 +23,14 @@ class App {
     }
 
     private routes(): void {
+        const uploadPayment = new UploadPaymentRouter();
+
         this.app.get("/", (req: Request, res: Response) => {
             res.status(200).json("<h1>Welcome to Final Project</h1>")
         })
+
+        // upload payment proof
+        this.app.use("/payments", uploadPayment.getRouter());
     }
 
     private errorHandler(): void {
