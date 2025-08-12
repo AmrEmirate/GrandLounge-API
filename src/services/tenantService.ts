@@ -1,4 +1,7 @@
 import { PropertyCategory } from '@prisma/client';
+
+import prisma from '../config/db';
+
 import ApiError from '../utils/apiError';
 import * as propertyRepo from '../repositories/propertyRepository';
 

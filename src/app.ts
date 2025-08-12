@@ -3,10 +3,14 @@ dotenv.config();
 import cors from "cors";
 import express, { Application, Request, Response, NextFunction } from "express";
 import logger from "./utils/logger";
+
 import mainRouter from "./routers"; 
 import ApiError from "./utils/apiError";
 import passport from 'passport';
-import './configs/passport'; 
+import './config/passport'; 
+
+import UploadPaymentRouter from "./routers/uploadPayment.router";
+
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -28,11 +32,17 @@ class App {
     }
 
     private routes(): void {
+        const uploadPayment = new UploadPaymentRouter();
+
         this.app.get("/", (req: Request, res: Response) => {
             res.status(200).send("<h1>Welcome to Final Project Grand Lodge</h1>");
         });
 
         this.app.use("/api", mainRouter); 
+
+        // upload payment proof
+        this.app.use("/payments", uploadPayment.getRouter());
+
     }
 
     private errorHandler(): void {

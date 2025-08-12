@@ -1,5 +1,9 @@
 import { UserRole } from '@prisma/client';
+
 import { compileTemplate, transporter } from '../configs/nodemailer';
+
+import prisma from '../config/db';
+
 import ApiError from '../utils/apiError';
 import { generateToken } from '../utils/jwt';
 import bcrypt from 'bcrypt';
