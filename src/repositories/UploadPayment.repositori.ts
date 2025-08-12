@@ -5,7 +5,9 @@ export class UploadPaymentRepository {
         return prisma.transaction.update({
             where: { id: transactionId },
             data: {
-                paymentProof: proofUrl,
+                paymentProof: {
+                    update: { fileUrl: proofUrl }
+                },
                 status: "MENUNGGU_KONFIRMASI",
                 updatedAt: new Date()
             }
