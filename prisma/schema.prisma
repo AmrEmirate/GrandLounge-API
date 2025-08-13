@@ -13,190 +13,194 @@ datasource db {
 
 // --- ENUMS ---
 enum UserRole {
-  USER
   TENANT
+  USER
 }
 
-enum TransactionStatus {
+enum BookingStatus {
   MENUNGGU_PEMBAYARAN
-  MENUNGGU_KONFIRMASI
-  DIKONFIRMASI
+  SUDAH_DIBAYAR
   DIBATALKAN
   SELESAI
 }
 
-enum PriceType {
-  NOMINAL
-  PERSENTASE
+enum PropertyCategory {
+  HOTEL
+  APARTEMEN
+  VILLA
+  GUEST_HOUSE
 }
 
-enum AvailabilityStatus {
-  AVAILABLE
-  UNAVAILABLE
+enum BEDOPTION {
+  SINGLE
+  DOUBLE
+  TWIN
+}
+
+enum RoomCategory {
+  STANDARD
+  DELUXE
+  SUITE
 }
 
 // --- MODELS ---
-model Account {
-  id              String    @id @default(uuid())
-  name            String
-  email           String    @unique
-  password        String
-  profilePicture  String?
-  role            UserRole  @default(USER)
-  isVerified      Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+model User {
+  id             Int      @id @default(autoincrement())
+  role           UserRole
+  full_name      String
+  email          String   @unique
+  password       String
+  profilePicture String?
+  verified       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  properties          Property[]
-  transactions        Transaction[]
-  reviews             Review[]
-  verificationTokens  VerificationToken[]
-  passwordResetTokens PasswordResetToken[]
+  // Relations
+  tenant   Tenant?
+  bookings Booking[]
+  reviews  Review[]
 }
 
-model PropertyCategory {
-  id          Int        @id @default(autoincrement())
-  name        String     @unique
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+model Tenant {
+  id                   Int      @id @default(autoincrement())
+  user_id              Int      @unique
+  company_name         String
+  address_company      String
+  phone_number_company String
+  email                String   @unique
+  password             String
+  profilePicture       String?
+  verified             Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  properties  Property[]
+  // Relations
+  user       User             @relation(fields: [user_id], references: [id])
+  properties Property_Hotel[]
 }
 
-model Property {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String   @db.Text
-  city        String
-  picture     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Property_Hotel {
+  id                Int              @id @default(autoincrement())
+  tenant_id         Int
+  name_property     String
+  property_category PropertyCategory
+  description       String
+  location          String
+  provinsi          String
+  zip_code          String
+  main_image        String?
+  deletedAt         DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  tenantId    String
-  tenant      Account  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
-  categoryId  Int
-  category    PropertyCategory @relation(fields: [categoryId], references: [id])
+  // Relations
+  tenant   Tenant           @relation(fields: [tenant_id], references: [id])
+  images   Property_Image[]
+  rooms    Room[]
+  bookings Booking[]
+  reviews  Review[]
+}
 
-  @@index([tenantId])
-  @@index([categoryId])
-  
-  rooms       Room[]
-  reviews     Review[]
+model Property_Image {
+  id          Int    @id @default(autoincrement())
+  property_id Int
+  image_url   String
+
+  // Relations
+  property Property_Hotel @relation(fields: [property_id], references: [id])
 }
 
 model Room {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
+  property_id Int
   name        String
-  description String?  @db.Text
-  basePrice   Float
+  description String
+  bedoption   BEDOPTION
+  image_room  String?
   capacity    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  property     Property_Hotel   @relation(fields: [property_id], references: [id])
+  images       Room_Image[]
+  availability Room_Available[]
+  bookingRooms Booking_Rooms[]
+}
+
+model Room_Image {
+  id        Int    @id @default(autoincrement())
+  room_id   Int
+  image_url String
+
+  // Relations
+  room Room @relation(fields: [room_id], references: [id])
+}
+
+model Room_Available {
+  id          Int      @id @default(autoincrement())
+  room_id     Int
+  isAvailable Boolean  @default(true)
+  date        DateTime
+  price       Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  propertyId    Int
-  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  
-  specialPrices   SpecialPrice[]
-  availabilities  RoomAvailability[]
-  transactions    Transaction[]
-  
-  @@index([propertyId])
+  // Relations
+  room Room @relation(fields: [room_id], references: [id])
 }
 
-model SpecialPrice {
-  id        Int       @id @default(autoincrement())
-  date      DateTime  @db.Date
-  type      PriceType
-  value     Float
-  
-  roomId    Int
-  room      Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+model Booking {
+  id               Int           @id @default(autoincrement())
+  user_id          Int
+  property_id      Int
+  invoice_number   String
+  check_in         DateTime
+  check_out        DateTime
+  total_price      Float
+  status           BookingStatus
+  amount           Float
+  category_room    RoomCategory
+  payment_deadline DateTime
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
-  @@unique([roomId, date])
+  // Relations
+  user          User            @relation(fields: [user_id], references: [id])
+  property      Property_Hotel  @relation(fields: [property_id], references: [id])
+  booking_rooms Booking_Rooms[]
+  reviews       Review[]
 }
 
-model RoomAvailability {
-  id        Int               @id @default(autoincrement())
-  date      DateTime          @db.Date
-  status    AvailabilityStatus @default(AVAILABLE)
+model Booking_Rooms {
+  id               Int          @id @default(autoincrement())
+  booking_id       Int
+  room_id          Int
+  guest_count      Int
+  overnight_price  Float
+  how_many_nights  Int
+  total_many_night Float
+  category_rooms   RoomCategory
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
-  roomId    Int
-  room      Room              @relation(fields: [roomId], references: [id], onDelete: Cascade)
-
-  @@unique([roomId, date])
+  // Relations
+  booking Booking @relation(fields: [booking_id], references: [id])
+  room    Room    @relation(fields: [room_id], references: [id])
 }
-
-model Transaction {
-  id            String            @id @default(uuid())
-  invoiceNumber String            @unique
-  startDate     DateTime          @db.Date
-  endDate       DateTime          @db.Date
-  totalPrice    Float
-  status        TransactionStatus @default(MENUNGGU_PEMBAYARAN)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-
-  accountId     String
-  account       Account           @relation(fields: [accountId], references: [id])
-  roomId        Int
-  room          Room              @relation(fields: [roomId], references: [id])
-
-  paymentProof  PaymentProof?
-
-  review        Review?
-
-  
-  @@index([accountId])
-  @@index([roomId])
-}
-
-model PaymentProof {
-  id            String      @id @default(uuid())
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  transactionId String      @unique
-  fileUrl       String
-  fileName      String?
-  fileSize      Int?        
-  fileType      String?    
-  uploadedAt    DateTime    @default(now())
-}
-
 
 model Review {
-  id          Int      @id @default(autoincrement())
-  comment     String   @db.Text
-  tenantReply String?  @db.Text
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  property_id  Int
+  booking_id   Int
+  comment      String
+  tenant_reply String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  transactionId String   @unique
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  
-  accountId     String
-  account       Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-
-  propertyId    Int
-  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  @@index([accountId])
-  @@index([propertyId])
-}
-
-model VerificationToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  expires   DateTime
-  accountId String
-  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  @@unique([accountId, token])
-}
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  expires   DateTime
-  accountId String
-  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  @@unique([accountId, token])
+  // Relations
+  user     User           @relation(fields: [user_id], references: [id])
+  property Property_Hotel @relation(fields: [property_id], references: [id])
+  booking  Booking        @relation(fields: [booking_id], references: [id])
 }
