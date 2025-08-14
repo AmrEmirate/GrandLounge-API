@@ -1,74 +1,78 @@
-import { prisma } from "../config/prisma";
+import { Prisma, BookingStatus } from "../generated/prisma";
 import bcrypt from "bcrypt"
-import { Prisma } from "../generated/prisma/client";
 import crypto from "crypto";
+import { prisma } from "../config/prisma";
 
-export default class roomReservationRepositori {
+export default class RoomReservationRepository {
     async checkRoomAvailability(roomId: number, newStartDate: Date, newEndDate: Date) {
-        const existingTransactions = await prisma.transaction.findMany({
+        const existingBookings = await prisma.booking_Rooms.findMany({
             where: {
-                roomId,
-                status: { in: ["DIKONFIRMASI", "MENUNGGU_KONFIRMASI"] },
-                AND: [
-                    { endDate: { lte: newStartDate } },
-                    { startDate: { gte: newStartDate } }
-                ]
-            }
+                room_id: roomId,
+                booking: {
+                    status: { in: [BookingStatus.SUDAH_DIBAYAR, BookingStatus.MENUNGGU_PEMBAYARAN] },
+                    AND: [
+                        { check_out: { gt: newStartDate } },
+                        { check_in: { lt: newEndDate } }
+                    ]
+                }
+            },
+            include: { booking: true }
         });
-        return existingTransactions.length === 0;
+        return existingBookings.length === 0;
     }
 
-    async createTransaction(data: Prisma.TransactionCreateInput) {
-        return prisma.transaction.create({ data });
+    async createTransaction(data: Prisma.BookingCreateInput) {
+        return prisma.booking.create({ data });
     }
 
     async findRoomById(id: number) {
-        return prisma.room.findUnique({ where: { id } });
+        return prisma.room.findUnique({
+            where: { id },
+            select: { id: true, property_id: true, basePrice: true },
+        });
     }
 
     async findOrCreateAccount(userData: { email: string; name: string; password?: string }) {
-        const hashedPassword = await bcrypt.hash(userData.password || crypto.randomBytes(8).toString("hex"), 10);
-        return prisma.account.upsert({
+        const raw = userData.password ?? crypto.randomBytes(8).toString("hex");
+        const hashed = await bcrypt.hash(raw, 10);
+        return prisma.user.upsert({
             where: { email: userData.email },
-            update: { name: userData.name },
+            update: { full_name: userData.name },
             create: {
+                role: "USER",
+                full_name: userData.name,
                 email: userData.email,
-                name: userData.name,
-                password: hashedPassword
-            }
+                password: hashed,
+            },
         });
     }
 
-    async findTransactionByAccountId(accountId: string) {
-        return prisma.transaction.findMany({
-            where: { accountId },
+    async findTransactionByAccountId(userId: number) {
+        return prisma.booking.findMany({
+            where: { user_id: userId },
             include: {
-                room: true,
-            }
-        })
+                property: true,
+                booking_rooms: { include: { room: true } },
+            },
+        });
     }
 
-    async findTransactionById(transactionId: string) {
-        return prisma.transaction.findUnique({
-            where: { id: transactionId },
+    async findTransactionById(bookingId: number) {
+        return prisma.booking.findUnique({
+            where: { id: bookingId },
             include: {
-                room: {
-                    include: {
-                        property: true,
-                    }
-                },
-                account: true
-            }
-        })
+                user: true,
+                property: true,
+                booking_rooms: { include: { room: true } },
+            },
+        });
     }
 
-    async updateTransaction(transactionId: string, data: Prisma.TransactionUpdateInput) {
-        return prisma.transaction.update({
-            where: { id: transactionId },
+    async updateTransaction(bookingId: number, data: Prisma.BookingUpdateInput) {
+        return prisma.booking.update({
+            where: { id: bookingId },
             data,
         });
     }
-
-    
 }
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createReservationController } from "../controllers/RoomReservation.controller";
+import { createReservationController, getResevationByIdController, getUserReservationsController, updateReservationStatusController } from "../controllers/RoomReservation.controller";
 
 export default class RoomReservationRouter {
     private router: Router;
@@ -12,6 +12,10 @@ export default class RoomReservationRouter {
     private initializeRoutes() {
         // Buat pesanan baru
         this.router.post("/", createReservationController);
+        this.router.get("reservations", getUserReservationsController);
+        this.router.get("/:id", getResevationByIdController);
+        this.router.patch("/:id/status", updateReservationStatusController);
+        
     }
 
     public getRouter(): Router {

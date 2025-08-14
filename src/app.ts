@@ -10,6 +10,7 @@ import passport from 'passport';
 import './config/passport'; 
 
 import UploadPaymentRouter from "./routers/uploadPayment.router";
+import RoomReservationRouter from "./routers/roomReservation.router";
 
 
 const PORT: string = process.env.PORT || "2020";
@@ -32,6 +33,7 @@ class App {
     }
 
     private routes(): void {
+        const reservationRouter = new RoomReservationRouter();
         const uploadPayment = new UploadPaymentRouter();
 
         this.app.get("/", (req: Request, res: Response) => {
@@ -40,8 +42,12 @@ class App {
 
         this.app.use("/api", mainRouter); 
 
+        // author = Adi
+        // reservation
+        this.app.use("/reservations", reservationRouter.getRouter());
         // upload payment proof
         this.app.use("/payments", uploadPayment.getRouter());
+        // end = adi
 
     }
 
