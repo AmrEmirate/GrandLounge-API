@@ -11,6 +11,8 @@ import './config/passport';
 
 import UploadPaymentRouter from "./routers/uploadPayment.router";
 import RoomReservationRouter from "./routers/roomReservation.router";
+import { OrderListController } from "./controllers/OrderList.controller";
+import OrderListRouter from "./routers/orderList.router";
 
 
 const PORT: string = process.env.PORT || "2020";
@@ -35,6 +37,7 @@ class App {
     private routes(): void {
         const reservationRouter = new RoomReservationRouter();
         const uploadPayment = new UploadPaymentRouter();
+        const orderList = new OrderListRouter();
 
         this.app.get("/", (req: Request, res: Response) => {
             res.status(200).send("<h1>Welcome to Final Project Grand Lodge</h1>");
@@ -47,6 +50,8 @@ class App {
         this.app.use("/reservations", reservationRouter.getRouter());
         // upload payment proof
         this.app.use("/payments", uploadPayment.getRouter());
+        // order list
+        this.app.use("/order", orderList.getRouter());
         // end = adi
 
     }
