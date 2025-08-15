@@ -1,4 +1,3 @@
-import { BookingStatus, Prisma } from "../generated/prisma";
 import OrderListRepositroy from "../repositories/OrderList.repositori";
 
 export const OrderListService = async (accountId: number, filter: {

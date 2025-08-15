@@ -3,16 +3,14 @@ dotenv.config();
 import cors from "cors";
 import express, { Application, Request, Response, NextFunction } from "express";
 import logger from "./utils/logger";
-
 import mainRouter from "./routers"; 
 import ApiError from "./utils/apiError";
 import passport from 'passport';
 import './config/passport'; 
-
 import UploadPaymentRouter from "./routers/uploadPayment.router";
 import RoomReservationRouter from "./routers/roomReservation.router";
-import { OrderListController } from "./controllers/OrderList.controller";
 import OrderListRouter from "./routers/orderList.router";
+import CancelOrderRouter from "./routers/cancelOrder.router";
 
 
 const PORT: string = process.env.PORT || "2020";
@@ -38,6 +36,7 @@ class App {
         const reservationRouter = new RoomReservationRouter();
         const uploadPayment = new UploadPaymentRouter();
         const orderList = new OrderListRouter();
+        const cancelOrder = new CancelOrderRouter();
 
         this.app.get("/", (req: Request, res: Response) => {
             res.status(200).send("<h1>Welcome to Final Project Grand Lodge</h1>");
@@ -52,6 +51,8 @@ class App {
         this.app.use("/payments", uploadPayment.getRouter());
         // order list
         this.app.use("/order", orderList.getRouter());
+        // cancel order
+        this.app.use("/order-cancel", cancelOrder.getRouter());
         // end = adi
 
     }

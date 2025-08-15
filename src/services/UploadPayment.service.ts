@@ -4,12 +4,12 @@ import { UploadPaymentRepository } from "../repositories/UploadPayment.repositor
 
 const uploadRepo = new UploadPaymentRepository();
 
-export const uploadPaymentService = async (transactionId: string, file: Express.Multer.File) => {
+export const uploadPaymentService = async (transactionId: number, file: Express.Multer.File) => {
     if (!file) {
         throw new Error("File is required");
     }
 
-    const transaction = await prisma.transaction.findUnique({ where: { id: transactionId } });
+    const transaction = await prisma.booking.findUnique({ where: { id: transactionId } });
 
     if (!transaction || transaction.status !== "MENUNGGU_PEMBAYARAN") {
         throw new Error("Invalid transaction status")

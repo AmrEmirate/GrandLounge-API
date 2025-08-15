@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { uploadPaymentController } from "../controllers/UploadPayment.Controller";
+import uploadPaymentController from "../controllers/UploadPayment.Controller";
 import { uploadPaymentProof } from "../middleware/uploadPayment";
 
 class UploadPaymentRouter {
     private router: Router;
+    private uploadPaymentController = new uploadPaymentController();
 
     constructor() {
         this.router = Router();
@@ -13,8 +14,7 @@ class UploadPaymentRouter {
     private initialRoutes(): void {
         this.router.post(
             "/:transactionId/upload-proof",
-            uploadPaymentProof,
-            uploadPaymentController
+            this.uploadPaymentController.uploadPaymentProof
         );
     }
 

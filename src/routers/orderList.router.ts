@@ -1,12 +1,14 @@
 import { Router } from "express";
 import passport from 'passport';
-import { OrderListController } from "../controllers/OrderList.controller";
+import OrderListController from "../controllers/OrderList.controller";
 
 export default class OrderListRouter {
     private router: Router;
+    private OrderList: OrderListController;
 
     constructor() {
         this.router = Router();
+        this.OrderList = new OrderListController();
         this.initializeRoutes();
     }
 
@@ -15,7 +17,7 @@ export default class OrderListRouter {
 
         this.router.get(
             '/order-list',
-            OrderListController
+            this.OrderList.orderList
         )
     }
 

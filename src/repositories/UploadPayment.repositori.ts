@@ -1,14 +1,12 @@
 import { prisma } from "../config/prisma";
 
 export class UploadPaymentRepository {
-    async updatePaymentProof(transactionId: string, proofUrl: string) {
-        return prisma.transaction.update({
+    async updatePaymentProof(transactionId: number, proofUrl: string) {
+        return prisma.booking.update({
             where: { id: transactionId },
             data: {
-                paymentProof: {
-                    update: { fileUrl: proofUrl }
-                },
-                status: "MENUNGGU_KONFIRMASI",
+                paymentProof: proofUrl,
+                status: "MENUNGGU_PEMBAYARAN",
                 updatedAt: new Date()
             }
         });
