@@ -1,9 +1,9 @@
 import { prisma } from "../config/prisma";
 
 export class UploadPaymentRepository {
-    async updatePaymentProof(transactionId: number, proofUrl: string) {
+    async updatePaymentProof(bookingId: number, proofUrl: string) {
         return prisma.booking.update({
-            where: { id: transactionId },
+            where: { id: bookingId },
             data: {
                 paymentProof: proofUrl,
                 status: "MENUNGGU_PEMBAYARAN",

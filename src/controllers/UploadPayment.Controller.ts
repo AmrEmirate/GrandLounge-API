@@ -9,10 +9,10 @@ class UploadPaymentController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const transactionId = Number(req.params.transactionId);
+            const bookingId = Number(req.params.transactionId);
             const file = req.file;
 
-            if (!transactionId) {
+            if (!bookingId) {
                 throw new ApiError(400, "Transaction ID is required");
             }
 
@@ -20,7 +20,7 @@ class UploadPaymentController {
                 throw new ApiError(400, "File is required")
             }
 
-            await uploadPaymentService(transactionId, file);
+            await uploadPaymentService(bookingId, file);
 
             res.status(200).json({
                 success: true,
