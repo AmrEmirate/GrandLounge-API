@@ -1,8 +1,6 @@
-// This is your Prisma schema file for Stazy App
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  output   = "./generated/client"
 }
 
 datasource db {
@@ -11,7 +9,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// --- ENUMS ---
 enum UserRole {
   TENANT
   USER
@@ -19,19 +16,13 @@ enum UserRole {
 
 enum BookingStatus {
   MENUNGGU_PEMBAYARAN
-  SUDAH_DIBAYAR
+  MENUNGGU_KONFIRMASI
+  DIPROSES
   DIBATALKAN
   SELESAI
 }
 
-enum PropertyCategory {
-  HOTEL
-  APARTEMEN
-  VILLA
-  GUEST_HOUSE
-}
-
-enum BEDOPTION {
+enum BedOption {
   SINGLE
   DOUBLE
   TWIN
@@ -43,166 +34,180 @@ enum RoomCategory {
   SUITE
 }
 
-// --- MODELS ---
+enum TokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
 model User {
   id             Int      @id @default(autoincrement())
   role           UserRole
-  full_name      String
+  fullName       String
   email          String   @unique
-  password       String
+  password       String?
   profilePicture String?
+  provider       String?
+  providerId     String?
   verified       Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  // Relations
   tenant   Tenant?
   bookings Booking[]
   reviews  Review[]
+  tokens   Token[]
+
+  @@unique([provider, providerId])
 }
 
 model Tenant {
-  id                   Int      @id @default(autoincrement())
-  user_id              Int      @unique
-  company_name         String
-  address_company      String
-  phone_number_company String
-  email                String   @unique
-  password             String
-  profilePicture       String?
-  verified             Boolean  @default(false)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @unique
+  companyName        String
+  addressCompany     String
+  phoneNumberCompany String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  // Relations
-  user       User             @relation(fields: [user_id], references: [id])
-  properties Property_Hotel[]
+  user       User       @relation(fields: [userId], references: [id])
+  properties Property[]
 }
 
-model Property_Hotel {
-  id                Int              @id @default(autoincrement())
-  tenant_id         Int
-  name_property     String
-  property_category PropertyCategory
-  description       String
-  location          String
-  provinsi          String
-  zip_code          String
-  main_image        String?
-  deletedAt         DateTime?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
-  // Relations
-  tenant   Tenant           @relation(fields: [tenant_id], references: [id])
-  images   Property_Image[]
+  properties Property[]
+}
+
+model Property {
+  id          Int      @id @default(autoincrement())
+  tenantId    Int
+  name        String
+  categoryId  Int 
+  description String
+  location    String
+  provinsi    String
+  zipCode     String
+  mainImage   String?
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant   Tenant          @relation(fields: [tenantId], references: [id])
+  category Category        @relation(fields: [categoryId], references: [id]) // Relasi ke model Category
+  images   PropertyImage[]
   rooms    Room[]
   bookings Booking[]
   reviews  Review[]
 }
 
-model Property_Image {
-  id          Int    @id @default(autoincrement())
-  property_id Int
-  image_url   String
+model PropertyImage {
+  id         Int    @id @default(autoincrement())
+  propertyId Int
+  imageUrl   String
 
-  // Relations
-  property Property_Hotel @relation(fields: [property_id], references: [id])
+  property Property @relation(fields: [propertyId], references: [id])
 }
 
 model Room {
-  id          Int       @id @default(autoincrement())
-  property_id Int
+  id          Int            @id @default(autoincrement())
+  propertyId  Int
   name        String
+  category    RoomCategory
   description String
-  bedoption   BEDOPTION
-  image_room  String?
+  bedOption   BedOption
+  imageRoom   String?
   capacity    Int
   basePrice   Float
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
-  // Relations
-  property     Property_Hotel   @relation(fields: [property_id], references: [id])
-  images       Room_Image[]
-  availability Room_Available[]
-  bookingRooms Booking_Rooms[]
+  property       Property           @relation(fields: [propertyId], references: [id])
+  images         RoomImage[]
+  availabilities RoomAvailability[]
+  bookingRooms   BookingRoom[]
 }
 
-model Room_Image {
-  id        Int    @id @default(autoincrement())
-  room_id   Int
-  image_url String
+model RoomImage {
+  id       Int    @id @default(autoincrement())
+  roomId   Int
+  imageUrl String
 
-  // Relations
-  room Room @relation(fields: [room_id], references: [id])
+  room Room @relation(fields: [roomId], references: [id])
 }
 
-model Room_Available {
+model RoomAvailability {
   id          Int      @id @default(autoincrement())
-  room_id     Int
+  roomId      Int
   isAvailable Boolean  @default(true)
-  date        DateTime
+  date        DateTime @db.Date
   price       Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations
-  room Room @relation(fields: [room_id], references: [id])
+  room Room @relation(fields: [roomId], references: [id])
+
+  @@unique([roomId, date])
 }
 
 model Booking {
-  id               Int           @id @default(autoincrement())
-  user_id          Int
-  property_id      Int
-  invoice_number   String
-  check_in         DateTime
-  check_out        DateTime
-  total_price      Float
-  status           BookingStatus
-  amount           Float
-  category_room    RoomCategory
-  payment_deadline DateTime
-  paymentProof     String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  propertyId      Int
+  invoiceNumber   String        @unique
+  checkIn         DateTime
+  checkOut        DateTime
+  totalPrice      Float
+  status          BookingStatus @default(MENUNGGU_PEMBAYARAN)
+  paymentDeadline DateTime
+  paymentProof    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  // Relations
-  user          User            @relation(fields: [user_id], references: [id])
-  property      Property_Hotel  @relation(fields: [property_id], references: [id])
-  booking_rooms Booking_Rooms[]
-  reviews       Review[]
+  user         User          @relation(fields: [userId], references: [id])
+  property     Property      @relation(fields: [propertyId], references: [id])
+  bookingRooms BookingRoom[]
+  review       Review?
 }
 
-model Booking_Rooms {
-  id               Int          @id @default(autoincrement())
-  booking_id       Int
-  room_id          Int
-  guest_count      Int
-  overnight_price  Float
-  how_many_nights  Int
-  total_many_night Float
-  category_rooms   RoomCategory
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+model BookingRoom {
+  id             Int      @id @default(autoincrement())
+  bookingId      Int
+  roomId         Int
+  guestCount     Int
+  pricePerNight  Float
+  numberOfNights Int
+  totalPrice     Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  // Relations
-  booking Booking @relation(fields: [booking_id], references: [id])
-  room    Room    @relation(fields: [room_id], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id])
+  room    Room    @relation(fields: [roomId], references: [id])
 }
 
 model Review {
-  id           Int      @id @default(autoincrement())
-  user_id      Int
-  property_id  Int
-  booking_id   Int
-  comment      String
-  tenant_reply String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  propertyId  Int
+  bookingId   Int      @unique
+  comment     String
+  tenantReply String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  // Relations
-  user     User           @relation(fields: [user_id], references: [id])
-  property Property_Hotel @relation(fields: [property_id], references: [id])
-  booking  Booking        @relation(fields: [booking_id], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+  property Property @relation(fields: [propertyId], references: [id])
+  booking  Booking  @relation(fields: [bookingId], references: [id])
+}
+
+model Token {
+  id        Int          @id @default(autoincrement())
+  token     String       @unique
+  purpose   TokenPurpose
+  expiresAt DateTime
+  userId    Int
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
