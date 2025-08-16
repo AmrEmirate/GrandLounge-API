@@ -19,6 +19,11 @@ export default class OrderListRouter {
             '/order-list',
             this.OrderList.orderList
         )
+        
+        this.router.get(
+            '/tenant-transaction-list',
+            this.OrderList.tenantTransactionList
+        )
     }
 
     public getRouter(): Router {

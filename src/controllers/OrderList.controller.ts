@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { OrderListService } from "../services/OrderList.service";
+import { getTenantReservationService, OrderListService } from "../services/OrderList.service";
 
 class OrderListController {
     public async orderList(
@@ -24,6 +24,27 @@ class OrderListController {
             })
         } catch (error) {
             next(error);
+        }
+    }
+
+    public async tenantTransactionList(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const tenantId = (req.user as any).tenantId;
+            const status = req.query.status as string | undefined;
+
+            const reservation = await getTenantReservationService(tenantId, status);
+
+            res.status(200).json({
+                success: true,
+                message: "Tenant transaction list retrieved successfully",
+                data: reservation
+            })
+        } catch (error) {
+            next(error)
         }
     }
 }
