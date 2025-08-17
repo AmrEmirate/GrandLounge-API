@@ -12,7 +12,8 @@ import RoomReservationRouter from "./routers/roomReservation.router";
 import OrderListRouter from "./routers/orderList.router";
 import CancelOrderRouter from "./routers/cancelOrder.router";
 import ConfirmPaymentRouter from "./routers/confirmPayment.router";
-
+import './scheduler';
+import OrderReminderRouter from "./routers/orderPayment.router";
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -39,6 +40,7 @@ class App {
         const orderList = new OrderListRouter();
         const cancelOrder = new CancelOrderRouter();
         const confirmPayment = new ConfirmPaymentRouter();
+        const sendConfirm = new OrderReminderRouter();
 
         this.app.get("/", (req: Request, res: Response) => {
             res.status(200).send("<h1>Welcome to Final Project Grand Lodge</h1>");
@@ -57,6 +59,8 @@ class App {
         this.app.use("/order-cancel", cancelOrder.getRouter());
         // Confirm Payment (Manual Transfer)
         this.app.use("payment", confirmPayment.getRouter());
+        // Send Email Reminder
+        this.app.use("send", sendConfirm.getRouter());
         // end = adi
 
     }

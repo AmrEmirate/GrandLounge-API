@@ -1,6 +1,9 @@
 import { Router } from "express";
 import passport from 'passport';
 import OrderListController from "../controllers/OrderList.controller";
+import { verifyToken } from "../middleware/verifyToken";
+import { isUser } from "../middleware/isUser";
+import { isTenant } from "../middleware/authMiddleware";
 
 export default class OrderListRouter {
     private router: Router;
@@ -17,11 +20,15 @@ export default class OrderListRouter {
 
         this.router.get(
             '/order-list',
+            verifyToken,
+            isUser,
             this.OrderList.orderList
         )
         
         this.router.get(
             '/tenant-transaction-list',
+            verifyToken,
+            isTenant,
             this.OrderList.tenantTransactionList
         )
     }

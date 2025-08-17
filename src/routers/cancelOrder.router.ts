@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { CancelOrderControllers } from "../controllers/CancelOrder.controller";
+import { verifyToken } from "../middleware/verifyToken";
+import { isUser } from "../middleware/isUser";
 
 export default class CancelOrderRouter {
     private router: Router;
@@ -14,6 +16,8 @@ export default class CancelOrderRouter {
     private initializeRoutes() {
         this.router.patch(
             "/cancel/:id",
+            verifyToken,
+            isUser,
             this.cancelOrderControllers.cancelOrder
         )
     }
