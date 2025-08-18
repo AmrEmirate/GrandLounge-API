@@ -1,6 +1,7 @@
 generator client {
   provider = "prisma-client-js"
   output   = "./generated/client"
+
 }
 
 datasource db {
@@ -9,7 +10,7 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum UserRole {
+enum UserRole { 
   TENANT
   USER
 }
@@ -40,89 +41,84 @@ enum TokenPurpose {
 }
 
 model User {
-  id             Int      @id @default(autoincrement())
+  id             Int        @id @default(autoincrement())
   role           UserRole
   fullName       String
-  email          String   @unique
+  email          String     @unique
   password       String?
   profilePicture String?
   provider       String?
   providerId     String?
-  verified       Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  tenant   Tenant?
-  bookings Booking[]
-  reviews  Review[]
-  tokens   Token[]
-
+  verified       Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  tenant         Tenant?
+  bookings       Booking[]
+  reviews        Review[]
+  tokens         Token[]
   @@unique([provider, providerId])
 }
 
 model Tenant {
-  id                 Int      @id @default(autoincrement())
-  userId             Int      @unique
+  id                 Int        @id @default(autoincrement())
+  userId             Int        @unique
   companyName        String
   addressCompany     String
   phoneNumberCompany String
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  user       User       @relation(fields: [userId], references: [id])
-  properties Property[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  user               User       @relation(fields: [userId], references: [id])
+  properties         Property[]
 }
 
 model Category {
   id   Int    @id @default(autoincrement())
   name String @unique
-
   properties Property[]
 }
 
 model Property {
-  id          Int      @id @default(autoincrement())
+  id          Int             @id @default(autoincrement())
   tenantId    Int
   name        String
-  categoryId  Int 
+  categoryId  Int
   description String
   location    String
+  latitude    Float?   
+  longitude   Float?
   provinsi    String
   zipCode     String
   mainImage   String?
   deletedAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  tenant   Tenant          @relation(fields: [tenantId], references: [id])
-  category Category        @relation(fields: [categoryId], references: [id]) // Relasi ke model Category
-  images   PropertyImage[]
-  rooms    Room[]
-  bookings Booking[]
-  reviews  Review[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  tenant      Tenant          @relation(fields: [tenantId], references: [id])
+  category    Category        @relation(fields: [categoryId], references: [id])
+  images      PropertyImage[]
+  rooms       Room[]
+  bookings    Booking[]
+  reviews     Review[]
 }
 
 model PropertyImage {
   id         Int    @id @default(autoincrement())
   propertyId Int
   imageUrl   String
-
-  property Property @relation(fields: [propertyId], references: [id])
+  property   Property @relation(fields: [propertyId], references: [id])
 }
 
 model Room {
-  id          Int            @id @default(autoincrement())
-  propertyId  Int
-  name        String
-  category    RoomCategory
-  description String
-  bedOption   BedOption
-  imageRoom   String?
-  capacity    Int
-  basePrice   Float
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
+  id             Int                @id @default(autoincrement())
+  propertyId     Int
+  name           String
+  category       RoomCategory
+  description    String
+  bedOption      BedOption
+  imageRoom      String?
+  capacity       Int
+  basePrice      Float
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
   property       Property           @relation(fields: [propertyId], references: [id])
   images         RoomImage[]
   availabilities RoomAvailability[]
@@ -133,8 +129,7 @@ model RoomImage {
   id       Int    @id @default(autoincrement())
   roomId   Int
   imageUrl String
-
-  room Room @relation(fields: [roomId], references: [id])
+  room     Room   @relation(fields: [roomId], references: [id])
 }
 
 model RoomAvailability {
@@ -145,9 +140,7 @@ model RoomAvailability {
   price       Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  room Room @relation(fields: [roomId], references: [id])
-
+  room        Room     @relation(fields: [roomId], references: [id])
   @@unique([roomId, date])
 }
 
@@ -164,11 +157,10 @@ model Booking {
   paymentProof    String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-
-  user         User          @relation(fields: [userId], references: [id])
-  property     Property      @relation(fields: [propertyId], references: [id])
-  bookingRooms BookingRoom[]
-  review       Review?
+  user            User          @relation(fields: [userId], references: [id])
+  property        Property      @relation(fields: [propertyId], references: [id])
+  bookingRooms    BookingRoom[]
+  review          Review?
 }
 
 model BookingRoom {
@@ -181,9 +173,8 @@ model BookingRoom {
   totalPrice     Float
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
-  booking Booking @relation(fields: [bookingId], references: [id])
-  room    Room    @relation(fields: [roomId], references: [id])
+  booking        Booking  @relation(fields: [bookingId], references: [id])
+  room           Room     @relation(fields: [roomId], references: [id])
 }
 
 model Review {
@@ -195,10 +186,9 @@ model Review {
   tenantReply String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  user     User     @relation(fields: [userId], references: [id])
-  property Property @relation(fields: [propertyId], references: [id])
-  booking  Booking  @relation(fields: [bookingId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+  property    Property @relation(fields: [propertyId], references: [id])
+  booking     Booking  @relation(fields: [bookingId], references: [id])
 }
 
 model Token {
@@ -208,6 +198,5 @@ model Token {
   expiresAt DateTime
   userId    Int
   createdAt DateTime     @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
 }

@@ -2,18 +2,25 @@ import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
 import express, { Application, Request, Response, NextFunction } from "express";
-import logger from "./utils/logger";
-import mainRouter from "./routers"; 
-import ApiError from "./utils/apiError";
 import passport from 'passport';
+
+// Impor Konfigurasi
 import './config/passport'; 
+import './scheduler'; 
+
+// Impor Router dari Feature 1 
+import authRouter from './routers/auth.router';
+import userRouter from './routers/user.router';
+import categoryRouter from './routers/category.router';
+import propertyRouter from './routers/property.router';
+
+// Impor Router dari Feature 2 
 import UploadPaymentRouter from "./routers/uploadPayment.router";
 import RoomReservationRouter from "./routers/roomReservation.router";
 import OrderListRouter from "./routers/orderList.router";
 import CancelOrderRouter from "./routers/cancelOrder.router";
 import ConfirmPaymentRouter from "./routers/confirmPayment.router";
-import './scheduler';
-import OrderReminderRouter from "./routers/orderPayment.router";
+import OrderReminderRouter from "./routers/orderPayment.router"; 
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -35,6 +42,13 @@ class App {
     }
 
     private routes(): void {
+        // --- ROUTER UNTUK FEATURE 1 (Amr) ---
+        this.app.use('/api/auth', authRouter);
+        this.app.use('/api/user', userRouter);
+        this.app.use('/api/categories', categoryRouter);
+        this.app.use('/api/properties', propertyRouter);
+
+        // --- ROUTER UNTUK FEATURE 2 (Adi) 
         const reservationRouter = new RoomReservationRouter();
         const uploadPayment = new UploadPaymentRouter();
         const orderList = new OrderListRouter();
@@ -42,45 +56,26 @@ class App {
         const confirmPayment = new ConfirmPaymentRouter();
         const sendConfirm = new OrderReminderRouter();
 
+        this.app.use("/api/reservations", reservationRouter.getRouter());
+        this.app.use("/api/payments", uploadPayment.getRouter());
+        this.app.use("/api/orders", orderList.getRouter()); 
+        this.app.use("/api/order-cancel", cancelOrder.getRouter());
+        this.app.use("/api/payment-confirm", confirmPayment.getRouter()); 
+        this.app.use("/api/send-reminder", sendConfirm.getRouter()); 
+
+        // Rute dasar
         this.app.get("/", (req: Request, res: Response) => {
             res.status(200).send("<h1>Welcome to Final Project Grand Lodge</h1>");
         });
-
-        this.app.use("/api", mainRouter); 
-
-        // author = Adi
-        // reservation
-        this.app.use("/reservations", reservationRouter.getRouter());
-        // upload payment proof
-        this.app.use("/payments", uploadPayment.getRouter());
-        // order list
-        this.app.use("/order", orderList.getRouter());
-        // cancel order
-        this.app.use("/order-cancel", cancelOrder.getRouter());
-        // Confirm Payment (Manual Transfer)
-        this.app.use("payment", confirmPayment.getRouter());
-        // Send Email Reminder
-        this.app.use("send", sendConfirm.getRouter());
-        // end = adi
-
     }
 
     private errorHandler(): void {
         this.app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-            logger.error(
-                `${req.method} ${req.path}: ${error.message} ${JSON.stringify(error)}`
-            );
-            if (error instanceof ApiError) {
-                res.status(error.statusCode).json({
-                    success: false,
-                    error: error.message,
-                });
-            } else {
-                res.status(500).json({
-                    success: false,
-                    error: "Internal Server Error",
-                });
-            }
+            console.error(error); // Menampilkan error lengkap di konsol
+            res.status(error.statusCode || 500).json({
+                success: false,
+                message: error.message || "Internal Server Error",
+            });
         });
     }
 

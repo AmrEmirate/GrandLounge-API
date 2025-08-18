@@ -193,13 +193,6 @@ export class PrismaClient<
    */
   $disconnect(): $Utils.JsPromise<void>;
 
-  /**
-   * Add a middleware
-   * @deprecated since 4.16.0. For new code, prefer client extensions instead.
-   * @see https://pris.ly/d/extensions
-   */
-  $use(cb: Prisma.Middleware): void
-
 /**
    * Executes a prepared raw query and returns the number of affected rows.
    * @example
@@ -446,8 +439,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.13.0
-   * Query Engine version: 361e86d0ea4987e9f53a565309b3eed797a6bcbd
+   * Prisma Client JS version: 6.14.0
+   * Query Engine version: 717184b7b35ea05dfa71a3236b7af656013e1e49
    */
   export type PrismaVersion = {
     client: string
@@ -1911,25 +1904,6 @@ export namespace Prisma {
     | 'runCommandRaw'
     | 'findRaw'
     | 'groupBy'
-
-  /**
-   * These options are being passed into the middleware as "params"
-   */
-  export type MiddlewareParams = {
-    model?: ModelName
-    action: PrismaAction
-    args: any
-    dataPath: string[]
-    runInTransaction: boolean
-  }
-
-  /**
-   * The `T` type makes sure, that the `return proceed` is not forgotten in the middleware implementation
-   */
-  export type Middleware<T = any> = (
-    params: MiddlewareParams,
-    next: (params: MiddlewareParams) => $Utils.JsPromise<T>,
-  ) => $Utils.JsPromise<T>
 
   // tested in getLogLevel.test.ts
   export function getLogLevel(log: Array<LogLevel | LogDefinition>): LogLevel | undefined;
@@ -5695,12 +5669,16 @@ export namespace Prisma {
     id: number | null
     tenantId: number | null
     categoryId: number | null
+    latitude: number | null
+    longitude: number | null
   }
 
   export type PropertySumAggregateOutputType = {
     id: number | null
     tenantId: number | null
     categoryId: number | null
+    latitude: number | null
+    longitude: number | null
   }
 
   export type PropertyMinAggregateOutputType = {
@@ -5710,6 +5688,8 @@ export namespace Prisma {
     categoryId: number | null
     description: string | null
     location: string | null
+    latitude: number | null
+    longitude: number | null
     provinsi: string | null
     zipCode: string | null
     mainImage: string | null
@@ -5725,6 +5705,8 @@ export namespace Prisma {
     categoryId: number | null
     description: string | null
     location: string | null
+    latitude: number | null
+    longitude: number | null
     provinsi: string | null
     zipCode: string | null
     mainImage: string | null
@@ -5740,6 +5722,8 @@ export namespace Prisma {
     categoryId: number
     description: number
     location: number
+    latitude: number
+    longitude: number
     provinsi: number
     zipCode: number
     mainImage: number
@@ -5754,12 +5738,16 @@ export namespace Prisma {
     id?: true
     tenantId?: true
     categoryId?: true
+    latitude?: true
+    longitude?: true
   }
 
   export type PropertySumAggregateInputType = {
     id?: true
     tenantId?: true
     categoryId?: true
+    latitude?: true
+    longitude?: true
   }
 
   export type PropertyMinAggregateInputType = {
@@ -5769,6 +5757,8 @@ export namespace Prisma {
     categoryId?: true
     description?: true
     location?: true
+    latitude?: true
+    longitude?: true
     provinsi?: true
     zipCode?: true
     mainImage?: true
@@ -5784,6 +5774,8 @@ export namespace Prisma {
     categoryId?: true
     description?: true
     location?: true
+    latitude?: true
+    longitude?: true
     provinsi?: true
     zipCode?: true
     mainImage?: true
@@ -5799,6 +5791,8 @@ export namespace Prisma {
     categoryId?: true
     description?: true
     location?: true
+    latitude?: true
+    longitude?: true
     provinsi?: true
     zipCode?: true
     mainImage?: true
@@ -5901,6 +5895,8 @@ export namespace Prisma {
     categoryId: number
     description: string
     location: string
+    latitude: number | null
+    longitude: number | null
     provinsi: string
     zipCode: string
     mainImage: string | null
@@ -5935,6 +5931,8 @@ export namespace Prisma {
     categoryId?: boolean
     description?: boolean
     location?: boolean
+    latitude?: boolean
+    longitude?: boolean
     provinsi?: boolean
     zipCode?: boolean
     mainImage?: boolean
@@ -5957,6 +5955,8 @@ export namespace Prisma {
     categoryId?: boolean
     description?: boolean
     location?: boolean
+    latitude?: boolean
+    longitude?: boolean
     provinsi?: boolean
     zipCode?: boolean
     mainImage?: boolean
@@ -5974,6 +5974,8 @@ export namespace Prisma {
     categoryId?: boolean
     description?: boolean
     location?: boolean
+    latitude?: boolean
+    longitude?: boolean
     provinsi?: boolean
     zipCode?: boolean
     mainImage?: boolean
@@ -5991,6 +5993,8 @@ export namespace Prisma {
     categoryId?: boolean
     description?: boolean
     location?: boolean
+    latitude?: boolean
+    longitude?: boolean
     provinsi?: boolean
     zipCode?: boolean
     mainImage?: boolean
@@ -5999,7 +6003,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type PropertyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "name" | "categoryId" | "description" | "location" | "provinsi" | "zipCode" | "mainImage" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["property"]>
+  export type PropertyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "tenantId" | "name" | "categoryId" | "description" | "location" | "latitude" | "longitude" | "provinsi" | "zipCode" | "mainImage" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["property"]>
   export type PropertyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tenant?: boolean | TenantDefaultArgs<ExtArgs>
     category?: boolean | CategoryDefaultArgs<ExtArgs>
@@ -6035,6 +6039,8 @@ export namespace Prisma {
       categoryId: number
       description: string
       location: string
+      latitude: number | null
+      longitude: number | null
       provinsi: string
       zipCode: string
       mainImage: string | null
@@ -6476,6 +6482,8 @@ export namespace Prisma {
     readonly categoryId: FieldRef<"Property", 'Int'>
     readonly description: FieldRef<"Property", 'String'>
     readonly location: FieldRef<"Property", 'String'>
+    readonly latitude: FieldRef<"Property", 'Float'>
+    readonly longitude: FieldRef<"Property", 'Float'>
     readonly provinsi: FieldRef<"Property", 'String'>
     readonly zipCode: FieldRef<"Property", 'String'>
     readonly mainImage: FieldRef<"Property", 'String'>
@@ -16285,6 +16293,8 @@ export namespace Prisma {
     categoryId: 'categoryId',
     description: 'description',
     location: 'location',
+    latitude: 'latitude',
+    longitude: 'longitude',
     provinsi: 'provinsi',
     zipCode: 'zipCode',
     mainImage: 'mainImage',
@@ -16496,6 +16506,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+  /**
    * Reference to a field of type 'RoomCategory'
    */
   export type EnumRoomCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RoomCategory'>
@@ -16520,20 +16544,6 @@ export namespace Prisma {
    * Reference to a field of type 'BedOption[]'
    */
   export type ListEnumBedOptionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BedOption[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float'
-   */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float[]'
-   */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 
@@ -16787,6 +16797,8 @@ export namespace Prisma {
     categoryId?: IntFilter<"Property"> | number
     description?: StringFilter<"Property"> | string
     location?: StringFilter<"Property"> | string
+    latitude?: FloatNullableFilter<"Property"> | number | null
+    longitude?: FloatNullableFilter<"Property"> | number | null
     provinsi?: StringFilter<"Property"> | string
     zipCode?: StringFilter<"Property"> | string
     mainImage?: StringNullableFilter<"Property"> | string | null
@@ -16808,6 +16820,8 @@ export namespace Prisma {
     categoryId?: SortOrder
     description?: SortOrder
     location?: SortOrder
+    latitude?: SortOrderInput | SortOrder
+    longitude?: SortOrderInput | SortOrder
     provinsi?: SortOrder
     zipCode?: SortOrder
     mainImage?: SortOrderInput | SortOrder
@@ -16832,6 +16846,8 @@ export namespace Prisma {
     categoryId?: IntFilter<"Property"> | number
     description?: StringFilter<"Property"> | string
     location?: StringFilter<"Property"> | string
+    latitude?: FloatNullableFilter<"Property"> | number | null
+    longitude?: FloatNullableFilter<"Property"> | number | null
     provinsi?: StringFilter<"Property"> | string
     zipCode?: StringFilter<"Property"> | string
     mainImage?: StringNullableFilter<"Property"> | string | null
@@ -16853,6 +16869,8 @@ export namespace Prisma {
     categoryId?: SortOrder
     description?: SortOrder
     location?: SortOrder
+    latitude?: SortOrderInput | SortOrder
+    longitude?: SortOrderInput | SortOrder
     provinsi?: SortOrder
     zipCode?: SortOrder
     mainImage?: SortOrderInput | SortOrder
@@ -16876,6 +16894,8 @@ export namespace Prisma {
     categoryId?: IntWithAggregatesFilter<"Property"> | number
     description?: StringWithAggregatesFilter<"Property"> | string
     location?: StringWithAggregatesFilter<"Property"> | string
+    latitude?: FloatNullableWithAggregatesFilter<"Property"> | number | null
+    longitude?: FloatNullableWithAggregatesFilter<"Property"> | number | null
     provinsi?: StringWithAggregatesFilter<"Property"> | string
     zipCode?: StringWithAggregatesFilter<"Property"> | string
     mainImage?: StringNullableWithAggregatesFilter<"Property"> | string | null
@@ -17684,6 +17704,8 @@ export namespace Prisma {
     name: string
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -17705,6 +17727,8 @@ export namespace Prisma {
     categoryId: number
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -17721,6 +17745,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17742,6 +17768,8 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17761,6 +17789,8 @@ export namespace Prisma {
     categoryId: number
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -17773,6 +17803,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17788,6 +17820,8 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18682,6 +18716,17 @@ export namespace Prisma {
     id?: SortOrder
   }
 
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -18730,6 +18775,8 @@ export namespace Prisma {
     categoryId?: SortOrder
     description?: SortOrder
     location?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
     provinsi?: SortOrder
     zipCode?: SortOrder
     mainImage?: SortOrder
@@ -18742,6 +18789,8 @@ export namespace Prisma {
     id?: SortOrder
     tenantId?: SortOrder
     categoryId?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
   }
 
   export type PropertyMaxOrderByAggregateInput = {
@@ -18751,6 +18800,8 @@ export namespace Prisma {
     categoryId?: SortOrder
     description?: SortOrder
     location?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
     provinsi?: SortOrder
     zipCode?: SortOrder
     mainImage?: SortOrder
@@ -18766,6 +18817,8 @@ export namespace Prisma {
     categoryId?: SortOrder
     description?: SortOrder
     location?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
     provinsi?: SortOrder
     zipCode?: SortOrder
     mainImage?: SortOrder
@@ -18778,6 +18831,24 @@ export namespace Prisma {
     id?: SortOrder
     tenantId?: SortOrder
     categoryId?: SortOrder
+    latitude?: SortOrder
+    longitude?: SortOrder
+  }
+
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -19649,6 +19720,14 @@ export namespace Prisma {
     connect?: ReviewWhereUniqueInput | ReviewWhereUniqueInput[]
   }
 
+  export type NullableFloatFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type NullableDateTimeFieldUpdateOperationsInput = {
     set?: Date | string | null
   }
@@ -20339,6 +20418,17 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -20348,6 +20438,22 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -20731,6 +20837,8 @@ export namespace Prisma {
     name: string
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -20750,6 +20858,8 @@ export namespace Prisma {
     categoryId: number
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -20842,6 +20952,8 @@ export namespace Prisma {
     categoryId?: IntFilter<"Property"> | number
     description?: StringFilter<"Property"> | string
     location?: StringFilter<"Property"> | string
+    latitude?: FloatNullableFilter<"Property"> | number | null
+    longitude?: FloatNullableFilter<"Property"> | number | null
     provinsi?: StringFilter<"Property"> | string
     zipCode?: StringFilter<"Property"> | string
     mainImage?: StringNullableFilter<"Property"> | string | null
@@ -20854,6 +20966,8 @@ export namespace Prisma {
     name: string
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -20873,6 +20987,8 @@ export namespace Prisma {
     name: string
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -21223,6 +21339,8 @@ export namespace Prisma {
     name: string
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -21243,6 +21361,8 @@ export namespace Prisma {
     categoryId: number
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -21274,6 +21394,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21294,6 +21416,8 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21309,6 +21433,8 @@ export namespace Prisma {
     name: string
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -21329,6 +21455,8 @@ export namespace Prisma {
     categoryId: number
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -21437,6 +21565,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21457,6 +21587,8 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21751,6 +21883,8 @@ export namespace Prisma {
     name: string
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -21771,6 +21905,8 @@ export namespace Prisma {
     categoryId: number
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -21901,6 +22037,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21921,6 +22059,8 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22176,6 +22316,8 @@ export namespace Prisma {
     name: string
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -22196,6 +22338,8 @@ export namespace Prisma {
     categoryId: number
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -22307,6 +22451,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22327,6 +22473,8 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22597,6 +22745,8 @@ export namespace Prisma {
     categoryId: number
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -22609,6 +22759,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22628,6 +22780,8 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22646,6 +22800,8 @@ export namespace Prisma {
     categoryId?: IntFieldUpdateOperationsInput | number
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22660,6 +22816,8 @@ export namespace Prisma {
     name: string
     description: string
     location: string
+    latitude?: number | null
+    longitude?: number | null
     provinsi: string
     zipCode: string
     mainImage?: string | null
@@ -22672,6 +22830,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22691,6 +22851,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22709,6 +22871,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
     location?: StringFieldUpdateOperationsInput | string
+    latitude?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     provinsi?: StringFieldUpdateOperationsInput | string
     zipCode?: StringFieldUpdateOperationsInput | string
     mainImage?: NullableStringFieldUpdateOperationsInput | string | null

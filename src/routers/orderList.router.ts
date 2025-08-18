@@ -3,7 +3,7 @@ import passport from 'passport';
 import OrderListController from "../controllers/OrderList.controller";
 import { verifyToken } from "../middleware/verifyToken";
 import { isUser } from "../middleware/isUser";
-import { isTenant } from "../middleware/authMiddleware";
+import { isTenant } from "../middleware/auth.middleware";
 
 export default class OrderListRouter {
     private router: Router;
