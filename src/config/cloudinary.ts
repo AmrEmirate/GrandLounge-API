@@ -1,35 +1,13 @@
-import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
-import * as streamifier from 'streamifier';
+import { v2 as cloudinary } from 'cloudinary';
+import dotenv from 'dotenv';
 
-const cloudName = process.env.CLOUD_NAME;
-const apiKey = process.env.CLOUD_API_KEY;
-const apiSecret = process.env.CLOUD_API_SECRET;
-
-if (!cloudName || !apiKey || !apiSecret) {
-    throw new Error("Missing Cloudinary environment variables!");
-}
+dotenv.config();
 
 cloudinary.config({
-    cloud_name: cloudName,
-    api_key: apiKey,
-    api_secret: apiSecret,
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+  secure: true,
 });
 
-export const cloudinaryUpload = (
-    file: Express.Multer.File
-): Promise<UploadApiResponse> => {
-    return new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-            (err, result) => {
-                if (err) {
-                    return reject(new Error(`Cloudinary upload error: ${err.message || err}`));
-                }
-                if (!result) {
-                    return reject(new Error("No result returned from Cloudinary."));
-                }
-                resolve(result);
-            }
-        );
-        streamifier.createReadStream(file.buffer).pipe(uploadStream)
-    })
-}
+export default cloudinary;
