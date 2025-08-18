@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../generated/prisma';
 import { hashPassword, comparePassword } from '../utils/hashing';
 import { generateToken } from '../utils/jwt';
 import { TokenService } from './token.service';
@@ -26,7 +26,7 @@ export const AuthService = {
     const result = await prisma.$transaction(async (tx) => {
       user = await tx.user.create({ data: { fullName: data.fullName, email: data.email, role: UserRole.TENANT } });
       await tx.tenant.create({ data: { userId: user.id, companyName: data.companyName, addressCompany: data.addressCompany, phoneNumberCompany: data.phoneNumberCompany } });
-      token = await TokenService.createToken(user.id, 'EMAIL_VERIFICATION', tx);
+      token = await TokenService.createToken(user.id, 'EMAIL_VERIFICATION',);
       return user;
     });
 

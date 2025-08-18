@@ -78,7 +78,7 @@ class App {
 
     private errorHandler(): void {
         this.app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-            console.error(error); // Menampilkan error lengkap di konsol
+            console.error(error); 
             res.status(error.statusCode || 500).json({
                 success: false,
                 message: error.message || "Internal Server Error",
