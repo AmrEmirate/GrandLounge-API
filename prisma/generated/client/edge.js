@@ -290,7 +290,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Dev 1\\grand-lodge\\BE-FINPRO-GRANDLOUNGE\\prisma\\generated\\client",
+      "value": "/Users/macbook/Documents/NGODING/modul-purwadhika-main/04. FINAL PROJECT/BE-FINPRO-GRANDLOUNGE/prisma/generated/client",
       "fromEnvVar": null
     },
     "config": {
@@ -299,16 +299,16 @@ const config = {
     "binaryTargets": [
       {
         "fromEnvVar": null,
-        "value": "windows",
+        "value": "darwin-arm64",
         "native": true
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Dev 1\\grand-lodge\\BE-FINPRO-GRANDLOUNGE\\prisma\\schema.prisma",
+    "sourceFilePath": "/Users/macbook/Documents/NGODING/modul-purwadhika-main/04. FINAL PROJECT/BE-FINPRO-GRANDLOUNGE/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": "../../../.env",
+    "rootEnvPath": null,
     "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../..",

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import passport from 'passport';
 import ConfirmPaymentController from "../controllers/ConfirmPayment.controller";
-import { isTenant } from "../middleware/auth.middleware";
+import { isTenant } from "../middleware/isTenant";
 
 export default class ConfirmPaymentRouter {
     private router: Router;
