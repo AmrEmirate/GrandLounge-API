@@ -1,19 +1,27 @@
 import CancelOrderRepository from "../repositories/CancelOrder.repositroy";
 import ApiError from "../utils/apiError";
 
-export const CancelOrderService = async (bookingId: number) => {
-    const cancelOrderRepo = new CancelOrderRepository(); 
+const cancelOrderRepo = new CancelOrderRepository();
 
-    const result = await cancelOrderRepo.cancelOrder(bookingId);
+export const CancelOrderService = async (bookingId: number, userId: number, isTenant: boolean) => {
 
-    if (!result) {
-        throw new ApiError(404, "Transaction not found.");
+    const booking = await cancelOrderRepo.findBookingById(bookingId);
+
+    if (!booking) {
+        throw new ApiError(404, "Pesanan tidak di temukan")
     }
 
-    if (result.status !== "DIBATALKAN") {
-        throw new ApiError(400, "Cannot cancel this transaction")
+    // Validasi otorisasi
+    if (booking.userId !== userId && (!isTenant || booking.property.tenantId !== userId)) {
+        throw new ApiError(403, "Anda tidak memiliki izin untuk membatalkan pesanan ini.")
     }
 
-    const cancelOrder = await cancelOrderRepo.cancelOrder(bookingId);
+    // Validasi status
+    if (booking.status !== "MENUNGGU_PEMBAYARAN" && booking.status !== "MENUNGGU_KONFIRMASI") {
+        throw new ApiError(400, "Pesanan ini tidak dapat dibatalkan.");
+    }
+
+
+    const cancelOrder = await cancelOrderRepo.updateBookingStatus(bookingId, "DIBATALKAN");
     return cancelOrder;
 }

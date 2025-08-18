@@ -9,19 +9,17 @@ export class OrderReminderController {
         next: NextFunction
     ): Promise<void> {
         try {
-            // Mengambil ID booking dari body permintaan
             const { bookingId } = req.body;
             if (!bookingId) {
                 throw new ApiError(400, "Booking ID is required.");
             }
 
-            // Memanggil service untuk menjalankan logika
-            await sendOrderConfirmation(parseInt(bookingId));
+            const result = await sendOrderConfirmation(parseInt(bookingId));
 
-            // Mengirim respons sukses ke klien
             res.status(200).json({
                 success: true,
                 message: "Confirmation email sent successfully.",
+                data: result
             });
         } catch (error) {
             next(error)

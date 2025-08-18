@@ -1,0 +1,40 @@
+import CalenderReportRepositori from "../repositories/CalenderReport.repositori";
+import ApiError from "../utils/apiError";
+
+const calenderRepo = new CalenderReportRepositori();
+
+export const getCalenderReport = async (tenantId: number, propertyId: number, startDate: Date, endDate: Date) => {
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        throw new ApiError(400, "Invalid date time")
+    }
+
+    if (startDate > endDate) {
+        throw new ApiError(400, "Start date cannot be after end date.")
+    }
+
+    const rawAvailabilityData = await calenderRepo.getRoomAvailibity(
+        tenantId,
+        propertyId,
+        startDate,
+        endDate
+    );
+
+    const calenderDate: { [key: string]: any[] } = {};
+
+    for (const record of rawAvailabilityData) {
+        const dateString = record.date.toISOString().split('T')[0];
+
+        if (!calenderDate[dateString]) {
+            calenderDate[dateString] = [];
+        }
+
+        calenderDate[dateString].push({
+            roomId: record.roomId,
+            roomName: record.room.name,
+            isAvailable: record.isAvailable,
+            price: record.price,
+        });
+    }
+
+    return calenderDate;
+}

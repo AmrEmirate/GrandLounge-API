@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { CancelOrderService } from "../services/CancelOrder.service";
+import { isTenant } from "../middleware/isTenant";
 
 export class CancelOrderControllers {
     public async cancelOrder(
@@ -9,7 +10,11 @@ export class CancelOrderControllers {
     ): Promise<void> {
         try {
             const { id } = req.params;
-            const canceledOrder = await CancelOrderService(Number(id));
+            const user = req.user as any;
+
+            const userId = user.id;
+            const isTenant = user.role === 'TENANT'
+            const canceledOrder = await CancelOrderService(Number(id), userId, isTenant);
     
             res.status(200).json({
                 success: true,

@@ -5,8 +5,8 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import passport from 'passport';
 
 // Impor Konfigurasi
-import './config/passport'; 
-import './scheduler'; 
+import './config/passport';
+import './scheduler';
 
 // Impor Router dari Feature 1 
 import authRouter from './routers/auth.router';
@@ -20,7 +20,8 @@ import RoomReservationRouter from "./routers/roomReservation.router";
 import OrderListRouter from "./routers/orderList.router";
 import CancelOrderRouter from "./routers/cancelOrder.router";
 import ConfirmPaymentRouter from "./routers/confirmPayment.router";
-import OrderReminderRouter from "./routers/orderPayment.router"; 
+import OrderReminderRouter from "./routers/orderPayment.router";
+import ReviewRouter from "./routers/review.router";
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -38,7 +39,7 @@ class App {
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
-        this.app.use(passport.initialize()); 
+        this.app.use(passport.initialize());
     }
 
     private routes(): void {
@@ -55,13 +56,19 @@ class App {
         const cancelOrder = new CancelOrderRouter();
         const confirmPayment = new ConfirmPaymentRouter();
         const sendConfirm = new OrderReminderRouter();
+        const review = new ReviewRouter();
+        const report = new ReviewRouter();
+        const calender = new CancelOrderRouter();
 
         this.app.use("/api/reservations", reservationRouter.getRouter());
         this.app.use("/api/payments", uploadPayment.getRouter());
-        this.app.use("/api/orders", orderList.getRouter()); 
+        this.app.use("/api/orders", orderList.getRouter());
         this.app.use("/api/order-cancel", cancelOrder.getRouter());
-        this.app.use("/api/payment-confirm", confirmPayment.getRouter()); 
-        this.app.use("/api/send-reminder", sendConfirm.getRouter()); 
+        this.app.use("/api/payment-confirm", confirmPayment.getRouter());
+        this.app.use("/api/send-reminder", sendConfirm.getRouter());
+        this.app.use("/api/review", review.getRouter());
+        this.app.use("/api/report", report.getRouter());
+        this.app.use("/api/calender", calender.getRouter());
 
         // Rute dasar
         this.app.get("/", (req: Request, res: Response) => {

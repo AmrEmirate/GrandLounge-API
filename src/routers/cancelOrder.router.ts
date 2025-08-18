@@ -2,6 +2,7 @@ import { Router } from "express";
 import { CancelOrderControllers } from "../controllers/CancelOrder.controller";
 import { verifyToken } from "../middleware/verifyToken";
 import { isUser } from "../middleware/isUser";
+import { isTenant } from "../middleware/isTenant";
 
 export default class CancelOrderRouter {
     private router: Router;
@@ -14,12 +15,21 @@ export default class CancelOrderRouter {
     }
 
     private initializeRoutes() {
+        // Endpoint untuk pembatalan oleh User
         this.router.patch(
-            "/cancel/:id",
+            "/user/cancel/:id",
             verifyToken,
             isUser,
             this.cancelOrderControllers.cancelOrder
-        )
+        );
+
+        // Endpoint untuk pembatalan oleh Tenant
+        this.router.patch(
+            "/tenant/cancel/:id",
+            verifyToken,
+            isTenant,
+            this.cancelOrderControllers.cancelOrder
+        );
     }
 
     public getRouter(): Router {
