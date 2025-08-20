@@ -26,7 +26,7 @@ export const AuthService = {
     const result = await prisma.$transaction(async (tx) => {
       user = await tx.user.create({ data: { fullName: data.fullName, email: data.email, role: UserRole.TENANT } });
       await tx.tenant.create({ data: { userId: user.id, companyName: data.companyName, addressCompany: data.addressCompany, phoneNumberCompany: data.phoneNumberCompany } });
-      token = await TokenService.createToken(user.id, 'EMAIL_VERIFICATION',);
+      token = await TokenService.createToken(user.id, 'EMAIL_VERIFICATION', tx);
       return user;
     });
 
