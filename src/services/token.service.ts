@@ -10,6 +10,11 @@ export const TokenService = {
   createToken: async (userId: number, purpose: TokenPurpose, tx?: PrismaTransactionClient, expiresInHours: number = 1) => {
     const prismaClient = tx || prisma;
     const token = crypto.randomBytes(32).toString('hex');
+    const user = await prismaClient.user.findUnique({ where: { id: userId } });
+    
+    if (!user) {
+        throw new Error("User not found to create token");
+    }
 
     await prismaClient.token.create({
       data: {
@@ -19,6 +24,9 @@ export const TokenService = {
         userId,
       },
     });
+
+    // Baris ini menampilkan token di terminal
+    console.log(`[DEBUG] Token for ${purpose} for ${user.email}: ${token}`);
     
     return token;
   },
