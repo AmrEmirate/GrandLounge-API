@@ -1,62 +1,60 @@
+// src/services/SendEmailNotification.service.ts
 import nodemailer from 'nodemailer';
+import { Booking, User, Property } from '../generated/prisma';
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    }
-})
+// Fungsi untuk mengirim email konfirmasi pemesanan
+export const sendBookingConfirmEmail = async (booking: Booking & { user: User; property: Property }) => {
+    // Implementasi pengiriman email
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    });
 
-export const sendNotification = async (userId: number, message: string) => {
-    try {
-        console.log(`Sending notification to user ${userId}: ${message}`);
-    } catch (error) {
-        console.error("Failed to send notification:", error)
-    }
-}
-
-export const sendBookingConfirmEmail = async (booking: any) => {
     const mailOptions = {
-        from: `"Grand Loungue" <${process.env.EMAIL_USER}>`,
-        to: booking.userEmail,
-        subject: "Booking Confirmation - Hotel XYZ",
-        text: `Hello ${booking.userName},\n\nYour booking has been confirmed!\n\nDetails:\n- Room: ${booking.roomName}\n- Check-in: ${booking.startDate}\n- Check-out: ${booking.endDate}\n- Total Price: Rp${booking.totalPrice}\n\nWe look forward to your stay!`,
+        from: process.env.EMAIL_USER,
+        to: booking.user.email,
+        subject: 'Pemesanan Anda Telah Dikonfirmasi',
         html: `
-          <h2>Booking Confirmation</h2>
-          <p>Hello <b>${booking.userName}</b>,</p>
-          <p>Your booking has been confirmed! 🎉</p>
-          <ul>
-            <li><b>Room:</b> ${booking.roomName}</li>
-            <li><b>Check-in:</b> ${booking.startDate}</li>
-            <li><b>Check-out:</b> ${booking.endDate}</li>
-            <li><b>Total Price:</b> Rp${booking.totalPrice}</li>
-          </ul>
-          <p>We look forward to your stay at <b>Hotel XYZ</b>!</p>
-        `,
-    }
+            <h1>Detail Pemesanan</h1>
+            <p>Pemesanan Anda untuk properti **${booking.property.name}** telah dikonfirmasi.</p>
+            <p><strong>Tanggal Check-in:</strong> ${booking.checkIn.toDateString()}</p>
+            <p><strong>Tanggal Check-out:</strong> ${booking.checkOut.toDateString()}</p>
+            <h2>Aturan Properti:</h2>
+            <p>${booking.property.description || 'Tidak ada aturan properti yang ditetapkan.'}</p>
+        `
+    };
 
-    await transporter.sendMail(mailOptions)
-}
+    await transporter.sendMail(mailOptions);
+    console.log(`Email konfirmasi dikirim ke ${booking.user.email}`);
+};
 
-export const sendCheckinReminderEmail = async (booking: any) => {
+// Fungsi untuk mengirim pengingat H-1 check-in
+export const sendCheckinReminderEmail = async (booking: Booking & { user: User; property: Property }) => {
+    // Implementasi pengiriman email pengingat
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        }
+    });
+
     const mailOptions = {
-        from: `"Grand Loungue" <${process.env.EMAIL_USER}>`,
-        to: booking.userEmail,
-        subject: "Reminder: Your Check-in is Tomorrow!",
-        text: `Hello ${booking.userName},\n\nThis is a friendly reminder that your check-in is scheduled for tomorrow.\n\nDetails:\n- Room: ${booking.roomName}\n- Check-in: ${booking.startDate}\n- Check-out: ${booking.endDate}\n\nWe look forward to welcoming you!`,
+        from: process.env.EMAIL_USER,
+        to: booking.user.email,
+        subject: 'Pengingat Check-in Besok!',
         html: `
-          <h2>Check-in Reminder</h2>
-          <p>Hello <b>${booking.userName}</b>,</p>
-          <p>Just a reminder that your check-in is <b>tomorrow</b> 🏨</p>
-          <ul>
-            <li><b>Room:</b> ${booking.roomName}</li>
-            <li><b>Check-in:</b> ${booking.startDate}</li>
-            <li><b>Check-out:</b> ${booking.endDate}</li>
-          </ul>
-          <p>We look forward to welcoming you at <b>Hotel XYZ</b>!</p>
-        `,
-    }
+            <h1>Pengingat Check-in</h1>
+            <p>Hai ${booking.user.fullName},</p>
+            <p>Ini adalah pengingat bahwa Anda akan melakukan check-in di **${booking.property.name}** besok pada tanggal ${booking.checkIn.toDateString()}.</p>
+            <h2>Aturan Properti:</h2>
+            <p>${booking.property.description || 'Tidak ada aturan properti yang ditetapkan.'}</p>
+        `
+    };
 
-    await transporter.sendMail(mailOptions)
-}
+    await transporter.sendMail(mailOptions);
+    console.log(`Email pengingat dikirim ke ${booking.user.email}`);
+};

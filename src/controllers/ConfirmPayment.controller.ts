@@ -1,35 +1,44 @@
+// src/controllers/ConfirmPayment.controller.ts
 import { Request, Response, NextFunction } from "express";
 import ApiError from "../utils/apiError";
 import { ConfirmPaymentService } from "../services/ConfirmPayment.service";
+import { prisma } from "../config/prisma"; // Pastikan Anda mengimpor Prisma
 
 class ConfirmPaymentController {
-    public async confirmPayment (
+    public async confirmPayment(
         req: Request,
         res: Response,
         next: NextFunction
     ): Promise<void> {
         try {
-            const tenantId = (req.user as any).tenant.id;
-            
-            const {bookingId, isAccepted} = req.body;
+            const userId = (req.user as any)?.id; 
 
-            // Validasi awal: pastikan ID booking dan status konfirmasi ada.
+            const tenant = await prisma.tenant.findUnique({
+                where: { userId: userId },
+            });
+
+            if (!tenant) {
+                throw new ApiError(403, "Tenant account not found.");
+            }
+
+            const { bookingId } = req.params;
+            const { isAccepted } = req.body;
+
             if (bookingId === undefined || isAccepted === undefined) {
                 throw new ApiError(400, "Booking ID and acceptance status are required.");
             }
 
-            // Panggil service untuk menjalankan logika konfirmasi pembayaran.
             const result = await ConfirmPaymentService(
-                tenantId,
+                tenant.id, 
                 parseInt(bookingId),
                 isAccepted
-            )
+            );
 
             res.status(200).json({
                 success: true,
                 message: "Payment confirmation status updated successfully.",
                 data: result
-            })
+            });
         } catch (error) {
             next(error)
         }

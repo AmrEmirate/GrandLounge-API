@@ -5,14 +5,14 @@ import { prisma } from "../config/prisma";
 
 export default class RoomReservationRepository {
     async checkRoomAvailability(roomId: number, newStartDate: Date, newEndDate: Date) {
-        const existingBookings = await prisma.booking_Rooms.findMany({
+        const existingBookings = await prisma.bookingRoom.findMany({
             where: {
-                room_id: roomId,
+                roomId: roomId,
                 booking: {
-                    status: { in: [BookingStatus.SUDAH_DIBAYAR, BookingStatus.MENUNGGU_PEMBAYARAN] },
+                    status: { in: [BookingStatus.DIPROSES, BookingStatus.MENUNGGU_PEMBAYARAN] },
                     AND: [
-                        { check_out: { gt: newStartDate } },
-                        { check_in: { lt: newEndDate } }
+                        { checkOut: { gt: newStartDate } },
+                        { checkIn: { lt: newEndDate } }
                     ]
                 }
             },
@@ -28,7 +28,7 @@ export default class RoomReservationRepository {
     async findRoomById(id: number) {
         return prisma.room.findUnique({
             where: { id },
-            select: { id: true, property_id: true, basePrice: true },
+            select: { id: true, propertyId: true, basePrice: true },
         });
     }
 
@@ -37,10 +37,10 @@ export default class RoomReservationRepository {
         const hashed = await bcrypt.hash(raw, 10);
         return prisma.user.upsert({
             where: { email: userData.email },
-            update: { full_name: userData.name },
+            update: { fullName: userData.name },
             create: {
                 role: "USER",
-                full_name: userData.name,
+                fullName: userData.name,
                 email: userData.email,
                 password: hashed,
             },
@@ -49,10 +49,10 @@ export default class RoomReservationRepository {
 
     async findTransactionByAccountId(userId: number) {
         return prisma.booking.findMany({
-            where: { user_id: userId },
+            where: { userId: userId },
             include: {
                 property: true,
-                booking_rooms: { include: { room: true } },
+                bookingRooms: { include: { room: true } },
             },
         });
     }
@@ -63,7 +63,7 @@ export default class RoomReservationRepository {
             include: {
                 user: true,
                 property: true,
-                booking_rooms: { include: { room: true } },
+                bookingRooms: { include: { room: true } },
             },
         });
     }

@@ -16,18 +16,17 @@ export default class ReviewRouter {
 
     private initialRoutes(): void {
         this.router.post(
-            "/",
+            "/comment",
             verifyToken,
             isUser,
-            this.review.submitReview
-        )
+            this.review.submitReview);
 
         this.router.patch(
             "/reply/:reviewId",
             verifyToken,
             isTenant,
-            this.review.replyToComment
-        )
+            this.review.replyToComment);
+
     }
 
     public getRouter(): Router {

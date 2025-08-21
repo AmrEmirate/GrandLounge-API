@@ -1,7 +1,7 @@
 import { Router } from "express";
-import passport from 'passport';
 import ConfirmPaymentController from "../controllers/ConfirmPayment.controller";
 import { isTenant } from "../middleware/isTenant";
+import { verifyToken } from "../middleware/verifyToken";
 
 export default class ConfirmPaymentRouter {
     private router: Router;
@@ -14,13 +14,11 @@ export default class ConfirmPaymentRouter {
     }
 
     private initializeRoutes() {
-        this.router.use(passport.authenticate('jwt', { session: false }));
-
         this.router.patch(
-            '/confirm-payment', 
-            passport.authenticate('jwt', { session: false }),
+            '/confirm/:bookingId', 
+            verifyToken,
             isTenant,
-            this.confirmPayment.confirmPayment.bind(this.confirmPayment) 
+            this.confirmPayment.confirmPayment 
           );
     }
 

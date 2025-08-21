@@ -11,26 +11,26 @@ export class CalenderReportController {
         try {
             const user = req.user as any;
             const tenantId = user.id;
-            const { propertyId, startDate, endDate } = req.query
+            const { propertyId, startDate, endDate } = req.query;
 
-            if (!propertyId || !startDate || !endDate) {
-                throw new ApiError(400, "propertyId, startDate, and endDate are required.");
+            if (!startDate || !endDate) {
+                throw new ApiError(400, "startDate and endDate are required.");
             }
 
             const reportData = await getCalenderReport(
                 tenantId,
-                parseInt(propertyId as string),
+                propertyId ? parseInt(propertyId as string) : undefined,
                 new Date(startDate as string),
                 new Date(endDate as string)
             );
 
             res.status(200).json({
                 success: true,
-                message: "Laporan ketersediaan berhasil diambil.",
+                message: "Laporan ketersediaan properti berhasil diambil.",
                 data: reportData
-            })
+            });
         } catch (error) {
-            next(error)
+            next(error);
         }
     }
 }

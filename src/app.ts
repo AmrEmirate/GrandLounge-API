@@ -1,3 +1,4 @@
+// src/App.ts
 import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
@@ -20,8 +21,12 @@ import RoomReservationRouter from "./routers/roomReservation.router";
 import OrderListRouter from "./routers/orderList.router";
 import CancelOrderRouter from "./routers/cancelOrder.router";
 import ConfirmPaymentRouter from "./routers/confirmPayment.router";
-import OrderReminderRouter from "./routers/orderPayment.router";
+import OrderReminderRouter from "./routers/orderReminder.router";
 import ReviewRouter from "./routers/review.router";
+import ReportRouter from "./routers/report.router";
+import CalenderRouter from "./routers/calenderReport.router";
+
+import { startSchedulers } from "./scheduler/index";
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -57,8 +62,8 @@ class App {
         const confirmPayment = new ConfirmPaymentRouter();
         const sendConfirm = new OrderReminderRouter();
         const review = new ReviewRouter();
-        const report = new ReviewRouter();
-        const calender = new CancelOrderRouter();
+        const report = new ReportRouter();
+        const calender = new CalenderRouter();
 
         this.app.use("/api/reservations", reservationRouter.getRouter());
         this.app.use("/api/payments", uploadPayment.getRouter());
@@ -78,7 +83,7 @@ class App {
 
     private errorHandler(): void {
         this.app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-            console.error(error); 
+            console.error(error);
             res.status(error.statusCode || 500).json({
                 success: false,
                 message: error.message || "Internal Server Error",
@@ -89,6 +94,7 @@ class App {
     public start(): void {
         this.app.listen(PORT, () => {
             console.log(`Server is Running on http://localhost:${PORT}`);
+            startSchedulers();
         });
     }
 }

@@ -15,7 +15,6 @@ export default class CancelOrderRouter {
     }
 
     private initializeRoutes() {
-        // Endpoint untuk pembatalan oleh User
         this.router.patch(
             "/user/cancel/:id",
             verifyToken,
@@ -23,7 +22,6 @@ export default class CancelOrderRouter {
             this.cancelOrderControllers.cancelOrder
         );
 
-        // Endpoint untuk pembatalan oleh Tenant
         this.router.patch(
             "/tenant/cancel/:id",
             verifyToken,

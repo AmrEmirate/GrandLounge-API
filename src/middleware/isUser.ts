@@ -15,7 +15,7 @@ export const isUser = (
         return;
     }
 
-    if (user.role !== "CUSTOMER") {
+    if (user.role !== "USER") {
         res.status(403).send({
             success: false,
             message: `Access denied: Role is ${user.role}, expected CUSTOMER`

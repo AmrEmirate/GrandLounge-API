@@ -5,33 +5,34 @@ export default class OrderListRepositroy {
     async findReservationByFilter(accountId: number, filter: {
         checkIn?: Date,
         checkOut?: Date,
-        invoiceNumber?: string
+        invoiceNumber?: string,
+        status?: string
     }) {
         const whereCondition: Prisma.BookingWhereInput = {
-            user_id: accountId,
+            userId: accountId,
+            ...(filter.status && { status: filter.status as BookingStatus }),
         };
 
         if (filter.invoiceNumber) {
-            whereCondition.invoice_number = {
+            whereCondition.invoiceNumber = {
                 contains: filter.invoiceNumber,
+                mode: "insensitive"
             };
         };
 
-        if (filter.checkIn) {
-            whereCondition.check_in = {
-                gte: filter.checkIn
-            };
-        };
-
-        if (filter.checkOut) {
-            whereCondition.check_out = {
-                lte: filter.checkOut
-            };
+        if (filter.checkIn || filter.checkOut) {
+            whereCondition.checkIn = {};
+            if (filter.checkIn) {
+                whereCondition.checkIn.gte = filter.checkIn;
+            }
+            if (filter.checkOut) {
+                whereCondition.checkIn.lte = filter.checkOut;
+            }
         };
 
         return prisma.booking.findMany({
             where: whereCondition,
-            include: { booking_rooms: true },
+            include: { bookingRooms: true },
             orderBy: { createdAt: 'desc' }
         })
 
@@ -39,10 +40,10 @@ export default class OrderListRepositroy {
 
     async tenantTransactionList(tenantId: number, status?: string) {
         const whereCondition: Prisma.BookingWhereInput = {
-            booking_rooms: {
+            bookingRooms: {
                 some: {
                     room: {
-                        property_id: tenantId
+                        propertyId: tenantId
                     }
                 }
             }
@@ -55,7 +56,7 @@ export default class OrderListRepositroy {
         return prisma.booking.findMany({
             where: whereCondition,
             include: {
-                booking_rooms: {
+                bookingRooms: {
                     include: {
                         room: {
                             include: {

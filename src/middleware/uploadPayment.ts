@@ -1,18 +1,17 @@
 import { Request } from 'express';
 import multer from 'multer';
+import ApiError from '../utils/apiError';
 
 export const uploadMemory = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 1 * 1024 * 1024 }, // 1 MB
     fileFilter: (req: Request, file: Express.Multer.File, callback) => {
-        const allowedExt = /\.(jpg|png)$/i;
-        const allowedMime = ["image/jpeg", "image/png"];
-        if (!allowedExt.test(file.originalname.toLowerCase()) || !allowedMime.includes(file.mimetype)) {
-            return callback(
-                new Error("Only .jpg and .png files are allowed")
-            );
+        const allowedMimes = ["image/jpeg", "image/png"];
+        if (allowedMimes.includes(file.mimetype)) {
+            callback(null, true);
+        } else {
+            callback(new ApiError(400, "Invalid file type. Only JPG and PNG are allowed."));
         }
-        callback(null, true);
     }
 })
 

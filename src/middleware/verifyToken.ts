@@ -13,7 +13,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
 
         const token = req.headers.authorization?.split(" ")[1];
         console.log("TOKEN:", token);
-        console.log("SECRET:", process.env.TOKEN_KEY);
+        console.log("SECRET:", process.env.JWT_SECRET);
 
         logger.info("Token:", token);
 
@@ -21,8 +21,10 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
             throw new ApiError(404, "Token is missing");
         }
 
-        const checkToken = verify(token, process.env.TOKEN_KEY || "fallback_secret")
+        const checkToken = verify(token, process.env.JWT_SECRET || "fallback_secret")
         console.log("Decoded token:", checkToken);
+
+        (req as any).user = checkToken;
 
         // jika token tidak valid, akan di lempar error
         res.locals.descript = checkToken as JwtPayload;

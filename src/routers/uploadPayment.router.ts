@@ -2,6 +2,7 @@ import { Router } from "express";
 import uploadPaymentController from "../controllers/UploadPayment.Controller";
 import { verifyToken } from "../middleware/verifyToken";
 import { isUser } from "../middleware/isUser";
+import { uploadPaymentProof } from "../middleware/uploadPayment";
 
 class UploadPaymentRouter {
     private router: Router;
@@ -17,6 +18,7 @@ class UploadPaymentRouter {
             "/:transactionId/upload-proof",
             verifyToken,
             isUser,
+            uploadPaymentProof,
             this.uploadPaymentController.uploadPaymentProof
         );
     }

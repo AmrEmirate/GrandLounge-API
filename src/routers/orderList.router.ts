@@ -7,31 +7,29 @@ import { isTenant } from "../middleware/isTenant";
 
 export default class OrderListRouter {
     private router: Router;
-    private OrderList: OrderListController;
+    private orderList: OrderListController;
 
     constructor() {
         this.router = Router();
-        this.OrderList = new OrderListController();
+        this.orderList = new OrderListController();
         this.initializeRoutes();
     }
 
     private initializeRoutes() {
-        this.router.use(passport.authenticate('jwt', { session: false }));
-
         this.router.get(
             '/order-list',
             verifyToken,
             isUser,
-            this.OrderList.orderList
-        )
-        
+            this.orderList.orderList
+        );
+
         this.router.get(
             '/tenant-transaction-list',
             verifyToken,
             isTenant,
-            this.OrderList.tenantTransactionList
-        )
-    }
+            this.orderList.tenantTransactionList
+        );
+    };
 
     public getRouter(): Router {
         return this.router;

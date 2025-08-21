@@ -2,6 +2,7 @@ import { Router } from "express";
 import RoomReversationController from "../controllers/RoomReservation.controller";
 import { isUser } from "../middleware/isUser";
 import { verifyToken } from "../middleware/verifyToken";
+import { isTenant } from "../middleware/isTenant";
 
 class RoomReservationRouter {
     private router: Router;
@@ -36,7 +37,7 @@ class RoomReservationRouter {
         this.router.patch
             ("/:id/status", 
                 verifyToken,
-                isUser,
+                isTenant,
                 this.reservationController.updateReservationStatusController);
 
     }

@@ -33,16 +33,15 @@ export const createReservationService = async (
     const invoiceNumber = `INV-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
     const newBooking = await reservationRepo.createTransaction({
-        invoice_number: invoiceNumber,
-        check_in: check_in,
-        check_out: check_out,
-        total_price: totalPrice,
-        amount: totalPrice,
+        invoiceNumber: invoiceNumber,
+        checkIn: check_in,
+        checkOut: check_out,
+        totalPrice: totalPrice,
         status: BookingStatus.MENUNGGU_PEMBAYARAN,
-        category_room: RoomCategory.STANDARD,
-        payment_deadline: new Date(Date.now() + 2 * 60 * 60 * 1000),
+        paymentDeadline: new Date(Date.now() + 1 * 60 * 60 * 1000),
+        // paymentDeadline: new Date(Date.now() + 15 * 1000), // testing
         user: { connect: { id: user.id } },
-        property: { connect: { id: room.property_id } },
+        property: { connect: { id: room.propertyId } },
     });
 
 

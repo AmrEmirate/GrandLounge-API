@@ -1,3 +1,4 @@
+// src/services/OrderReminder.service.ts
 import OrderReminderRepository from "../repositories/OrderReminder.repositori";
 import ApiError from "../utils/apiError";
 import { sendBookingConfirmEmail, sendCheckinReminderEmail } from "../services/SendEmailNotification.service";
@@ -8,7 +9,7 @@ const reminderRepo = new OrderReminderRepository();
 export const sendOrderConfirmation = async (bookingId: number) => {
     const booking = await reminderRepo.findBookingById(bookingId);
     if (!booking) throw new ApiError(404, "Booking not found.");
-    if (booking.status !== "MENUNGGU_PEMBAYARAN") throw new ApiError(400, "Invalid status.");
+    // if (booking.status !== BookingStatus.DIPROSES) throw new ApiError(400, "Invalid status.");
 
     await sendBookingConfirmEmail(booking);
 };
@@ -17,7 +18,7 @@ export const sendOrderConfirmation = async (bookingId: number) => {
 export const sendDailyReminders = async () => {
     const upcomingBookings = await reminderRepo.findUpcomingBookings();
     console.log(`Found ${upcomingBookings.length} bookings for reminder.`);
-    
+
     for (const booking of upcomingBookings) {
         await sendCheckinReminderEmail(booking);
     }

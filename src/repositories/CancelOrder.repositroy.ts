@@ -6,18 +6,16 @@ export default class CancelOrderRepository {
         return prisma.booking.findUnique({
             where: { id: bookingId },
             include: {
-                user: true, // Sertakan data user
-                property: { // Sertakan data properti
+                user: true, 
+                property: { 
                     include: {
-                        tenant: true, // Sertakan data tenant dari properti
+                        tenant: true,
                     },
                 },
             },
         });
     }
 
-    // Fungsi yang Anda berikan, untuk mengubah status.
-    // Fungsi ini akan dipanggil setelah validasi di service berhasil.
     async updateBookingStatus(bookingId: number, newStatus: BookingStatus) {
         return prisma.booking.update({
             where: { id: bookingId },

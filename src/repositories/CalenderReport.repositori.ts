@@ -3,20 +3,20 @@ import { prisma } from "../config/prisma";
 export default class CalenderReportRepositori {
     async getRoomAvailibity(
         tenantId: number,
-        propertyId: number,
-        startDate: Date,
-        endDate: Date
+        propertyId?: number,
+        startDate?: Date,
+        endDate?: Date
     ) {
         return prisma.roomAvailability.findMany({
             where: {
-                date: {
+                date: startDate && endDate ? {
                     gte: startDate,
                     lte: endDate
-                },
+                } : undefined,
                 room: {
-                    propertyId: propertyId,
                     property: {
-                        tenantId: tenantId
+                        tenantId: tenantId,
+                        ...(propertyId ? { id: propertyId } : {}), 
                     },
                 },
             },
@@ -24,7 +24,13 @@ export default class CalenderReportRepositori {
                 room: {
                     select: {
                         id: true,
-                        name: true
+                        name: true,
+                        property: {
+                            select: {
+                                id: true,
+                                name: true,
+                            }
+                        }
                     },
                 },
             },

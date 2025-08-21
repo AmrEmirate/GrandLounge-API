@@ -11,7 +11,7 @@ export const ConfirmPaymentService = async (tenantId: number, bookingId: number,
         throw new ApiError(404, "Booking not found")
     };
 
-    if (booking.property.tenant_id !== tenantId) {
+    if (booking.property.tenantId !== tenantId) {
         throw new ApiError(403, "You do not have permission to confirm this payment.");
     }
 
@@ -21,9 +21,9 @@ export const ConfirmPaymentService = async (tenantId: number, bookingId: number,
 
     let newStatus: BookingStatus;
     if (isAccepted) {
-        newStatus = BookingStatus.SUDAH_DIBAYAR;
+        newStatus = BookingStatus.DIPROSES;
     } else {
-        newStatus = BookingStatus.DIBATALKAN;
+        newStatus = BookingStatus.MENUNGGU_PEMBAYARAN;
     }
 
     const updatedBooking = await bookingRepo.updateBookingStatus(bookingId, newStatus);
@@ -32,7 +32,7 @@ export const ConfirmPaymentService = async (tenantId: number, bookingId: number,
     if (isAccepted) {
         const message = "Pembayaran Anda telah diterima. Pemesanan Anda sedang diproses.";
 
-        await sendNotification(updatedBooking.user_id, message);
+        await sendNotification(updatedBooking.userId, message);
     }
 
     return updatedBooking

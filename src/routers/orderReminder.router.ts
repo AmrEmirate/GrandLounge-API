@@ -1,23 +1,24 @@
 import { Router } from "express";
 import { OrderReminderController } from "../controllers/OrderReminder.controller";
+import { verifyToken } from "../middleware/verifyToken";
+import { isTenant } from "../middleware/isTenant";
 
 export default class OrderReminderRouter {
     private router: Router;
-    private controller: OrderReminderController;
+    private orderRemind: OrderReminderController;
 
     constructor() {
         this.router = Router();
-        this.controller = new OrderReminderController();
+        this.orderRemind = new OrderReminderController();
         this.initializeRoutes();
     }
 
     private initializeRoutes() {
-        // Menetapkan rute POST untuk mengirim email konfirmasi.
-        // Perhatikan bahwa rute ini tidak digunakan untuk pengingat otomatis.
-        // Pengingat otomatis dijalankan oleh scheduler.
         this.router.post(
-            "/send-confirmation",
-            this.controller.sendConfirm.bind(this.controller)
+            "/send-confirm", 
+            verifyToken, 
+            isTenant, 
+            this.orderRemind.sendConfirm
         );
     }
 
