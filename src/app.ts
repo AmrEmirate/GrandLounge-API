@@ -22,11 +22,10 @@ import OrderListRouter from "./routers/orderList.router";
 import CancelOrderRouter from "./routers/cancelOrder.router";
 import ConfirmPaymentRouter from "./routers/confirmPayment.router";
 import OrderReminderRouter from "./routers/orderReminder.router";
-import ReviewRouter from "./routers/review.router";
 import ReportRouter from "./routers/report.router";
 import CalenderRouter from "./routers/calenderReport.router";
-
 import { startSchedulers } from "./scheduler/index";
+import ReviewRouter from "./routers/review.router";
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -71,7 +70,7 @@ class App {
         this.app.use("/api/order-cancel", cancelOrder.getRouter());
         this.app.use("/api/payment-confirm", confirmPayment.getRouter());
         this.app.use("/api/send-reminder", sendConfirm.getRouter());
-        this.app.use("/api/review", review.getRouter());
+        this.app.use("/api/reviews", review.getRouter())
         this.app.use("/api/report", report.getRouter());
         this.app.use("/api/calender", calender.getRouter());
 

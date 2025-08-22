@@ -1,61 +1,71 @@
-import { Request, Response, NextFunction } from 'express';
-import { submitReview, replyToReview } from '../services/Review.service';
-import ApiError from "../utils/apiError";
+import { Request, Response, NextFunction } from "express";
+import { ReviewService } from "../services/Review.service";
+
+const reviewService = new ReviewService();
 
 export class ReviewController {
-    public async submitReview(
+    public async createReview(
         req: Request,
         res: Response,
         next: NextFunction
     ): Promise<void> {
-        console.log("1. Memulai submitReview di ReviewController");
         try {
-            const user = (res.locals as any).descript;
-            if (!user || !user.id) {
-                throw new ApiError(401, "User not authenticated or invalid token data.");
-            }
-            
-            console.log("2. User dari token:", user);
-            const { bookingId, propertyId, comment } = req.body;
-            console.log(`3. Data input: bookingId=${bookingId}, propertyId=${propertyId}, comment=${comment}`);
-            
-            const review = await submitReview(user.id, bookingId, propertyId, comment);
-            
-            console.log("4. Review berhasil dibuat, mengirim respons");
-            res.status(200).json({
+            const userId = (req.user as { id: number }).id;
+            const { bookingId, rating, comment } = req.body;
+
+            const review = await reviewService.createReview(
+                userId,
+                Number(bookingId),
+                Number(rating),
+                comment
+            );
+
+            res.status(201).json({
                 success: true,
-                message: "Review berhasil dikirim!",
-                data: review
+                message: "Review berhasil dibuat",
+                data: review,
             });
         } catch (error) {
-            console.error("Kesalahan di ReviewController:", error);
-            next(error);
+            next(error)
         }
     }
 
-    public async replyToComment( 
-        req: Request, 
-        res: Response, 
-        next: NextFunction 
-    ): Promise<void> { 
-        try { 
-            const user = (res.locals as any).descript; 
-            if (!user || !user.id) { 
-                throw new ApiError(401, "User not authenticated or invalid token data."); 
-            } 
-            
-            const { reviewId } = req.params; 
-            const { replyComment } = req.body; 
+    public async replyReview(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const { reviewId } = req.params;
+            const { reply } = req.body;
 
-            const updatedReview = await replyToReview(user.id, parseInt(reviewId), replyComment); 
+            const review = await reviewService.replyReview(Number(reviewId), reply);
+            res.status(200).json({
+                success: true,
+                message: "Reply berhasil dikirim",
+                data: review
+            })
+        } catch (error) {
+            next(error)
+        }
+    }
 
-            res.status(200).json({ 
-                success: true, 
-                message: "Balasan berhasil dikirim!", 
-                data: updatedReview 
-            }); 
-        } catch (error) { 
-            next(error); 
-        } 
+    public async getReviewByProperty(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const { propertyId } = req.params;
+            const review = await reviewService.getReviewsByProperty(Number(propertyId));
+
+            res.status(200).json({
+                success: true,
+                message: "Berhasil mendapatkan review pada property",
+                data: review
+            })
+        } catch (error) {
+            next(error)
+        }
     }
 }

@@ -1,32 +1,38 @@
 import { Router } from "express";
-import { isUser } from "../middleware/isUser";
-import { isTenant } from "../middleware/isTenant";
 import { ReviewController } from "../controllers/Review.controller";
-import { verifyToken } from "../utils/jwt";
+import { verifyToken } from "../middleware/verifyToken";
+import { isTenant } from "../middleware/isTenant";
+import { isUser } from "../middleware/isUser";
 
 export default class ReviewRouter {
     private router: Router;
-    private review: ReviewController;
+    private reviewController: ReviewController;
 
     constructor() {
         this.router = Router();
-        this.review = new ReviewController();
-        this.initialRoutes();
+        this.reviewController = new ReviewController();
+        this.initializeRoutes();
     }
 
-    private initialRoutes(): void {
+    private initializeRoutes(): void {
         this.router.post(
-            "/comment",
+            "/",
             verifyToken,
             isUser,
-            this.review.submitReview);
+            this.reviewController.createReview
+        );
 
-        this.router.patch(
-            "/reply/:reviewId",
+        this.router.post(
+            "/:reviewId/reply",
             verifyToken,
             isTenant,
-            this.review.replyToComment);
+            this.reviewController.replyReview
+        );
 
+        this.router.get(
+            "/property/:propertyId",
+            this.reviewController.getReviewByProperty
+        );
     }
 
     public getRouter(): Router {

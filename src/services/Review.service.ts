@@ -1,78 +1,44 @@
-import { PrismaClient } from "../generated/prisma";
-import ReviewRepository from "../repositories/Review.repositori";
+import { prisma } from "../config/prisma";
+import { ReviewRepository } from "../repositories/Review.repositori";
 import ApiError from "../utils/apiError";
 
-const prisma = new PrismaClient();
-const reviewRepo = new ReviewRepository();
+export class ReviewService {
+    private reviewRepo = new ReviewRepository();
 
-export const submitReview = async (userId: number, bookingId: number, propertyId: number, comment: string) => {
-    try {
-        console.log("Memulai submitReview di ReviewService");
-        
-        const booking = await prisma.booking.findUnique({
-            where: { id: bookingId },
-            include: {
-                review: true
-            }
-        });
-        
-        console.log("Booking ditemukan:", booking);
+    async createReview(userId: number, bookingId: number, rating: number, comment?: string) {
+        const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
 
         if (!booking) {
-            throw new ApiError(404, "Pemesanan tidak ditemukan.");
+            throw new ApiError(404, "Booking tidak di temukan")
         }
 
         if (booking.userId !== userId) {
-            throw new ApiError(403, "Anda tidak memiliki izin untuk memberi review pada pesanan ini.");
+            throw new ApiError(403, "Tidak Bisa Review Orang Lain")
         }
 
-        if (new Date(booking.checkOut) > new Date()) {
-            throw new ApiError(400, "Anda hanya bisa memberi review setelah tanggal check-out.");
+        if (booking.status !== "SELESAI") {
+            throw new ApiError(400, "Review hanya bisa setelah check out")
         }
 
-        if (booking.review) {
-            throw new ApiError(400, "Review sudah diberikan untuk pemesanan ini.");
+        const existing = await this.reviewRepo.findBookingById(bookingId);
+        if (existing) {
+            throw new ApiError(400, "Review sudah pernah di berikan")
         }
 
-        const newReview = await reviewRepo.createReview({
+        return this.reviewRepo.createReview({
+            userId,
+            propertyId: booking.propertyId,
+            bookingId,
+            rating,
             comment,
-            user: {
-                connect: { id: userId }
-            },
-            booking: {
-                connect: { id: bookingId }
-            },
-            property: {
-                connect: { id: propertyId }
-            }
         });
-        
-        console.log("Review berhasil dibuat:", newReview);
-        return newReview;
-
-    } catch (error) {
-        console.error("Kesalahan di ReviewService:", error);
-        throw error; // Melempar error ke controller untuk ditangani
     }
-} 
 
-export const replyToReview = async (tenantId: number, reviewId: number, replyComment: string) => { 
-    try {
-        const review = await reviewRepo.findReviewById(reviewId); 
+    async replyReview(reviewId: number, reply: string) {
+        return this.reviewRepo.replyReview(reviewId, reply)
+    }
 
-        if (!review) { 
-            throw new ApiError(404, "Review tidak ditemukan."); 
-        } 
-
-        if (review.booking.property.tenantId !== tenantId) { 
-            throw new ApiError(403, "Anda tidak memiliki izin untuk membalas review ini.") 
-        } 
-
-        return await reviewRepo.updateReview(reviewId, { 
-            tenantReply: replyComment 
-        }) 
-    } catch (error) {
-        console.error("Kesalahan di replyToReview:", error);
-        throw error;
+    async getReviewsByProperty(propertyId: number) {
+        return this.reviewRepo.getReviewsByProperty(propertyId)
     }
 }
