@@ -4,7 +4,7 @@ import { TenantPropertyService } from '../services/tenantProperty.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const PropertyController = {
-  // --- Panggil PublicPropertyService ---
+  // --- Fungsi untuk User (Publik) ---
   getAll: async (req: Request, res: Response) => {
     try {
       const result = await PublicPropertyService.getProperties(req.query);
@@ -49,7 +49,7 @@ export const PropertyController = {
     }
   },
 
-  // --- Panggil TenantPropertyService ---
+  // --- Fungsi untuk Tenant ---
   create: async (req: AuthRequest, res: Response) => {
     try {
       const tenantId = req.user?.tenant?.id;
@@ -112,6 +112,29 @@ export const PropertyController = {
       res.status(200).json({ message: 'Properti berhasil dihapus.' });
     } catch (error: any) {
       res.status(404).json({ message: error.message });
+    }
+  },
+  
+  uploadImage: async (req: AuthRequest, res: Response) => {
+    try {
+        const tenantId = req.user?.tenant?.id;
+        if (!tenantId) {
+            return res.status(403).json({ message: 'Akses ditolak.' });
+        }
+
+        const file = req.file;
+        if (!file) {
+            return res.status(400).json({ message: 'Tidak ada file yang diunggah.' });
+        }
+
+        const property = await TenantPropertyService.uploadPropertyImage(
+            Number(req.params.id), 
+            tenantId, 
+            file
+        );
+        res.status(200).json({ message: 'Gambar berhasil diunggah.', data: property });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
     }
   },
 };
