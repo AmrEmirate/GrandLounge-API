@@ -1,10 +1,11 @@
 import { PropertyRepository } from '../repositories/property.repository';
 import { Property } from '../generated/prisma';
+import { uploadToCloudinary } from '../utils/cloudinary';
 
 export const TenantPropertyService = {
   createProperty: async (data: any, tenantId: number): Promise<Property> => {
     const { name, categoryId, description, zipCode, amenityIds, cityId } = data;
-
+    
     const propertyData = {
       name,
       categoryId,
@@ -37,5 +38,16 @@ export const TenantPropertyService = {
   deleteProperty: async (id: number, tenantId: number): Promise<Property> => {
     await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
     return await PropertyRepository.softDelete(id);
+  },
+
+  uploadPropertyImage: async (id: number, tenantId: number, file: Express.Multer.File): Promise<Property> => {
+    // 1. Pastikan properti ini milik tenant yang sedang login
+    await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
+    
+    // 2. Upload file ke Cloudinary
+    const result = await uploadToCloudinary(file.buffer, 'property_images');
+    
+    // 3. Update database dengan URL gambar baru
+    return await PropertyRepository.update(id, { mainImage: result.secure_url });
   },
 };

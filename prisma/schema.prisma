@@ -79,7 +79,7 @@ model Category {
 
 model Amenity {
   id         Int        @id @default(autoincrement())
-  name       String     @unique // Contoh: "Wi-Fi", "Kolam Renang", "AC"
+  name       String     @unique 
   properties Property[]
 }
 
@@ -98,7 +98,7 @@ model Property {
   name        String
   categoryId  Int
   description String
-  cityId      Int             // <-- Menggantikan location, provinsi, lat, long
+  cityId      Int            
   zipCode     String
   mainImage   String?
   deletedAt   DateTime?
@@ -115,7 +115,7 @@ model Property {
   amenities   Amenity[]
 
   @@index([categoryId])
-  @@index([cityId]) // Index sekarang menggunakan cityId
+  @@index([cityId])   
 }
 
 model PropertyImage {
