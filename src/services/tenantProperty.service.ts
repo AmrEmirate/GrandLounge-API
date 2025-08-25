@@ -1,26 +1,19 @@
 import { PropertyRepository } from '../repositories/property.repository';
 import { Property } from '../generated/prisma';
-import { GeocodingService } from './geocoding.service';
 
 export const TenantPropertyService = {
   createProperty: async (data: any, tenantId: number): Promise<Property> => {
-    const { name, categoryId, description, location, provinsi, zipCode } = data;
-    const fullAddress = `${location}, ${provinsi}, ${zipCode}`;
-    
-    const { latitude, longitude } = await GeocodingService.getFromAddress(fullAddress);
+    const { name, categoryId, description, zipCode, amenityIds, cityId } = data;
 
     const propertyData = {
       name,
       categoryId,
       description,
-      location,
-      provinsi,
       zipCode,
-      latitude,
-      longitude,
+      cityId,
     };
 
-    return await PropertyRepository.create(propertyData, tenantId);
+    return await PropertyRepository.create(propertyData, tenantId, amenityIds);
   },
 
   getPropertiesByTenant: async (tenantId: number): Promise<Property[]> => {
@@ -36,8 +29,9 @@ export const TenantPropertyService = {
   },
 
   updateProperty: async (id: number, tenantId: number, data: any): Promise<Property> => {
+    const { amenityIds, ...propertyData } = data;
     await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
-    return await PropertyRepository.update(id, data);
+    return await PropertyRepository.update(id, propertyData, amenityIds);
   },
 
   deleteProperty: async (id: number, tenantId: number): Promise<Property> => {
