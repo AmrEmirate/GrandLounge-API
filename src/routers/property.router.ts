@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { PropertyController } from '../controllers/property.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '../generated/prisma';
 import roomRouter from './room.router';
 import upload from '../middleware/upload.middleware';
 
@@ -25,6 +25,12 @@ router.patch(
     tenantOnly,
     upload.single('propertyImage'),
     PropertyController.uploadImage
+);
+router.post(
+    '/my-properties/:id/gallery',
+    tenantOnly,
+    upload.array('galleryImages', 10),
+    PropertyController.uploadGallery
 );
 
 // --- Endpoint Terproteksi untuk Tenant (Manajemen Kamar) ---

@@ -8,7 +8,7 @@ export const PropertyRepository = {
 
     return await prisma.property.create({
       data: {
-        ...propertyData, // Menggunakan sisa data properti (name, description, zipCode, dll.)
+        ...propertyData, // Menggunakan sisa data properti (name, description, zipCode)
         tenant: {
           connect: { id: tenantId },
         },
@@ -44,6 +44,7 @@ export const PropertyRepository = {
         city: true,
         amenities: true,
         rooms: true,
+        images: true, // Menyertakan gambar galeri
       },
     });
   },
@@ -70,6 +71,22 @@ export const PropertyRepository = {
       data: {
         deletedAt: new Date(),
       },
+    });
+  },
+
+  addGalleryImages: async (propertyId: number, imageUrls: string[]) => {
+    const imageData = imageUrls.map(url => ({
+        propertyId: propertyId,
+        imageUrl: url,
+    }));
+
+    await prisma.propertyImage.createMany({
+        data: imageData,
+    });
+
+    return prisma.property.findUnique({ 
+        where: { id: propertyId }, 
+        include: { images: true } 
     });
   },
 };
