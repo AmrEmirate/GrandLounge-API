@@ -1,9 +1,12 @@
 import { PropertyRepository } from '../repositories/property.repository';
 import { Property } from '../generated/prisma';
+import { GeocodingService } from './geocoding.service';
 import { uploadToCloudinary } from '../utils/cloudinary';
+import { Express } from 'express'; // Pastikan Express diimpor untuk tipe Multer.File
 
 export const TenantPropertyService = {
   createProperty: async (data: any, tenantId: number): Promise<Property> => {
+    // Logika ini sudah diperbarui untuk menggunakan cityId
     const { name, categoryId, description, zipCode, amenityIds, cityId } = data;
     
     const propertyData = {
@@ -49,5 +52,21 @@ export const TenantPropertyService = {
     
     // 3. Update database dengan URL gambar baru
     return await PropertyRepository.update(id, { mainImage: result.secure_url });
+  },
+
+  uploadGalleryImages: async (id: number, tenantId: number, files: Express.Multer.File[]) => {
+    // 1. Pastikan properti ini milik tenant yang sedang login
+    await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
+
+    // 2. Upload semua file ke Cloudinary secara paralel
+    const uploadPromises = files.map(file => 
+        uploadToCloudinary(file.buffer, 'property_gallery')
+    );
+
+    const uploadResults = await Promise.all(uploadPromises);
+    const imageUrls = uploadResults.map(result => result.secure_url);
+
+    // 3. Simpan semua URL gambar baru ke database
+    return await PropertyRepository.addGalleryImages(id, imageUrls);
   },
 };
