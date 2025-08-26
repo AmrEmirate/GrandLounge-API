@@ -61,13 +61,18 @@ export default class RoomReservationRepository {
         return prisma.booking.findUnique({
             where: { id: bookingId },
             include: {
-                user: true,
-                property: true,
-                bookingRooms: { include: { room: true } },
+                property: {
+                    include: {
+                        city: true,       
+                        category: true,
+                    },
+                },
+                bookingRooms: {
+                    include: { room: true },
+                },
             },
         });
     }
-
     async updateTransaction(bookingId: number, data: Prisma.BookingUpdateInput) {
         return prisma.booking.update({
             where: { id: bookingId },

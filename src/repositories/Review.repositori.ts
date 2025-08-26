@@ -40,7 +40,11 @@ export class ReviewRepository {
 
     async getReviewsByProperty(propertyId: number) {
         return prisma.review.findMany({
-            where: { propertyId }
+            where: { propertyId },
+            include: {
+                user: true
+            }
         })
     }
+    
 }
