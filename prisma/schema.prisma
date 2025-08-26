@@ -37,6 +37,7 @@ enum RoomCategory {
 enum TokenPurpose {
   EMAIL_VERIFICATION
   PASSWORD_RESET
+  EMAIL_CHANGE
 }
 
 model User {
@@ -55,7 +56,6 @@ model User {
   bookings       Booking[]
   reviews        Review[]
   tokens         Token[]
-
   @@unique([provider, providerId])
 }
 
@@ -104,7 +104,6 @@ model Property {
   deletedAt   DateTime?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-
   city        City            @relation(fields: [cityId], references: [id])
   tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   category    Category        @relation(fields: [categoryId], references: [id])
@@ -113,7 +112,6 @@ model Property {
   bookings    Booking[]
   reviews     Review[]
   amenities   Amenity[]
-
   @@index([categoryId])
   @@index([cityId])   
 }
@@ -159,7 +157,6 @@ model RoomAvailability {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-
   @@unique([roomId, date])
 }
 

@@ -26,6 +26,12 @@ router.patch(
     upload.single('propertyImage'),
     PropertyController.uploadImage
 );
+router.post(
+    '/my-properties/:id/gallery',
+    tenantOnly,
+    upload.array('galleryImages', 10),
+    PropertyController.uploadGallery
+);
 
 // --- Endpoint Terproteksi untuk Tenant (Manajemen Kamar) ---
 router.use('/my-properties/:propertyId/rooms', tenantOnly, roomRouter);
