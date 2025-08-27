@@ -15,31 +15,20 @@ class RoomReservationRouter {
     }
 
     private initializeRoutes() {
-        // Buat pesanan baru
-        this.router.post
-            ("/",
-                verifyToken,
-                isUser,
-                this.reservationController.createReservationController);
+        // User melihat available room
+        this.router.post("/check-available", verifyToken, isUser, this.reservationController.checkAvailableRoomsController);
+        
+        // User membuat reservasi baru
+        this.router.post("/", verifyToken, isUser, this.reservationController.createReservationController);
 
-        this.router.get
-            ("/reservations",
-                verifyToken,
-                isUser,
-                this.reservationController.getUserReservationController);
+        // User melihat semua reservasi miliknya
+        this.router.get("/reservations", verifyToken, isUser, this.reservationController.getUserReservationController);
 
-        this.router.get
-            ("/:id",
-                verifyToken,
-                isUser,
-                this.reservationController.getResevationByIdController);
-                
-        this.router.patch
-            ("/:id/status", 
-                verifyToken,
-                isTenant,
-                this.reservationController.updateReservationStatusController);
+        // User melihat detail reservasi by ID
+        this.router.get("/:id", verifyToken, isUser, this.reservationController.getReservationByIdController);
 
+        // Tenant update status reservasi
+        this.router.patch("/:id/status", verifyToken, isTenant, this.reservationController.updateReservationStatusController);
     }
 
     public getRouter(): Router {

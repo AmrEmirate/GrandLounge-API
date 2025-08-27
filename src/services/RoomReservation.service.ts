@@ -1,6 +1,7 @@
 import { BookingStatus, RoomCategory } from "../generated/prisma";
 import ReservationRepositori from "../repositories/RoomReservation.repositori";
 import ApiError from "../utils/apiError";
+import snap from "../config/midtrans";
 
 const reservationRepo = new ReservationRepositori();
 
@@ -33,19 +34,44 @@ export const createReservationService = async (
     const invoiceNumber = `INV-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
     const newBooking = await reservationRepo.createTransaction({
-        invoiceNumber: invoiceNumber,
+        invoiceNumber,
         checkIn: check_in,
         checkOut: check_out,
-        totalPrice: totalPrice,
+        totalPrice,
         status: BookingStatus.MENUNGGU_PEMBAYARAN,
         paymentDeadline: new Date(Date.now() + 1 * 60 * 60 * 1000),
-        // paymentDeadline: new Date(Date.now() + 15 * 1000), // testing
         user: { connect: { id: user.id } },
         property: { connect: { id: room.propertyId } },
     });
 
+    let transaction;
+    try {
+        transaction = await snap.createTransaction({
+            transaction_details: {
+                order_id: invoiceNumber,
+                gross_amount: totalPrice,
+            },
+            customer_details: {
+                first_name: guestInfo.name,
+                email: guestInfo.email,
+            },
+        } as any);
+    } catch (err) {
+        await reservationRepo.updateTransaction(newBooking.id, { status: BookingStatus.DIBATALKAN });
+        throw new ApiError(500, "Failed to create Midtrans transaction");
+    }
 
-    return newBooking;
+    await reservationRepo.updateTransaction(newBooking.id, {
+        midtransOrderId: invoiceNumber, // menggunakan invoiceNumber sebagai order_id
+        paymentToken: transaction.token,
+        paymentUrl: transaction.redirect_url,
+    });
+
+    return {
+        ...newBooking,
+        paymentUrl: transaction.redirect_url!,
+        paymentToken: transaction.token!,
+    };
 };
 
 // dapat melihat semua reservasi milik pengguna

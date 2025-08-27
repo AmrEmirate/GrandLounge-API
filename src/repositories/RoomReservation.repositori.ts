@@ -63,7 +63,7 @@ export default class RoomReservationRepository {
             include: {
                 property: {
                     include: {
-                        city: true,       
+                        city: true,
                         category: true,
                     },
                 },
@@ -73,11 +73,90 @@ export default class RoomReservationRepository {
             },
         });
     }
+
     async updateTransaction(bookingId: number, data: Prisma.BookingUpdateInput) {
         return prisma.booking.update({
             where: { id: bookingId },
             data,
         });
     }
+
+    async createReservationWithRooms(
+        userId: number,
+        propertyId: number,
+        checkIn: Date,
+        checkOut: Date,
+        totalPrice: number,
+        roomCount: number
+    ) {
+        const rooms = await prisma.room.findMany({
+            where: { propertyId }
+        });
+
+        const availableRooms: number[] = [];
+        for (const room of rooms) {
+            const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut);
+            if (isAvailable) availableRooms.push(room.id);
+            if (availableRooms.length >= roomCount) break; // cukup jumlah kamar yang dibutuhkan
+        }
+
+        if (availableRooms.length < roomCount) {
+            throw new Error("Tidak cukup kamar tersedia untuk tanggal yang dipilih");
+        }
+
+        const booking = await prisma.booking.create({
+            data: {
+                userId,
+                propertyId,
+                checkIn,
+                checkOut,
+                totalPrice,
+                status: BookingStatus.MENUNGGU_PEMBAYARAN,
+                invoiceNumber: `INV-${Date.now()}`,
+                paymentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            },
+        });
+
+        const numberOfNights = Math.ceil(
+            (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        const bookingRoomsData = [];
+
+        for (const roomId of availableRooms) {
+            const room = await this.findRoomById(roomId);
+            const pricePerNight = room?.basePrice ?? 0;
+            const totalPrice = numberOfNights * pricePerNight;
+
+            bookingRoomsData.push({
+                bookingId: booking.id,
+                roomId,
+                guestCount: 1,
+                pricePerNight,
+                numberOfNights,
+                totalPrice,
+            });
+        }
+
+        await prisma.bookingRoom.createMany({ data: bookingRoomsData });
+
+        return prisma.booking.findUnique({
+            where: { id: booking.id },
+            include: { bookingRooms: { include: { room: true } }, property: true },
+        });
+
+    }
+    async getAvailableRooms(propertyId: number, checkIn: Date, checkOut: Date) {
+        const rooms = await prisma.room.findMany({ where: { propertyId } });
+        const availableRooms: number[] = [];
+
+        for (const room of rooms) {
+            const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut);
+            if (isAvailable) availableRooms.push(room.id);
+        }
+
+        return availableRooms;
+    }
+
 }
 
