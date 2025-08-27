@@ -1,5 +1,5 @@
 import { Prisma, BookingStatus } from "../generated/prisma";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { prisma } from "../config/prisma";
 
@@ -86,9 +86,9 @@ export default class RoomReservationRepository {
         propertyId: number,
         checkIn: Date,
         checkOut: Date,
-        totalPrice: number,
         roomCount: number
     ) {
+        // Ambil semua kamar yang tersedia di properti ini
         const rooms = await prisma.room.findMany({
             where: { propertyId }
         });
@@ -97,55 +97,74 @@ export default class RoomReservationRepository {
         for (const room of rooms) {
             const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut);
             if (isAvailable) availableRooms.push(room.id);
-            if (availableRooms.length >= roomCount) break; // cukup jumlah kamar yang dibutuhkan
+            if (availableRooms.length >= roomCount) break; // Cukup jumlah kamar yang dibutuhkan
         }
 
         if (availableRooms.length < roomCount) {
             throw new Error("Tidak cukup kamar tersedia untuk tanggal yang dipilih");
         }
 
-        const booking = await prisma.booking.create({
-            data: {
-                userId,
-                propertyId,
-                checkIn,
-                checkOut,
-                totalPrice,
-                status: BookingStatus.MENUNGGU_PEMBAYARAN,
-                invoiceNumber: `INV-${Date.now()}`,
-                paymentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
-            },
-        });
-
         const numberOfNights = Math.ceil(
             (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
         );
 
+        let calculatedTotalPrice = 0;
         const bookingRoomsData = [];
 
+        // Hitung total harga dan siapkan data untuk bookingRooms
         for (const roomId of availableRooms) {
             const room = await this.findRoomById(roomId);
             const pricePerNight = room?.basePrice ?? 0;
             const totalPrice = numberOfNights * pricePerNight;
+            calculatedTotalPrice += totalPrice;
 
             bookingRoomsData.push({
-                bookingId: booking.id,
                 roomId,
                 guestCount: 1,
                 pricePerNight,
                 numberOfNights,
-                totalPrice,
+                totalPrice: totalPrice,
             });
         }
 
-        await prisma.bookingRoom.createMany({ data: bookingRoomsData });
+        // Gunakan transaksi untuk memastikan kedua operasi berhasil atau gagal bersama
+        const transactionResult = await prisma.$transaction(async (prisma) => {
+            // 1. Buat booking utama dengan total harga yang sudah dihitung
+            const booking = await prisma.booking.create({
+                data: {
+                    userId,
+                    propertyId,
+                    checkIn,
+                    checkOut,
+                    totalPrice: calculatedTotalPrice,
+                    status: BookingStatus.MENUNGGU_PEMBAYARAN,
+                    invoiceNumber: `INV-${Date.now()}`,
+                    paymentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                },
+            });
 
-        return prisma.booking.findUnique({
-            where: { id: booking.id },
-            include: { bookingRooms: { include: { room: true } }, property: true },
+            const bookingRoomsData: Prisma.BookingRoomCreateManyInput[] = [];
+
+            // Tambahkan bookingId ke setiap item bookingRoomsData
+            const finalBookingRoomsData = bookingRoomsData.map(item => ({
+                ...item,
+                bookingId: booking.id
+            }));
+
+            // 2. Buat semua bookingRooms sekaligus
+            await prisma.bookingRoom.createMany({ data: finalBookingRoomsData });
+
+            return booking;
         });
 
+        // Ambil data booking lengkap untuk dikirimkan ke client
+        return prisma.booking.findUnique({
+            where: { id: transactionResult.id },
+            include: { bookingRooms: { include: { room: true } }, property: true },
+        });
     }
+
+    // Metode baru untuk mendapatkan kamar yang tersedia.
     async getAvailableRooms(propertyId: number, checkIn: Date, checkOut: Date) {
         const rooms = await prisma.room.findMany({ where: { propertyId } });
         const availableRooms: number[] = [];
@@ -157,6 +176,4 @@ export default class RoomReservationRepository {
 
         return availableRooms;
     }
-
 }
-

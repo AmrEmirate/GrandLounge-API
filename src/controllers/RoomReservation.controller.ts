@@ -8,10 +8,10 @@ class RoomReservationController {
     // USER CREATE RESERVATION
     public async createReservationController(req: Request, res: Response, next: NextFunction) {
         try {
-            const { propertyId, checkIn, checkOut, roomCount, totalPrice, guestInfo } = req.body;
+            const { propertyId, checkIn, checkOut, roomCount, guestInfo } = req.body;
 
             // Validasi input
-            if (!propertyId || !checkIn || !checkOut || !roomCount || !totalPrice || !guestInfo?.email || !guestInfo?.name) {
+            if (!propertyId || !checkIn || !checkOut || !roomCount || !guestInfo?.email || !guestInfo?.name) {
                 throw new ApiError(400, "Missing required reservation data.");
             }
 
@@ -24,7 +24,6 @@ class RoomReservationController {
                 propertyId,
                 new Date(checkIn),
                 new Date(checkOut),
-                totalPrice,
                 roomCount
             );
 
