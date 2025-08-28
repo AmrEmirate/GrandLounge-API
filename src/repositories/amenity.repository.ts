@@ -9,25 +9,29 @@ export const AmenityRepository = {
   },
 
   findAll: async (): Promise<Amenity[]> => {
-    return await prisma.amenity.findMany();
-  },
-
-  findById: async (id: number): Promise<Amenity | null> => {
-    return await prisma.amenity.findUnique({
-      where: { id },
+    return await prisma.amenity.findMany({
+      where: { deletedAt: null }, // Filter data aktif
     });
   },
 
-  update: async (id: number, name: string): Promise<Amenity> => {
+  findById: async (id: string): Promise<Amenity | null> => {
+    return await prisma.amenity.findFirst({
+      where: { id, deletedAt: null }, // Filter data aktif
+    });
+  },
+
+  update: async (id: string, name: string): Promise<Amenity> => {
     return await prisma.amenity.update({
       where: { id },
       data: { name },
     });
   },
 
-  delete: async (id: number): Promise<Amenity> => {
-    return await prisma.amenity.delete({
+  // Mengubah delete menjadi softDelete
+  delete: async (id: string): Promise<Amenity> => {
+    return await prisma.amenity.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
   },
 };

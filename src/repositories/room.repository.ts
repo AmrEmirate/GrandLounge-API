@@ -11,58 +11,51 @@ interface RoomData {
 }
 
 export const RoomRepository = {
-  create: async (propertyId: number, data: RoomData): Promise<Room> => {
+  create: async (propertyId: string, data: RoomData): Promise<Room> => {
     return await prisma.room.create({
       data: {
         propertyId: propertyId,
-        name: data.name,
-        category: data.category,
-        description: data.description,
-        bedOption: data.bedOption,
-        capacity: data.capacity,
-        basePrice: data.basePrice,
+        ...data,
       },
     });
   },
 
-  findAllByPropertyId: async (propertyId: number): Promise<Room[]> => {
+  findAllByPropertyId: async (propertyId: string): Promise<Room[]> => {
     return await prisma.room.findMany({
-      where: { propertyId: propertyId },
+      where: { propertyId: propertyId, deletedAt: null }, // Filter data aktif
     });
   },
 
-  findById: async (roomId: number): Promise<Room | null> => {
-    return await prisma.room.findUnique({
-      where: { id: roomId },
+  findById: async (roomId: string): Promise<Room | null> => {
+    return await prisma.room.findFirst({
+      where: { id: roomId, deletedAt: null }, // Filter data aktif
     });
   },
 
-  update: async (roomId: number, data: Partial<RoomData>): Promise<Room> => {
+  update: async (roomId: string, data: Partial<RoomData>): Promise<Room> => {
     return await prisma.room.update({
       where: { id: roomId },
       data: data,
     });
   },
 
-  delete: async (roomId: number): Promise<Room> => {
-    return await prisma.room.delete({
+  // Mengubah delete menjadi softDelete
+  delete: async (roomId: string): Promise<Room> => {
+    return await prisma.room.update({
       where: { id: roomId },
+      data: { deletedAt: new Date() },
     });
   },
 
-  addGalleryImages: async (roomId: number, imageUrls: string[]) => {
+  addGalleryImages: async (roomId: string, imageUrls: string[]) => {
     const imageData = imageUrls.map(url => ({
-        roomId: roomId,
-        imageUrl: url,
+      roomId: roomId,
+      imageUrl: url,
     }));
-
-    await prisma.roomImage.createMany({
-        data: imageData,
-    });
-
-    return prisma.room.findUnique({ 
-        where: { id: roomId }, 
-        include: { images: true } 
+    await prisma.roomImage.createMany({ data: imageData });
+    return prisma.room.findUnique({
+      where: { id: roomId },
+      include: { images: true },
     });
   },
 };

@@ -9,25 +9,29 @@ export const CityRepository = {
   },
 
   findAll: async (): Promise<City[]> => {
-    return await prisma.city.findMany();
-  },
-
-  findById: async (id: number): Promise<City | null> => {
-    return await prisma.city.findUnique({
-      where: { id },
+    return await prisma.city.findMany({
+      where: { deletedAt: null }, // Filter data aktif
     });
   },
 
-  update: async (id: number, data: { name: string; provinsi: string }): Promise<City> => {
+  findById: async (id: string): Promise<City | null> => {
+    return await prisma.city.findFirst({
+      where: { id, deletedAt: null }, // Filter data aktif
+    });
+  },
+
+  update: async (id: string, data: { name: string; provinsi: string }): Promise<City> => {
     return await prisma.city.update({
       where: { id },
       data: data,
     });
   },
 
-  delete: async (id: number): Promise<City> => {
-    return await prisma.city.delete({
+  // Mengubah delete menjadi softDelete
+  delete: async (id: string): Promise<City> => {
+    return await prisma.city.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
   },
 };

@@ -1,11 +1,14 @@
-// src/repositories/OrderReminder.repositori.ts
 import { prisma } from "../config/prisma";
 import { startOfDay, addDays } from 'date-fns';
 
 export default class OrderReminderRepository {
-    async findBookingById(bookingId: number) {
+    /**
+     * 
+     * @param bookingId 
+     */
+    async findBookingById(bookingId: string) { 
         return prisma.booking.findUnique({
-            where: { id: bookingId },
+            where: { id: bookingId }, 
             include: { user: true, property: true },
         });
     }
@@ -21,6 +24,12 @@ export default class OrderReminderRepository {
                     gte: tomorrowStart,
                     lt: dayAfterTomorrowStart,
                 },
+                user: {
+                    deletedAt: null
+                },
+                property: {
+                    deletedAt: null
+                }
             },
             include: { user: true, property: true },
         });

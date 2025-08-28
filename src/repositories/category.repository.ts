@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { UserRole, Category } from "../generated/prisma";
+import { Category } from "../generated/prisma";
 
 export const CategoryRepository = {
   create: async (name: string): Promise<Category> => {
@@ -9,25 +9,29 @@ export const CategoryRepository = {
   },
 
   findAll: async (): Promise<Category[]> => {
-    return await prisma.category.findMany();
-  },
-
-  findById: async (id: number): Promise<Category | null> => {
-    return await prisma.category.findUnique({
-      where: { id },
+    return await prisma.category.findMany({
+      where: { deletedAt: null }, // Filter data aktif
     });
   },
 
-  update: async (id: number, name: string): Promise<Category> => {
+  findById: async (id: string): Promise<Category | null> => {
+    return await prisma.category.findFirst({
+      where: { id, deletedAt: null }, // Filter data aktif
+    });
+  },
+
+  update: async (id: string, name: string): Promise<Category> => {
     return await prisma.category.update({
       where: { id },
       data: { name },
     });
   },
 
-  delete: async (id: number): Promise<Category> => {
-    return await prisma.category.delete({
+  // Mengubah delete menjadi softDelete
+  delete: async (id: string): Promise<Category> => {
+    return await prisma.category.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
   },
 };
