@@ -25,9 +25,12 @@ export default class RoomReservationRepository {
         return prisma.booking.create({ data });
     }
 
-    async findRoomById(id: number) {
-        return prisma.room.findUnique({
-            where: { id },
+    async findRoomByName(propertyId: number, name: string) {
+        return prisma.room.findFirst({
+            where: { 
+                propertyId: propertyId,
+                name: name
+             },
             select: { id: true, propertyId: true, basePrice: true },
         });
     }
@@ -57,22 +60,30 @@ export default class RoomReservationRepository {
         });
     }
 
-    async findTransactionById(bookingId: number) {
-        return prisma.booking.findUnique({
-            where: { id: bookingId },
-            include: {
-                property: {
-                    include: {
-                        city: true,
-                        category: true,
+    async findTransactionByRoomName(roomName: string) {
+    return prisma.booking.findFirst({
+        where: {
+            bookingRooms: {
+                some: {
+                    room: {
+                        name: roomName,
                     },
                 },
-                bookingRooms: {
-                    include: { room: true },
+            },
+        },
+        include: {
+            property: {
+                include: {
+                    city: true,
+                    category: true,
                 },
             },
-        });
-    }
+            bookingRooms: {
+                include: { room: true },
+            },
+        },
+    });
+}
 
     async updateTransaction(bookingId: number, data: Prisma.BookingUpdateInput) {
         return prisma.booking.update({
@@ -88,16 +99,15 @@ export default class RoomReservationRepository {
         checkOut: Date,
         roomCount: number
     ) {
-        // Ambil semua kamar yang tersedia di properti ini
-        const rooms = await prisma.room.findMany({
-            where: { propertyId }
-        });
+        const rooms = await prisma.room.findMany({ where: { propertyId } });
+        const availableRooms: { id: number; basePrice: number }[] = [];
 
-        const availableRooms: number[] = [];
         for (const room of rooms) {
             const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut);
-            if (isAvailable) availableRooms.push(room.id);
-            if (availableRooms.length >= roomCount) break; // Cukup jumlah kamar yang dibutuhkan
+            if (isAvailable) {
+                availableRooms.push({ id: room.id, basePrice: room.basePrice });
+            }
+            if (availableRooms.length >= roomCount) break;
         }
 
         if (availableRooms.length < roomCount) {
@@ -109,27 +119,19 @@ export default class RoomReservationRepository {
         );
 
         let calculatedTotalPrice = 0;
-        const bookingRoomsData = [];
-
-        // Hitung total harga dan siapkan data untuk bookingRooms
-        for (const roomId of availableRooms) {
-            const room = await this.findRoomById(roomId);
-            const pricePerNight = room?.basePrice ?? 0;
-            const totalPrice = numberOfNights * pricePerNight;
+        const bookingRoomsDataToCreate = availableRooms.map(room => {
+            const totalPrice = numberOfNights * room.basePrice;
             calculatedTotalPrice += totalPrice;
-
-            bookingRoomsData.push({
-                roomId,
-                guestCount: 1,
-                pricePerNight,
+            return {
+                roomId: room.id,
+                guestCount: 1, // Asumsi 1 tamu per kamar
+                pricePerNight: room.basePrice,
                 numberOfNights,
                 totalPrice: totalPrice,
-            });
-        }
+            };
+        });
 
-        // Gunakan transaksi untuk memastikan kedua operasi berhasil atau gagal bersama
         const transactionResult = await prisma.$transaction(async (prisma) => {
-            // 1. Buat booking utama dengan total harga yang sudah dihitung
             const booking = await prisma.booking.create({
                 data: {
                     userId,
@@ -140,31 +142,25 @@ export default class RoomReservationRepository {
                     status: BookingStatus.MENUNGGU_PEMBAYARAN,
                     invoiceNumber: `INV-${Date.now()}`,
                     paymentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                    bookingRooms: {
+                        createMany: {
+                            data: bookingRoomsDataToCreate,
+                        },
+                    },
                 },
+                include: { bookingRooms: true }, // Sertakan data yang baru dibuat
             });
-
-            const bookingRoomsData: Prisma.BookingRoomCreateManyInput[] = [];
-
-            // Tambahkan bookingId ke setiap item bookingRoomsData
-            const finalBookingRoomsData = bookingRoomsData.map(item => ({
-                ...item,
-                bookingId: booking.id
-            }));
-
-            // 2. Buat semua bookingRooms sekaligus
-            await prisma.bookingRoom.createMany({ data: finalBookingRoomsData });
 
             return booking;
         });
 
-        // Ambil data booking lengkap untuk dikirimkan ke client
-        return prisma.booking.findUnique({
+        return prisma.booking.findMany({
             where: { id: transactionResult.id },
             include: { bookingRooms: { include: { room: true } }, property: true },
         });
     }
 
-    // Metode baru untuk mendapatkan kamar yang tersedia.
+
     async getAvailableRooms(propertyId: number, checkIn: Date, checkOut: Date) {
         const rooms = await prisma.room.findMany({ where: { propertyId } });
         const availableRooms: number[] = [];

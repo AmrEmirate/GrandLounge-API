@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import RoomReservationRepository from "../repositories/RoomReservation.repositori";
 import ApiError from "../utils/apiError";
+import { createReservationService, getReservationByNameService } from "../services/RoomReservation.service";
 
 const repo = new RoomReservationRepository();
 
@@ -15,10 +16,10 @@ class RoomReservationController {
                 throw new ApiError(400, "Missing required reservation data.");
             }
 
-            // 1️⃣ Buat account jika belum ada
+            // Buat account jika belum ada
             const user = await repo.findOrCreateAccount({ email: guestInfo.email, name: guestInfo.name });
 
-            // 2️⃣ Buat reservation + bookingRooms otomatis
+            // Buat reservation + bookingRooms otomatis
             const newReservation = await repo.createReservationWithRooms(
                 user.id,
                 propertyId,
@@ -54,12 +55,19 @@ class RoomReservationController {
     }
 
     // USER MELIHAT DETAIL RESERVASI
-    public async getReservationByIdController(req: Request, res: Response, next: NextFunction) {
+    public async getReservationByRoomNameController(req: Request, res: Response, next: NextFunction) {
         try {
-            const { id } = req.params;
-            const reservation = await repo.findTransactionById(Number(id));
+            const { name } = req.params;
 
-            if (!reservation) throw new ApiError(404, "Reservation not found");
+            if (!name) {
+                throw new ApiError(400, "Data reservasi tidak lengkap.");
+            }
+
+             const reservation = await getReservationByNameService(name);
+
+            if (!reservation) {
+                throw new ApiError(404, "Reservasi untuk kamar ini tidak ditemukan.");
+            }
 
             res.status(200).json({
                 success: true,
@@ -111,6 +119,36 @@ class RoomReservationController {
             });
         } catch (error) {
             next(error);
+        }
+    }
+
+    public async createReservationByRoomNameController(
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> {
+        try {
+            const { propertyId, roomName, checkIn, checkOut, guestInfo } = req.body;
+
+            if (!propertyId || !roomName || !checkIn || !checkOut || !guestInfo?.email || !guestInfo?.name) {
+                throw new ApiError(400, "Data reservasi tidak lengkap.");
+            }
+
+            const newReservation = await createReservationService(
+                propertyId,
+                roomName,
+                new Date(checkIn),
+                new Date(checkOut),
+                guestInfo
+            );
+
+            res.status(201).json({
+                success: true,
+                message: "Reservasi berhasil dibuat.",
+                data: newReservation,
+            });
+        } catch (error) {
+            next(error)
         }
     }
 
