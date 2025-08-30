@@ -5,12 +5,12 @@ import streamifier from 'streamifier';
 
 const uploadRepo = new UploadPaymentRepository();
 
-export const uploadPaymentService = async (bookingId: number, file: Express.Multer.File) => {
+export const uploadPaymentService = async (invoiceNumber: string, file: Express.Multer.File) => {
     if (!file) {
         throw new Error("File is required");
     }
 
-    const transaction = await prisma.booking.findUnique({ where: { id: bookingId } });
+    const transaction = await prisma.booking.findUnique({ where: { invoiceNumber } });
 
     if (!transaction || transaction.status !== "MENUNGGU_PEMBAYARAN") {
         throw new Error("Invalid transaction status")
@@ -30,5 +30,5 @@ export const uploadPaymentService = async (bookingId: number, file: Express.Mult
         streamifier.createReadStream(file.buffer).pipe(stream);
     });
 
-    return uploadRepo.updatePaymentProof(bookingId, (uploadPayment as any).secure_url);
+    return uploadRepo.updatePaymentProof(invoiceNumber, (uploadPayment as any).secure_url);
 }

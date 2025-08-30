@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { prisma } from "../config/prisma";
 
 export default class RoomReservationRepository {
-    async checkRoomAvailability(roomId: number, newStartDate: Date, newEndDate: Date) {
+    async checkRoomAvailability(roomId: string, newStartDate: Date, newEndDate: Date) {
         const existingBookings = await prisma.bookingRoom.findMany({
             where: {
                 roomId: roomId,
@@ -25,7 +25,7 @@ export default class RoomReservationRepository {
         return prisma.booking.create({ data });
     }
 
-    async findRoomByName(propertyId: number, name: string) {
+    async findRoomByName(propertyId: string, name: string) {
         return prisma.room.findFirst({
             where: { 
                 propertyId: propertyId,
@@ -50,7 +50,7 @@ export default class RoomReservationRepository {
         });
     }
 
-    async findTransactionByAccountId(userId: number) {
+    async findTransactionByAccountId(userId: string) {
         return prisma.booking.findMany({
             where: { userId: userId },
             include: {
@@ -60,9 +60,10 @@ export default class RoomReservationRepository {
         });
     }
 
-    async findTransactionByRoomName(roomName: string) {
+    async findTransactionByRoomName(roomName: string, userId: string) {
     return prisma.booking.findFirst({
         where: {
+            userId,
             bookingRooms: {
                 some: {
                     room: {
@@ -85,7 +86,7 @@ export default class RoomReservationRepository {
     });
 }
 
-    async updateTransaction(bookingId: number, data: Prisma.BookingUpdateInput) {
+    async updateTransaction(bookingId: string, data: Prisma.BookingUpdateInput) {
         return prisma.booking.update({
             where: { id: bookingId },
             data,
@@ -93,14 +94,14 @@ export default class RoomReservationRepository {
     }
 
     async createReservationWithRooms(
-        userId: number,
-        propertyId: number,
+        userId: string,
+        propertyId: string,
         checkIn: Date,
         checkOut: Date,
         roomCount: number
     ) {
         const rooms = await prisma.room.findMany({ where: { propertyId } });
-        const availableRooms: { id: number; basePrice: number }[] = [];
+        const availableRooms: { id: string; basePrice: number }[] = [];
 
         for (const room of rooms) {
             const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut);
@@ -161,9 +162,9 @@ export default class RoomReservationRepository {
     }
 
 
-    async getAvailableRooms(propertyId: number, checkIn: Date, checkOut: Date) {
+    async getAvailableRooms(propertyId: string, checkIn: Date, checkOut: Date) {
         const rooms = await prisma.room.findMany({ where: { propertyId } });
-        const availableRooms: number[] = [];
+        const availableRooms: string[] = [];
 
         for (const room of rooms) {
             const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut);

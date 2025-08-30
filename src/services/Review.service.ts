@@ -1,29 +1,19 @@
-import { prisma } from "../config/prisma";
 import { ReviewRepository } from "../repositories/Review.repositori";
+import { prisma } from "../config/prisma";
 import ApiError from "../utils/apiError";
 
 export class ReviewService {
     private reviewRepo = new ReviewRepository();
 
-    async createReview(userId: number, bookingId: number, rating: number, comment?: string) {
-        const booking = await prisma.booking.findUnique({ where: { id: bookingId } })
+    // Create review
+    async createReview(userId: string, bookingId: string, rating: number, comment?: string) {
+        const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+        if (!booking) throw new ApiError(404, "Booking tidak ditemukan");
+        if (booking.userId !== userId) throw new ApiError(403, "Tidak bisa review booking orang lain");
+        if (booking.status !== "SELESAI") throw new ApiError(400, "Review hanya bisa setelah check-out");
 
-        if (!booking) {
-            throw new ApiError(404, "Booking tidak di temukan")
-        }
-
-        if (booking.userId !== userId) {
-            throw new ApiError(403, "Tidak Bisa Review Orang Lain")
-        }
-
-        if (booking.status !== "SELESAI") {
-            throw new ApiError(400, "Review hanya bisa setelah check out")
-        }
-
-        const existing = await this.reviewRepo.findBookingById(bookingId);
-        if (existing) {
-            throw new ApiError(400, "Review sudah pernah di berikan")
-        }
+        const existing = await this.reviewRepo.findBookingBy(bookingId);
+        if (existing) throw new ApiError(400, "Review sudah pernah diberikan");
 
         return this.reviewRepo.createReview({
             userId,
@@ -34,11 +24,34 @@ export class ReviewService {
         });
     }
 
-    async replyReview(reviewId: number, reply: string) {
-        return this.reviewRepo.replyReview(reviewId, reply)
+    // Reply review tenant
+    async replyReview(reviewId: string, reply: string) {
+        try {
+            return await this.reviewRepo.replyReview(reviewId, reply);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                // P2025 adalah kode error Prisma untuk 'record not found'
+                throw new ApiError(404, "Review tidak ditemukan.");
+            }
+            throw error; // Lempar error lain
+        }
     }
 
-    async getReviewsByProperty(propertyId: number) {
-        return this.reviewRepo.getReviewsByProperty(propertyId)
+    // Get reviews by propertyId
+    async getReviewsByProperty(propertyId: string) {
+         return this.getReviewsByPropertyId(propertyId);
     }
+
+    // Get reviews by propertyName (hotel name)
+    async getReviewsByPropertyName(propertyName: string) {
+        return this.reviewRepo.getReviewsByPropertyName(propertyName);
+    }
+
+    async getReviewsByPropertyId(propertyId: string) {
+        return prisma.review.findMany({
+            where: { propertyId },
+            include: { user: true, property: true },
+        });
+    }
+
 }

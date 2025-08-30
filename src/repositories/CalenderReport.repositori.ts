@@ -2,8 +2,8 @@ import { prisma } from "../config/prisma";
 
 export default class CalenderReportRepositori {
     async getRoomAvailibity(
-        tenantId: number,
-        propertyId?: number,
+        tenantId: string,
+        propertyId?: string,
         startDate?: Date,
         endDate?: Date
     ) {

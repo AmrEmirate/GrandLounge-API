@@ -1,8 +1,9 @@
+import { use } from "passport";
 import { prisma } from "../config/prisma";
 import OrderListRepositroy from "../repositories/OrderList.repositori";
 import ApiError from "../utils/apiError";
 
-export const OrderListService = async (accountId: number, filter: {
+export const OrderListService = async (userId: string, filter: {
     checkIn?: Date,
     checkOut?: Date,
     invoiceNumber?: string,
@@ -16,19 +17,19 @@ export const OrderListService = async (accountId: number, filter: {
     }
 
     const orderRepo = new OrderListRepositroy();
-    const orderList = await orderRepo.findReservationByFilter(accountId, parsedFilter);
+    const orderList = await orderRepo.findReservationByFilter(userId, parsedFilter);
     return orderList
 }
 
-export const getTenantReservationService = async (userId: number, status?: string) => {
+export const getTenantTransactionListService = async (userId: string, status?: string) => {
     const tenant = await prisma.tenant.findUnique({
-        where: { userId: userId },
+        where: { userId }, 
     });
 
     if (!tenant) {
         throw new Error("Tenant profile not found for this user.");
     }
-    
+
     const tenantRepo = new OrderListRepositroy();
     const reservations = await tenantRepo.tenantTransactionList(tenant.id, status);
     return reservations;

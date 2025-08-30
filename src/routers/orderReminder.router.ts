@@ -15,9 +15,9 @@ export default class OrderReminderRouter {
 
     private initializeRoutes() {
         this.router.post(
-            "/send-confirm", 
-            verifyToken, 
-            isTenant, 
+            "/send-confirm-invoice",
+            verifyToken,
+            isTenant,
             this.orderRemind.sendConfirm
         );
     }

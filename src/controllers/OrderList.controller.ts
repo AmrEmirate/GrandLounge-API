@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getTenantReservationService, OrderListService } from "../services/OrderList.service";
+import { getTenantTransactionListService, OrderListService } from "../services/OrderList.service";
 import ApiError from "../utils/apiError";
 
 class OrderListController {
@@ -9,7 +9,7 @@ class OrderListController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const accountId = (req.user as any).accountId;
+            const userId = (req.user as any).userId;
             const filter = {
                 checkIn: req.query.checkIn ? new Date(req.query.checkIn as string) : undefined,
                 checkOut: req.query.checkOut ? new Date(req.query.checkOut as string) : undefined,
@@ -17,7 +17,11 @@ class OrderListController {
                 status: req.query.status as string,
             };
 
-            const orderlist = await OrderListService(accountId, filter);
+            if (filter.checkIn && filter.checkOut && filter.checkIn > filter.checkOut) {
+                throw new ApiError(400, "Check-in date cannot be after check-out date");
+            }
+
+            const orderlist = await OrderListService(userId, filter);
 
             res.status(200).json({
                 success: true,
@@ -35,14 +39,14 @@ class OrderListController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const userId = (req.user as any).id; 
+            const userId = (req.user as any).id;
             const status = req.query.status as string | undefined;
 
             if (!userId) { 
-                throw new ApiError(400, "User ID is required.");
+                throw new ApiError(400, "User ID is required");
             }
 
-            const reservation = await getTenantReservationService(userId, status);
+            const reservation = await getTenantTransactionListService(userId, status);
 
             res.status(200).json({
                 success: true,

@@ -63,7 +63,9 @@ class RoomReservationController {
                 throw new ApiError(400, "Data reservasi tidak lengkap.");
             }
 
-             const reservation = await getReservationByNameService(name);
+            const userId = (req.user as any).id;
+
+            const reservation = await getReservationByNameService(name, userId);
 
             if (!reservation) {
                 throw new ApiError(404, "Reservasi untuk kamar ini tidak ditemukan.");
@@ -85,7 +87,7 @@ class RoomReservationController {
             const { id } = req.params;
             const { status } = req.body;
 
-            const updatedReservation = await repo.updateTransaction(Number(id), { status });
+            const updatedReservation = await repo.updateTransaction(id, { status });
 
             res.status(200).json({
                 success: true,

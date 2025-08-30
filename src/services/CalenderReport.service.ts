@@ -4,8 +4,8 @@ import ApiError from "../utils/apiError";
 const calenderRepo = new CalenderReportRepositori();
 
 export const getCalenderReport = async (
-    tenantId: number,
-    propertyId?: number,
+    tenantId: string,
+    propertyId?: string,
     startDate?: Date,
     endDate?: Date
 ) => {

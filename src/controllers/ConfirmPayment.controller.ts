@@ -1,4 +1,3 @@
-// src/controllers/ConfirmPayment.controller.ts
 import { Request, Response, NextFunction } from "express";
 import ApiError from "../utils/apiError";
 import { ConfirmPaymentService } from "../services/ConfirmPayment.service";
@@ -11,36 +10,46 @@ class ConfirmPaymentController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const userId = (req.user as any)?.id; 
+            const userId = (req.user as any)?.id;
+            if (!userId) throw new ApiError(401, "Unauthorized");
 
+            // Ambil tenantId dari database menggunakan userId yang ada di token
             const tenant = await prisma.tenant.findUnique({
                 where: { userId: userId },
+                select: { id: true },
             });
 
             if (!tenant) {
                 throw new ApiError(403, "Tenant account not found.");
             }
 
-            const { bookingId } = req.params;
+            const { invoiceNumber } = req.params;
             const { isAccepted } = req.body;
 
-            if (bookingId === undefined || isAccepted === undefined) {
-                throw new ApiError(400, "Booking ID and acceptance status are required.");
+            if (!invoiceNumber || isAccepted === undefined) {
+                throw new ApiError(400, "Invoice number and acceptance status are required.");
             }
 
-            const result = await ConfirmPaymentService(
-                tenant.id, 
-                parseInt(bookingId),
+            console.log("TenantId dari DB:", tenant.id);
+            console.log("InvoiceNumber:", invoiceNumber);
+            console.log("isAccepted:", isAccepted);
+
+            const updatedBooking = await ConfirmPaymentService(
+                tenant.id, // Gunakan tenant.id yang benar
+                invoiceNumber,
                 isAccepted
             );
 
+            console.log("Booking property tenantId:", updatedBooking.property.tenantId);
+            console.log("Booking status setelah update:", updatedBooking.status);
+
             res.status(200).json({
                 success: true,
-                message: "Payment confirmation status updated successfully.",
-                data: result
+                message: `Payment has been ${updatedBooking.status === "DIPROSES" ? "confirmed" : "rejected"} successfully.`,
+                data: updatedBooking,
             });
         } catch (error) {
-            next(error)
+            next(error);
         }
     }
 }

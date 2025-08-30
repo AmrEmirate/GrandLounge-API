@@ -2,13 +2,9 @@ import { prisma } from "../config/prisma";
 import { startOfDay, addDays } from 'date-fns';
 
 export default class OrderReminderRepository {
-    /**
-     * 
-     * @param bookingId 
-     */
-    async findBookingById(bookingId: string) { 
+    async findBookingById(invoiceNumber: string) {
         return prisma.booking.findUnique({
-            where: { id: bookingId }, 
+            where: { invoiceNumber },
             include: { user: true, property: true },
         });
     }
@@ -19,8 +15,8 @@ export default class OrderReminderRepository {
 
         return prisma.booking.findMany({
             where: {
-                status: "DIPROSES", 
-                checkIn: { 
+                status: "DIPROSES",
+                checkIn: {
                     gte: tomorrowStart,
                     lt: dayAfterTomorrowStart,
                 },

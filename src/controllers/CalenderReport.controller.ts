@@ -19,7 +19,7 @@ export class CalenderReportController {
 
             const reportData = await getCalenderReport(
                 tenantId,
-                propertyId ? parseInt(propertyId as string) : undefined,
+                propertyId as string,
                 new Date(startDate as string),
                 new Date(endDate as string)
             );

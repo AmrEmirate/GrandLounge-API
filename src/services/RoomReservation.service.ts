@@ -9,7 +9,7 @@ const reservationRepo = new ReservationRepositori();
 
 // membuat reservasi kamar
 export const createReservationService = async (
-    propertyId: number,
+    propertyId: string,
     roomName: string,
     check_in: Date,
     check_out: Date,
@@ -55,7 +55,7 @@ export const createReservationService = async (
             data: {
                 bookingId: booking.id,
                 roomId: room.id,
-                guestCount: 1, // Atur sesuai kebutuhan Anda
+                guestCount: 1,
                 pricePerNight: room.basePrice,
                 numberOfNights: durationDays,
                 totalPrice: totalPrice,
@@ -96,15 +96,15 @@ export const createReservationService = async (
 };
 
 // dapat melihat semua reservasi milik pengguna
-export const getUserReservationsService = async (accountId: number) => {
-    const reservation = await reservationRepo.findTransactionByAccountId(accountId);
+export const getUserReservationsService = async (userId: string) => {
+    const reservation = await reservationRepo.findTransactionByAccountId(userId);
     return reservation;
 };
 
 // dapat melihat detaol reservasi berdasarkan Nama
-export const getReservationByNameService = async (roomName: string) => {
-    const reservation = await reservationRepo.findTransactionByRoomName(roomName);
-    if (!reservation) {
+export const getReservationByNameService = async (roomName: string, userId: string) => {
+    const reservation = await reservationRepo.findTransactionByRoomName(roomName, userId);
+    if (!reservation || reservation.userId !== userId) {
         throw new ApiError(404, `Reservasi untuk kamar dengan nama "${roomName}" tidak ditemukan.`);
     }
     return reservation;
@@ -112,7 +112,7 @@ export const getReservationByNameService = async (roomName: string) => {
 
 // tenant dapat mengubah status reservasi
 export const updateReservationStatusService = async (
-    bookingId: number,
+    bookingId: string,
     newStatus: BookingStatus,
 ) => {
     return reservationRepo.updateTransaction(bookingId, { status: newStatus });

@@ -1,15 +1,27 @@
-import { $Enums, BookingStatus, Prisma } from "../generated/prisma";
-import ConfirmPaymentRepositori from "../repositories/ConfirmPayment.repositori";
+import { BookingStatus } from "../generated/prisma";
+import ConfirmPaymentRepository from "../repositories/ConfirmPayment.repositori";
 import ApiError from "../utils/apiError";
-import { sendNotification } from "./SendEmailNotification.service";
+import {
+    sendNotification,
+    sendBookingConfirmEmail,
+    sendPaymentRejectedEmail,
+} from "../services/SendEmailNotification.service";
 
-const bookingRepo = new ConfirmPaymentRepositori();
-export const ConfirmPaymentService = async (tenantId: number, bookingId: number, isAccepted: boolean) => {
-    const booking = await bookingRepo.findBookingById(bookingId);
+const bookingRepo = new ConfirmPaymentRepository();
+
+export const ConfirmPaymentService = async (
+    tenantId: string,
+    invoiceNumber: string,
+    isAccepted: boolean
+) => {
+    const booking = await bookingRepo.findBookingByInvoice(invoiceNumber);
 
     if (!booking) {
-        throw new ApiError(404, "Booking not found")
-    };
+        throw new ApiError(404, "Booking not found");
+    }
+
+    console.log("TenantId JWT (service):", tenantId);
+    console.log("TenantId property:", booking.property.tenantId);
 
     if (booking.property.tenantId !== tenantId) {
         throw new ApiError(403, "You do not have permission to confirm this payment.");
@@ -26,14 +38,18 @@ export const ConfirmPaymentService = async (tenantId: number, bookingId: number,
         newStatus = BookingStatus.MENUNGGU_PEMBAYARAN;
     }
 
-    const updatedBooking = await bookingRepo.updateBookingStatus(bookingId, newStatus);
+    const updatedBooking = await bookingRepo.updateBookingStatus(booking.id, newStatus);
 
-    // Panggil layanan notifikasi hanya jika pembayaran diterima
+    // ✅ Notifikasi & Email
     if (isAccepted) {
         const message = "Pembayaran Anda telah diterima. Pemesanan Anda sedang diproses.";
-
         await sendNotification(updatedBooking.userId, message);
+        await sendBookingConfirmEmail(updatedBooking); // email detail booking
+    } else {
+        const message = "Pembayaran Anda ditolak. Silakan upload ulang bukti pembayaran.";
+        await sendNotification(updatedBooking.userId, message);
+        await sendPaymentRejectedEmail(updatedBooking); // email penolakan
     }
 
-    return updatedBooking
-}
+    return updatedBooking;
+};

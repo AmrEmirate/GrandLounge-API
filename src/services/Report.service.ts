@@ -3,7 +3,7 @@ import ReportRepositori from "../repositories/Report.repositori";
 
 const reportRepo = new ReportRepositori();
 
-export const getSalesByTenant = async (tenantId: number, query: any) => {
+export const getSalesByTenant = async (tenantId: string, query: any) => {
     const startDate = query.startDate ? new Date(query.startDate) : undefined;
     const endDate = query.endDate ? new Date(query.endDate) : undefined;
     const groupBy = query.groupBy;

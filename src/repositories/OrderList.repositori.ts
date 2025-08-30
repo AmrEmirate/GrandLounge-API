@@ -2,14 +2,14 @@ import { prisma } from "../config/prisma";
 import { Prisma, BookingStatus } from "../generated/prisma";
 
 export default class OrderListRepositroy {
-    async findReservationByFilter(accountId: number, filter: {
+    async findReservationByFilter(user: string, filter: {
         checkIn?: Date,
         checkOut?: Date,
         invoiceNumber?: string,
         status?: string
     }) {
         const whereCondition: Prisma.BookingWhereInput = {
-            userId: accountId,
+            userId: user,
             ...(filter.status && { status: filter.status as BookingStatus }),
         };
 
@@ -38,12 +38,14 @@ export default class OrderListRepositroy {
 
     }
 
-    async tenantTransactionList(tenantId: number, status?: string) {
+    async tenantTransactionList(tenantId: string, status?: string) {
         const whereCondition: Prisma.BookingWhereInput = {
             bookingRooms: {
                 some: {
                     room: {
-                        propertyId: tenantId
+                        property: {
+                            tenantId: tenantId
+                        }
                     }
                 }
             }

@@ -15,7 +15,7 @@ class UploadPaymentRouter {
 
     private initialRoutes(): void {
         this.router.post(
-            "/:transactionId/upload-proof",
+            "/:invoiceNumber",
             verifyToken,
             isUser,
             uploadPaymentProof,

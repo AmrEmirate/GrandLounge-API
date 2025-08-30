@@ -2,9 +2,9 @@ import { prisma } from "../config/prisma";
 import { BookingStatus } from "../generated/prisma";
 
 export default class CancelOrderRepository {
-    async findBookingById(bookingId: number) {
+    async findBookingById(invoiceNumber: string) {
         return prisma.booking.findUnique({
-            where: { id: bookingId },
+            where: { invoiceNumber },
             include: {
                 user: true, 
                 property: { 
@@ -16,9 +16,9 @@ export default class CancelOrderRepository {
         });
     }
 
-    async updateBookingStatus(bookingId: number, newStatus: BookingStatus) {
+    async updateBookingStatus(invoiceNumber: string, newStatus: BookingStatus) {
         return prisma.booking.update({
-            where: { id: bookingId },
+            where: { invoiceNumber },
             data: {
                 status: newStatus
             }

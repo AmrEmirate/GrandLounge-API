@@ -9,13 +9,13 @@ export class CancelOrderControllers {
         next: NextFunction
     ): Promise<void> {
         try {
-            const { id } = req.params;
+            const { invoice } = req.params;
             const user = req.user as any;
 
             const userId = user.id;
             const isTenant = user.role === 'TENANT'
-            const canceledOrder = await CancelOrderService(Number(id), userId, isTenant);
-    
+            const canceledOrder = await CancelOrderService(invoice, userId, isTenant);
+
             res.status(200).json({
                 success: true,
                 message: "Order has been canceled successfully",

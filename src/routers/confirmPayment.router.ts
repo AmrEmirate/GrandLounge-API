@@ -15,7 +15,7 @@ export default class ConfirmPaymentRouter {
 
     private initializeRoutes() {
         this.router.patch(
-            '/confirm/:bookingId', 
+            '/confirm/:invoiceNumber', 
             verifyToken,
             isTenant,
             this.confirmPayment.confirmPayment 

@@ -8,9 +8,9 @@ export class ReviewRepository {
         rating,
         comment,
     }: {
-        userId: number;
-        propertyId: number;
-        bookingId: number;
+        userId: string;
+        propertyId: string;
+        bookingId: string;
         rating: number;
         comment?: string;
     }) {
@@ -25,26 +25,28 @@ export class ReviewRepository {
         });
     }
 
-    async findBookingById(bookingId: number) {
-        return prisma.review.findUnique({
+    async findBookingBy(bookingId: string) {
+        return prisma.review.findFirst({
             where: { bookingId }
         })
     }
 
-    async replyReview(reviewId: number, reply: string) {
+    async replyReview(reviewId: string, reply: string) {
         return prisma.review.update({
             where: { id: reviewId },
             data: { reply }
         });
     }
 
-    async getReviewsByProperty(propertyId: number) {
+    async getReviewsByPropertyName(propertyName: string) {
         return prisma.review.findMany({
-            where: { propertyId },
-            include: {
-                user: true
-            }
-        })
+            where: {
+                property: {
+                    name: propertyName,
+                },
+            },
+            include: { user: true, property: true },
+        });
     }
-    
+
 }

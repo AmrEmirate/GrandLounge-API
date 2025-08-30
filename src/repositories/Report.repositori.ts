@@ -2,7 +2,7 @@ import { prisma } from "../config/prisma";
 import { BookingStatus } from "../generated/prisma";
 
 export default class ReportRepositori {
-    async getAggregateSales(tenantId: number, startDate?: Date, endDate?: Date) {
+    async getAggregateSales(tenantId: string, startDate?: Date, endDate?: Date) {
         let whereClause: any = {
             status: BookingStatus.SELESAI,
             property: { tenantId }
@@ -18,35 +18,37 @@ export default class ReportRepositori {
         });
     }
 
-    async getSalesByProperty(tenantId: number, startDate?: Date, endDate?: Date, sortBy: string = "total") {
+    async getSalesByProperty(tenantId: string, startDate?: Date, endDate?: Date, sortBy?: any) {
         let whereClause: any = {
             status: BookingStatus.SELESAI,
             property: { tenantId }
         };
-
         if (startDate && endDate) {
             whereClause.createdAt = { gte: startDate, lte: endDate };
         }
 
-        const bookings = await prisma.booking.findMany({
+        const groupedSales = await prisma.booking.groupBy({
+            by: ['propertyId'],
             where: whereClause,
-            include: { property: true },
-            orderBy: sortBy === "date" ? { createdAt: "desc" } : { totalPrice: "desc" }
+            _sum: {
+                totalPrice: true,
+            },
         });
 
-        // kelompokin manual biar ada propertyName
-        const grouped: Record<number, { propertyName: string, total: number }> = {};
-        for (let b of bookings) {
-            if (!grouped[b.propertyId]) {
-                grouped[b.propertyId] = { propertyName: b.property.name, total: 0 };
-            }
-            grouped[b.propertyId].total += b.totalPrice;
-        }
+        const propertyIds = groupedSales.map(g => g.propertyId);
+        const properties = await prisma.property.findMany({
+            where: { id: { in: propertyIds } },
+            select: { id: true, name: true }
+        });
+        const propertyMap = new Map(properties.map(p => [p.id, p.name]));
 
-        return Object.values(grouped);
+        return groupedSales.map(item => ({
+            propertyName: propertyMap.get(item.propertyId),
+            total: item._sum.totalPrice
+        }));
     }
 
-    async getSalesByUser(tenantId: number, startDate?: Date, endDate?: Date, sortBy: string = "total") {
+    async getSalesByUser(tenantId: string, startDate?: Date, endDate?: Date, sortBy: string = "total") {
         let whereClause: any = {
             status: BookingStatus.SELESAI,
             property: { tenantId }
@@ -58,12 +60,12 @@ export default class ReportRepositori {
 
         const bookings = await prisma.booking.findMany({
             where: whereClause,
-            include: { user: true }, 
+            include: { user: true },
             orderBy: sortBy === "date" ? { createdAt: "desc" } : { totalPrice: "desc" }
         });
 
         // kelompokin manual biar ada userName
-        const grouped: Record<number, { userName: string, total: number }> = {};
+        const grouped: Record<string, { userName: string, total: number }> = {};
         for (let b of bookings) {
             if (!grouped[b.userId]) {
                 grouped[b.userId] = { userName: b.user.fullName, total: 0 };

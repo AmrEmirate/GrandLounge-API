@@ -16,18 +16,19 @@ export default class CancelOrderRouter {
 
     private initializeRoutes() {
         this.router.patch(
-            "/user/cancel/:id",
+            "/user/cancel/invoice/:invoice",
             verifyToken,
             isUser,
             this.cancelOrderControllers.cancelOrder
         );
 
         this.router.patch(
-            "/tenant/cancel/:id",
+            "/tenant/cancel/invoice/:invoice",
             verifyToken,
             isTenant,
             this.cancelOrderControllers.cancelOrder
         );
+
     }
 
     public getRouter(): Router {

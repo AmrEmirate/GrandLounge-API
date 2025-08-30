@@ -1,3 +1,4 @@
+// src/routers/review.router.ts
 import { Router } from "express";
 import { ReviewController } from "../controllers/Review.controller";
 import { verifyToken } from "../middleware/verifyToken";
@@ -15,24 +16,17 @@ export default class ReviewRouter {
     }
 
     private initializeRoutes(): void {
-        this.router.post(
-            "/",
-            verifyToken,
-            isUser,
-            this.reviewController.createReview
-        );
+        // User membuat review
+        this.router.post("/", verifyToken, isUser, this.reviewController.createReview);
 
-        this.router.post(
-            "/:reviewId/reply",
-            verifyToken,
-            isTenant,
-            this.reviewController.replyReview
-        );
+        // Tenant reply review
+        this.router.post("/:reviewId/reply", verifyToken, isTenant, this.reviewController.replyReview);
 
-        this.router.get(
-            "/property/:propertyId",
-            this.reviewController.getReviewByProperty
-        );
+        // Lihat review berdasarkan propertyId
+        this.router.get("/property/:propertyId", this.reviewController.getReviewByProperty);
+
+        // Lihat review berdasarkan nama hotel
+        this.router.get("/property/name/:propertyName", this.reviewController.getReviewByPropertyName);
     }
 
     public getRouter(): Router {

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import ApiError from "../utils/apiError";
-import { sendOrderConfirmation } from "../services/OrderReminder.service";
+import { sendOrderConfirmationByInvoice } from "../services/OrderReminder.service";
 
 export class OrderReminderController {
     public async sendConfirm(
@@ -9,12 +9,12 @@ export class OrderReminderController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const { bookingId } = req.body;
-            if (!bookingId) {
-                throw new ApiError(400, "Booking ID is required.");
+            const { invoiceNumber } = req.body;
+            if (!invoiceNumber) {
+                throw new ApiError(400, "Invoice number is required.");
             }
 
-            const result = await sendOrderConfirmation(parseInt(bookingId));
+            const result = await sendOrderConfirmationByInvoice(invoiceNumber);
 
             res.status(200).json({
                 success: true,
