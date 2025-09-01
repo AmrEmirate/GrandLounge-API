@@ -54,14 +54,18 @@ export const ConfirmPaymentService = async (
     });
 
     // Kirim notifikasi HANYA JIKA transaksi di atas berhasil
-    if (isAccepted) {
-        const message = "Pembayaran Anda telah diterima. Pemesanan Anda sedang diproses.";
-        await sendNotification(updatedBooking.userId, message);
-        await sendBookingConfirmEmail(updatedBooking);
-    } else {
-        const message = "Pembayaran Anda ditolak. Silakan upload ulang bukti pembayaran.";
-        await sendNotification(updatedBooking.userId, message);
-        await sendPaymentRejectedEmail(updatedBooking);
+    try {
+        if (isAccepted) {
+            const message = "Pembayaran Anda telah diterima. Pemesanan Anda sedang diproses.";
+            await sendNotification(updatedBooking.userId, message);
+            await sendBookingConfirmEmail(updatedBooking);
+        } else {
+            const message = "Pembayaran Anda ditolak. Silakan upload ulang bukti pembayaran.";
+            await sendNotification(updatedBooking.userId, message);
+            await sendPaymentRejectedEmail(updatedBooking);
+        }
+    } catch (error) {
+        throw new ApiError(500, `Gagal mengirim notifikasi untuk booking ${updatedBooking.id}:`)
     }
 
     return updatedBooking;
