@@ -10,7 +10,8 @@ const allAuthenticated = authMiddleware(); // Middleware untuk semua yang sudah 
 const tenantOnly = authMiddleware([UserRole.TENANT]); // Middleware khusus tenant
 
 // Endpoint ini sekarang bisa diakses semua user yang sudah login
-router.get('/', allAuthenticated, CategoryController.getAll);
+// Endpoint ini sekarang bisa diakses oleh publik
+router.get('/', CategoryController.getAll);
 
 // Endpoint ini tetap hanya untuk tenant
 router.post('/', tenantOnly, CategoryController.create);
