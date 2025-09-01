@@ -24,20 +24,21 @@ export const createReservationService = async (
         throw new ApiError(404, `Kamar dengan nama "${roomName}" tidak ditemukan di properti ini.`);
     }
 
-    const isAvailable = await reservationRepo.checkRoomAvailability(room.id, check_in, check_out);
-    if (!isAvailable) {
-        throw new ApiError(400, "Kamar ini tidak tersedia pada tanggal yang dipilih.");
-    }
-
+    
     const user = await reservationRepo.findOrCreateAccount(guestInfo);
 
     const durationDays = Math.ceil((check_out.getTime() - check_in.getTime()) / 86_400_000);
     const totalPrice = room.basePrice * durationDays;
     const invoiceNumber = `INV-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
 
-    const newBooking = await prisma.$transaction(async (prisma) => {
-        // 1. Buat entri Booking utama
-        const booking = await prisma.booking.create({
+    const newBooking = await prisma.$transaction(async (tx) => {
+
+        const isAvailable = await reservationRepo.checkRoomAvailability(room.id, check_in, check_out, tx); 
+        if (!isAvailable) {
+            throw new ApiError(400, "Kamar ini tidak tersedia pada tanggal yang dipilih.");
+        }
+
+        const booking = await tx.booking.create({
             data: {
                 invoiceNumber,
                 checkIn: check_in,
@@ -50,12 +51,12 @@ export const createReservationService = async (
             },
         });
 
-        // 2. Buat entri di BookingRooms untuk menghubungkan Booking dengan Room
-        await prisma.bookingRoom.create({
+
+        await tx.bookingRoom.create({
             data: {
                 bookingId: booking.id,
                 roomId: room.id,
-                guestCount: 1,
+                guestCount: 1, // Asumsi 1 tamu
                 pricePerNight: room.basePrice,
                 numberOfNights: durationDays,
                 totalPrice: totalPrice,
@@ -63,6 +64,8 @@ export const createReservationService = async (
         });
 
         return booking;
+    }, {
+        
     });
 
     let transaction;

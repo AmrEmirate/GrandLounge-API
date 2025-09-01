@@ -12,6 +12,17 @@ export class ReviewService {
         if (booking.userId !== userId) throw new ApiError(403, "Tidak bisa review booking orang lain");
         if (booking.status !== "SELESAI") throw new ApiError(400, "Review hanya bisa setelah check-out");
 
+        const currentDate = new Date();
+        const checkoutDate = new Date(booking.checkOut);
+
+        currentDate.setHours(0, 0, 0, 0);
+        checkoutDate.setHours(0, 0, 0, 0);
+
+        if (currentDate <= checkoutDate) {
+            throw new ApiError(400, 'You can only review this booking after the check-out date has passed.');
+        }
+
+
         const existing = await this.reviewRepo.findBookingBy(bookingId);
         if (existing) throw new ApiError(400, "Review sudah pernah diberikan");
 
@@ -39,7 +50,7 @@ export class ReviewService {
 
     // Get reviews by propertyId
     async getReviewsByProperty(propertyId: string) {
-         return this.getReviewsByPropertyId(propertyId);
+        return this.getReviewsByPropertyId(propertyId);
     }
 
     // Get reviews by propertyName (hotel name)

@@ -1,10 +1,11 @@
-import { Prisma, BookingStatus } from "../generated/prisma";
+import { Prisma, BookingStatus, PrismaClient } from "../generated/prisma";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { prisma } from "../config/prisma";
+import { DefaultArgs } from "../generated/prisma/runtime/library";
 
 export default class RoomReservationRepository {
-    async checkRoomAvailability(roomId: string, newStartDate: Date, newEndDate: Date) {
+    async checkRoomAvailability(roomId: string, newStartDate: Date, newEndDate: Date, tx: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">) {
         const existingBookings = await prisma.bookingRoom.findMany({
             where: {
                 roomId: roomId,
@@ -104,7 +105,7 @@ export default class RoomReservationRepository {
         const availableRooms: { id: string; basePrice: number }[] = [];
 
         for (const room of rooms) {
-            const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut);
+            const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut, prisma);
             if (isAvailable) {
                 availableRooms.push({ id: room.id, basePrice: room.basePrice });
             }
@@ -167,7 +168,7 @@ export default class RoomReservationRepository {
         const availableRooms: string[] = [];
 
         for (const room of rooms) {
-            const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut);
+            const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut, prisma);
             if (isAvailable) availableRooms.push(room.id);
         }
 
