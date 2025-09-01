@@ -3,24 +3,42 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { prisma } from "../config/prisma";
 import { DefaultArgs } from "../generated/prisma/runtime/library";
+import { eachDayOfInterval } from 'date-fns';
 
 export default class RoomReservationRepository {
+    // --- FUNGSI YANG DIPERBAIKI ---
     async checkRoomAvailability(roomId: string, newStartDate: Date, newEndDate: Date, tx: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">) {
-        const existingBookings = await prisma.bookingRoom.findMany({
+        // 1. Cek tumpang tindih dengan booking yang sudah ada (status MENUNGGU_PEMBAYARAN atau DIPROSES)
+        const existingBookings = await tx.bookingRoom.count({
             where: {
                 roomId: roomId,
                 booking: {
-                    status: { in: [BookingStatus.DIPROSES, BookingStatus.MENUNGGU_PEMBAYARAN] },
-                    AND: [
-                        { checkOut: { gt: newStartDate } },
-                        { checkIn: { lt: newEndDate } }
-                    ]
+                    status: { in: [BookingStatus.MENUNGGU_PEMBAYARAN, BookingStatus.DIPROSES] },
+                    checkOut: { gt: newStartDate },
+                    checkIn: { lt: newEndDate }
                 }
-            },
-            include: { booking: true }
+            }
         });
-        return existingBookings.length === 0;
+
+        if (existingBookings > 0) {
+            return false; // Langsung return false jika sudah ada booking
+        }
+
+        // 2. Cek ketersediaan manual yang di-set oleh tenant di tabel RoomAvailability
+        const datesInRange = eachDayOfInterval({ start: newStartDate, end: new Date(newEndDate.getTime() - 1) });
+        
+        const unavailableDatesCount = await tx.roomAvailability.count({
+            where: {
+                roomId: roomId,
+                date: { in: datesInRange },
+                isAvailable: false // Cari tanggal yang secara eksplisit ditandai "tidak tersedia"
+            }
+        });
+
+        // Jika ada satu saja tanggal yang tidak tersedia di rentang itu, maka kamar tidak tersedia.
+        return unavailableDatesCount === 0;
     }
+    // --- AKHIR FUNGSI YANG DIPERBAIKI ---
 
     async createTransaction(data: Prisma.BookingCreateInput) {
         return prisma.booking.create({ data });
@@ -28,10 +46,10 @@ export default class RoomReservationRepository {
 
     async findRoomByName(propertyId: string, name: string) {
         return prisma.room.findFirst({
-            where: { 
+            where: {
                 propertyId: propertyId,
                 name: name
-             },
+            },
             select: { id: true, propertyId: true, basePrice: true },
         });
     }
@@ -62,30 +80,30 @@ export default class RoomReservationRepository {
     }
 
     async findTransactionByRoomName(roomName: string, userId: string) {
-    return prisma.booking.findFirst({
-        where: {
-            userId,
-            bookingRooms: {
-                some: {
-                    room: {
-                        name: roomName,
+        return prisma.booking.findFirst({
+            where: {
+                userId,
+                bookingRooms: {
+                    some: {
+                        room: {
+                            name: roomName,
+                        },
                     },
                 },
             },
-        },
-        include: {
-            property: {
-                include: {
-                    city: true,
-                    category: true,
+            include: {
+                property: {
+                    include: {
+                        city: true,
+                        category: true,
+                    },
+                },
+                bookingRooms: {
+                    include: { room: true },
                 },
             },
-            bookingRooms: {
-                include: { room: true },
-            },
-        },
-    });
-}
+        });
+    }
 
     async updateTransaction(bookingId: string, data: Prisma.BookingUpdateInput) {
         return prisma.booking.update({

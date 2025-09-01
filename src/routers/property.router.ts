@@ -14,6 +14,9 @@ router.get('/cities', PropertyController.getCities);
 router.get('/:id', PropertyController.getOne);
 router.get('/:id/availability', PropertyController.getMonthlyAvailability);
 
+// --- RUTE BARU DITAMBAHKAN DI SINI ---
+router.get('/:id/available-rooms', PropertyController.getAvailableRooms);
+
 // --- Endpoint Terproteksi untuk Tenant (Manajemen Properti) ---
 router.post('/', tenantOnly, PropertyController.create);
 router.get('/my-properties/all', tenantOnly, PropertyController.getPropertiesByTenant);

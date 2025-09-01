@@ -1,5 +1,9 @@
 import { prisma } from '../config/prisma';
 import { startOfMonth, endOfMonth } from 'date-fns';
+import RoomReservationRepository from '../repositories/RoomReservation.repositori';
+
+// Inisialisasi repositori yang akan kita gunakan
+const roomReservationRepo = new RoomReservationRepository();
 
 export const PublicPropertyService = {
   /**
@@ -80,7 +84,6 @@ export const PublicPropertyService = {
     const property = await prisma.property.findFirst({
       where: { id, deletedAt: null },
       include: {
-        // PERBAIKAN: Hapus 'where' dari relasi to-one (satu-ke-satu)
         category: true,
         city: true,
         tenant: { 
@@ -90,14 +93,12 @@ export const PublicPropertyService = {
             }
           } 
         },
-        
-        // 'where' tetap ada di relasi to-many (satu-ke-banyak)
         rooms: { where: { deletedAt: null } },
         amenities: { where: { deletedAt: null } },
         reviews: {
-          where: { deletedAt: null }, // Filter ulasan yang aktif
+          where: { deletedAt: null },
           include: {
-            user: { // Ambil info user yang memberikan ulasan
+            user: {
               select: { fullName: true, profilePicture: true }
             }
           }
@@ -105,13 +106,40 @@ export const PublicPropertyService = {
       },
     });
 
-    // Validasi manual setelah mengambil data
     if (property && (property.category?.deletedAt || property.city?.deletedAt || property.tenant?.deletedAt)) {
-      return null; // Anggap properti tidak ditemukan jika relasinya sudah di-soft delete
+      return null;
     }
 
     return property;
   },
+
+  // --- FUNGSI BARU UNTUK MENGECEK KAMAR YANG TERSEDIA ---
+  /**
+   * Mengambil daftar kamar yang tersedia untuk properti tertentu dalam rentang tanggal.
+   * @param propertyId - ID properti (UUID).
+   * @param checkIn - Tanggal check-in.
+   * @param checkOut - Tanggal check-out.
+   */
+  getAvailableRooms: async (propertyId: string, checkIn: Date, checkOut: Date) => {
+    // Memanggil logika dari repositori untuk mendapatkan ID kamar yang tersedia
+    const availableRoomIds = await roomReservationRepo.getAvailableRooms(propertyId, checkIn, checkOut);
+    
+    // Jika tidak ada kamar yang tersedia, kembalikan array kosong
+    if (availableRoomIds.length === 0) {
+        return [];
+    }
+    
+    // Mengambil detail lengkap dari kamar-kamar yang ID-nya ditemukan
+    const rooms = await prisma.room.findMany({
+        where: {
+            id: { in: availableRoomIds },
+            deletedAt: null // Pastikan kamar tidak di-soft delete
+        }
+    });
+
+    return rooms;
+  },
+  // --- AKHIR FUNGSI BARU ---
   
   /**
    * Mengambil data ketersediaan dan harga terendah bulanan untuk sebuah properti.
