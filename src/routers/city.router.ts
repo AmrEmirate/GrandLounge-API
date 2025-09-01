@@ -10,7 +10,7 @@ const allAuthenticated = authMiddleware(); // Middleware untuk semua yang sudah 
 const tenantOnly = authMiddleware([UserRole.TENANT]); // Middleware khusus tenant
 
 // Endpoint publik untuk mengambil semua kota
-router.get('/', allAuthenticated, CityController.getAll);
+router.get('/', CityController.getAll);
 
 // Endpoint terproteksi hanya untuk tenant
 router.post('/', tenantOnly, CityController.create);
