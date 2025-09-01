@@ -58,21 +58,31 @@ export default class ReportRepositori {
             whereClause.createdAt = { gte: startDate, lte: endDate };
         }
 
-        const bookings = await prisma.booking.findMany({
+        const groupedSales = await prisma.booking.groupBy({
+            by: ['userId'], // Kelompokkan berdasarkan userId
             where: whereClause,
-            include: { user: true },
-            orderBy: sortBy === "date" ? { createdAt: "desc" } : { totalPrice: "desc" }
+            _sum: {
+                totalPrice: true,
+            },
         });
 
-        // kelompokin manual biar ada userName
-        const grouped: Record<string, { userName: string, total: number }> = {};
-        for (let b of bookings) {
-            if (!grouped[b.userId]) {
-                grouped[b.userId] = { userName: b.user.fullName, total: 0 };
-            }
-            grouped[b.userId].total += b.totalPrice;
+        const userIds = groupedSales.map(g => g.userId);
+
+        const users = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, fullName: true }
+        });
+        const userMap = new Map(users.map(u => [u.id, u.fullName]));
+
+        const result = groupedSales.map(item => ({
+            userName: userMap.get(item.userId) || 'Unknown User',
+            total: item._sum.totalPrice
+        }));
+
+        if (sortBy === 'total') {
+            result.sort((a, b) => (b.total || 0) - (a.total || 0));
         }
 
-        return Object.values(grouped);
+        return result;
     }
 }

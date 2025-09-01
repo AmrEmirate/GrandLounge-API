@@ -1,15 +1,19 @@
+// src/routers/category.router.ts
 import { Router } from 'express';
 import { CategoryController } from '../controllers/category.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { UserRole } from '../generated/prisma';
 
-
 const router = Router();
 
-const tenantOnly = authMiddleware([UserRole.TENANT]);
+const allAuthenticated = authMiddleware(); // Middleware untuk semua yang sudah login
+const tenantOnly = authMiddleware([UserRole.TENANT]); // Middleware khusus tenant
 
+// Endpoint ini sekarang bisa diakses semua user yang sudah login
+router.get('/', allAuthenticated, CategoryController.getAll);
+
+// Endpoint ini tetap hanya untuk tenant
 router.post('/', tenantOnly, CategoryController.create);
-router.get('/', tenantOnly, CategoryController.getAll);
 router.get('/:id', tenantOnly, CategoryController.getById);
 router.patch('/:id', tenantOnly, CategoryController.update);
 router.delete('/:id', tenantOnly, CategoryController.delete);

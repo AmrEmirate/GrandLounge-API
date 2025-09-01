@@ -46,3 +46,30 @@ export const sendCheckinReminderEmail = async (
     });
     console.log(`⏰ Email reminder dikirim ke ${booking.user.email}`);
 };
+
+export const sendPaymentRejectedEmail = async (
+    booking: Booking & { user: User }
+) => {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: booking.user.email,
+        subject: "Informasi Pembayaran Anda",
+        html: `
+            <h1>Pembayaran Ditolak</h1>
+            <p>Hai ${booking.user.fullName},</p>
+            <p>Mohon maaf, pembayaran untuk invoice <b>${booking.invoiceNumber}</b> telah kami tolak.</p>
+            <p>Silakan periksa kembali bukti pembayaran Anda dan unggah ulang.</p>
+        `,
+    });
+    console.log(`❌ Email penolakan pembayaran dikirim ke ${booking.user.email}`);
+};
+
+// Fungsi ini bisa dibuat sederhana atau kompleks sesuai kebutuhan
+export const sendNotification = async (userId: string, message: string) => {
+    // Di sini Anda bisa menambahkan logika push notification, dll.
+    // Untuk sekarang, kita bisa log saja sebagai placeholder.
+    console.log(`🔔 Notifikasi untuk user ${userId}: "${message}"`);
+    // Karena ini tidak mengirim email, tidak perlu memanggil transporter
+    return Promise.resolve();
+};
+

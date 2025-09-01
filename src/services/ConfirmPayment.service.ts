@@ -1,6 +1,7 @@
 import { BookingStatus } from "../generated/prisma";
 import ConfirmPaymentRepository from "../repositories/ConfirmPayment.repositori";
 import ApiError from "../utils/apiError";
+import { prisma } from "../config/prisma"; // Import prisma untuk memulai transaksi
 import {
     sendNotification,
     sendBookingConfirmEmail,
@@ -14,41 +15,53 @@ export const ConfirmPaymentService = async (
     invoiceNumber: string,
     isAccepted: boolean
 ) => {
-    const booking = await bookingRepo.findBookingByInvoice(invoiceNumber);
+    // Mulai transaksi untuk memastikan semua operasi DB aman
+    const updatedBooking = await prisma.$transaction(async (tx) => {
+        // Buat instance repo BARU KHUSUS untuk transaksi ini
+        // dengan memberikan 'tx' ke constructor
+        const transactionalRepo = new ConfirmPaymentRepository(tx);
 
-    if (!booking) {
-        throw new ApiError(404, "Booking not found");
-    }
+        // Gunakan repo transaksional untuk semua operasi di dalam sini
+        const booking = await transactionalRepo.findBookingByInvoice(invoiceNumber);
 
-    console.log("TenantId JWT (service):", tenantId);
-    console.log("TenantId property:", booking.property.tenantId);
+        if (!booking) {
+            throw new ApiError(404, "Booking not found");
+        }
 
-    if (booking.property.tenantId !== tenantId) {
-        throw new ApiError(403, "You do not have permission to confirm this payment.");
-    }
+        if (booking.property.tenantId !== tenantId) {
+            throw new ApiError(403, "You do not have permission to confirm this payment.");
+        }
 
-    if (booking.status !== "MENUNGGU_PEMBAYARAN") {
-        throw new ApiError(400, "Cannot confirm payment for this booking status.");
-    }
+        if (booking.status !== "MENUNGGU_PEMBAYARAN") {
+            throw new ApiError(400, "Cannot confirm payment for this booking status.");
+        }
 
-    let newStatus: BookingStatus;
-    if (isAccepted) {
-        newStatus = BookingStatus.DIPROSES;
-    } else {
-        newStatus = BookingStatus.MENUNGGU_PEMBAYARAN;
-    }
+        let newStatus: BookingStatus;
+        if (isAccepted) {
+            newStatus = BookingStatus.DIPROSES;
+        } else {
+            newStatus = BookingStatus.MENUNGGU_PEMBAYARAN;
+        }
 
-    const updatedBooking = await bookingRepo.updateBookingStatus(booking.id, newStatus);
+        const result = await transactionalRepo.updateBookingStatus(booking.id, newStatus);
 
-    // ✅ Notifikasi & Email
+        // Jika pembayaran ditolak, bersihkan link bukti pembayaran lama
+        if (!isAccepted) {
+            await transactionalRepo.clearPaymentProof(booking.id);
+        }
+
+        return result; // Kembalikan hasil dari dalam transaksi
+    });
+
+    // Kirim notifikasi HANYA JIKA transaksi di atas berhasil
     if (isAccepted) {
         const message = "Pembayaran Anda telah diterima. Pemesanan Anda sedang diproses.";
         await sendNotification(updatedBooking.userId, message);
-        await sendBookingConfirmEmail(updatedBooking); // email detail booking
+        await sendBookingConfirmEmail(updatedBooking);
     } else {
         const message = "Pembayaran Anda ditolak. Silakan upload ulang bukti pembayaran.";
         await sendNotification(updatedBooking.userId, message);
-        await sendPaymentRejectedEmail(updatedBooking); // email penolakan
+        await sendPaymentRejectedEmail(updatedBooking);
     }
 
     return updatedBooking;
