@@ -7,13 +7,15 @@ export const OrderListService = async (userId: string, filter: {
     checkIn?: Date,
     checkOut?: Date,
     invoiceNumber?: string,
-    status?: string
+    status?: string,
+    propertyName?: string;
 }) => {
     const parsedFilter = {
         checkIn: filter.checkIn ? new Date(filter.checkIn) : undefined,
         checkOut: filter.checkOut ? new Date(filter.checkOut) : undefined,
         invoiceNumber: filter.invoiceNumber,
-        status: filter.status
+        status: filter.status,
+        propertyName: filter.propertyName
     }
 
     const orderRepo = new OrderListRepositroy();

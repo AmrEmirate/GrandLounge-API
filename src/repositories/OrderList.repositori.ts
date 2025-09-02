@@ -6,7 +6,8 @@ export default class OrderListRepositroy {
         checkIn?: Date,
         checkOut?: Date,
         invoiceNumber?: string,
-        status?: string
+        status?: string,
+        propertyName?: string
     }) {
         const whereCondition: Prisma.BookingWhereInput = {
             userId: user,
@@ -20,22 +21,38 @@ export default class OrderListRepositroy {
             };
         };
 
-        if (filter.checkIn || filter.checkOut) {
-            whereCondition.checkIn = {};
-            if (filter.checkIn) {
-                whereCondition.checkIn.gte = filter.checkIn;
-            }
-            if (filter.checkOut) {
-                whereCondition.checkIn.lte = filter.checkOut;
-            }
-        };
+        if (filter.propertyName) {
+            whereCondition.property = {
+                name: {
+                    contains: filter.propertyName,
+                    mode: 'insensitive'
+                }
+            };
+        }
+
+        if (filter.checkIn) {
+            // Ambil tanggal dari filter
+            const targetDate = new Date(filter.checkIn);
+
+            // Tentukan awal hari (pukul 00:00:00) DARI TANGGAL TERSEBUT
+            const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+
+            // Tentukan awal hari BERIKUTNYA
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1);
+
+            whereCondition.checkIn = {
+                gte: startDate, // Lebih besar atau sama dengan awal hari yang dipilih
+                lt: endDate     // Lebih KECIL dari awal hari berikutnya
+            };
+        }
 
         return prisma.booking.findMany({
             where: whereCondition,
-            include: { 
+            include: {
                 bookingRooms: true,
                 property: true,
-             },
+            },
             orderBy: { createdAt: 'desc' }
         })
 

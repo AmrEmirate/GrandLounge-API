@@ -15,6 +15,7 @@ class OrderListController {
                 checkOut: req.query.checkOut ? new Date(req.query.checkOut as string) : undefined,
                 invoiceNumber: req.query.invoiceNumber as string | undefined,
                 status: req.query.status as string,
+                propertyName: req.query.propertyName as string | undefined
             };
 
             if (filter.checkIn && filter.checkOut && filter.checkIn > filter.checkOut) {
