@@ -8,18 +8,16 @@ import upload from '../middleware/upload.middleware';
 const router = Router();
 const tenantOnly = authMiddleware([UserRole.TENANT]);
 
-// --- Endpoint Publik untuk User ---
+// --- Endpoint Publik ---
 router.get('/', PropertyController.getAll);
 router.get('/cities', PropertyController.getCities);
 router.get('/:id', PropertyController.getOne);
 router.get('/:id/availability', PropertyController.getMonthlyAvailability);
-
-// --- RUTE BARU DITAMBAHKAN DI SINI ---
 router.get('/:id/available-rooms', PropertyController.getAvailableRooms);
 
-// --- Endpoint Terproteksi untuk Tenant (Manajemen Properti) ---
+// --- Endpoint Terproteksi untuk Tenant ---
 router.post('/', tenantOnly, PropertyController.create);
-router.get('/my-properties/all', tenantOnly, PropertyController.getPropertiesByTenant);
+router.get('/my-properties/all', tenantOnly, PropertyController.getPropertiesByTenant); // Middleware debug sudah dihapus
 router.get('/my-properties/:id', tenantOnly, PropertyController.getPropertyByIdForTenant);
 router.patch('/my-properties/:id', tenantOnly, PropertyController.update);
 router.delete('/my-properties/:id', tenantOnly, PropertyController.delete);
@@ -36,7 +34,7 @@ router.post(
     PropertyController.uploadGallery
 );
 
-// --- Endpoint Terproteksi untuk Tenant (Manajemen Kamar) ---
+// Rute untuk Kamar
 router.use('/my-properties/:propertyId/rooms', tenantOnly, roomRouter);
 
 export default router;

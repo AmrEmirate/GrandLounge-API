@@ -23,11 +23,10 @@ export const authMiddleware = (roles: UserRole[] = []) => {
     }
 
     try {
-      // Menggunakan findFirst untuk menambahkan kondisi soft delete
       const user = await prisma.user.findFirst({
         where: {
           id: decoded.id,
-          deletedAt: null, // Pastikan pengguna belum di-soft delete
+          deletedAt: null,
         },
         include: {
           tenant: true,
@@ -44,10 +43,19 @@ export const authMiddleware = (roles: UserRole[] = []) => {
 
       req.user = user;
 
-      // Memeriksa otorisasi peran (role)
-      if (roles.length > 0 && !roles.includes(user.role)) {
-        return res.status(403).json({ message: 'Anda tidak memiliki hak akses untuk sumber daya ini.' });
+      // --- PERBAIKAN LOGIKA OTORISASI DI SINI ---
+      if (roles.length > 0) {
+        // 1. Cek apakah peran user sesuai dengan yang diizinkan
+        if (!roles.includes(user.role)) {
+          return res.status(403).json({ message: 'Anda tidak memiliki hak akses untuk sumber daya ini.' });
+        }
+
+        // 2. Jika peran TENANT dibutuhkan, pastikan data tenant ada
+        if (roles.includes(UserRole.TENANT) && !user.tenant) {
+          return res.status(403).json({ message: 'Akses ditolak. Data tenant tidak ditemukan untuk akun ini.' });
+        }
       }
+      // --- AKHIR PERBAIKAN ---
 
       next();
     } catch (error) {
