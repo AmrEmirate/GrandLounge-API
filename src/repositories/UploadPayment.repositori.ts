@@ -6,7 +6,7 @@ export class UploadPaymentRepository {
             where: { invoiceNumber },
             data: {
                 paymentProof: proofUrl,
-                status: "MENUNGGU_PEMBAYARAN",
+                status: "MENUNGGU_KONFIRMASI",
                 updatedAt: new Date()
             }
         });

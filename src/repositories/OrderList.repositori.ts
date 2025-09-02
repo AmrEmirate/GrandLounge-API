@@ -32,7 +32,10 @@ export default class OrderListRepositroy {
 
         return prisma.booking.findMany({
             where: whereCondition,
-            include: { bookingRooms: true },
+            include: { 
+                bookingRooms: true,
+                property: true,
+             },
             orderBy: { createdAt: 'desc' }
         })
 
@@ -67,7 +70,8 @@ export default class OrderListRepositroy {
                         }
                     }
                 },
-                user: true
+                user: true,
+                property: true
             },
             orderBy: { createdAt: "desc" }
         });
