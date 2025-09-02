@@ -85,12 +85,21 @@ export const AuthService = {
     if (!user.verified) throw new Error('Akun belum diverifikasi.');
     const isPasswordValid = await comparePassword(data.password, user.password);
     if (!isPasswordValid) throw new Error('Email atau password salah.');
+    
+    // --- PERBAIKAN DI SINI ---
+    // Tambahkan field `verified` dan `createdAt` ke dalam payload token.
     const jwt = generateToken({ 
-    id: user.id, 
-    role: user.role,
-    fullName: user.fullName, 
-    email: user.email        
-});
+        id: user.id, 
+        role: user.role,
+        fullName: user.fullName, 
+        email: user.email,
+        verified: user.verified,
+        createdAt: user.createdAt,
+        profilePicture: user.profilePicture
+    });
+    
+    // --- AKHIR PERBAIKAN ---
+
     return { user, token: jwt };
   },
 
