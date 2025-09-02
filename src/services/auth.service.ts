@@ -85,7 +85,12 @@ export const AuthService = {
     if (!user.verified) throw new Error('Akun belum diverifikasi.');
     const isPasswordValid = await comparePassword(data.password, user.password);
     if (!isPasswordValid) throw new Error('Email atau password salah.');
-    const jwt = generateToken({ id: user.id, role: user.role });
+    const jwt = generateToken({ 
+    id: user.id, 
+    role: user.role,
+    fullName: user.fullName, 
+    email: user.email        
+});
     return { user, token: jwt };
   },
 

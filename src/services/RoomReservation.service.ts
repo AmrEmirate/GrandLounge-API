@@ -11,11 +11,12 @@ const reservationRepo = new ReservationRepositori();
 export const createReservationService = async (
     propertyId: string,
     roomName: string,
-    check_in: Date,
-    check_out: Date,
-    guestInfo: { name: string, email: string, password?: string },
+    checkIn: Date,
+    checkOut: Date,
+    guestInfo: { name: string; email: string; password?: string },
+    paymentMethod: string, // <-- Pastikan parameter ini ada
 ) => {
-    if (check_out <= check_in) {
+    if (checkOut <= checkIn) {
         throw new ApiError(400, "End date must be after start date");
     }
 
@@ -24,16 +25,14 @@ export const createReservationService = async (
         throw new ApiError(404, `Kamar dengan nama "${roomName}" tidak ditemukan di properti ini.`);
     }
 
-    
     const user = await reservationRepo.findOrCreateAccount(guestInfo);
 
-    const durationDays = Math.ceil((check_out.getTime() - check_in.getTime()) / 86_400_000);
+    const durationDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / 86_400_000);
     const totalPrice = room.basePrice * durationDays;
     const invoiceNumber = `INV-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
 
     const newBooking = await prisma.$transaction(async (tx) => {
-
-        const isAvailable = await reservationRepo.checkRoomAvailability(room.id, check_in, check_out, tx); 
+        const isAvailable = await reservationRepo.checkRoomAvailability(room.id, checkIn, checkOut, tx);
         if (!isAvailable) {
             throw new ApiError(400, "Kamar ini tidak tersedia pada tanggal yang dipilih.");
         }
@@ -41,8 +40,8 @@ export const createReservationService = async (
         const booking = await tx.booking.create({
             data: {
                 invoiceNumber,
-                checkIn: check_in,
-                checkOut: check_out,
+                checkIn: checkIn,
+                checkOut: checkOut,
                 totalPrice,
                 status: BookingStatus.MENUNGGU_PEMBAYARAN,
                 paymentDeadline: new Date(Date.now() + 1 * 60 * 60 * 1000),
@@ -51,12 +50,11 @@ export const createReservationService = async (
             },
         });
 
-
         await tx.bookingRoom.create({
             data: {
                 bookingId: booking.id,
                 roomId: room.id,
-                guestCount: 1, // Asumsi 1 tamu
+                guestCount: 1,
                 pricePerNight: room.basePrice,
                 numberOfNights: durationDays,
                 totalPrice: totalPrice,
@@ -64,38 +62,42 @@ export const createReservationService = async (
         });
 
         return booking;
-    }, {
-        
     });
 
-    let transaction;
-    try {
-        transaction = await snap.createTransaction({
-            transaction_details: {
-                order_id: invoiceNumber,
-                gross_amount: totalPrice,
-            },
-            customer_details: {
-                first_name: guestInfo.name,
-                email: guestInfo.email,
-            },
-        } as any);
-    } catch (err) {
-        await reservationRepo.updateTransaction(newBooking.id, { status: BookingStatus.DIBATALKAN });
-        throw new ApiError(500, "Failed to create Midtrans transaction");
+    // --- LOGIKA PEMBAYARAN YANG DIPERBAIKI ---
+    if (paymentMethod === 'gateway') {
+        let transaction;
+        try {
+            transaction = await snap.createTransaction({
+                transaction_details: {
+                    order_id: newBooking.invoiceNumber,
+                    gross_amount: newBooking.totalPrice,
+                },
+                customer_details: {
+                    first_name: guestInfo.name,
+                    email: guestInfo.email,
+                },
+            } as any);
+        } catch (err) {
+            await reservationRepo.updateTransaction(newBooking.id, { status: BookingStatus.DIBATALKAN });
+            throw new ApiError(500, "Gagal membuat transaksi Midtrans");
+        }
+
+        const updatedBooking = await reservationRepo.updateTransaction(newBooking.id, {
+            midtransOrderId: newBooking.invoiceNumber,
+            paymentToken: transaction.token,
+            paymentUrl: transaction.redirect_url,
+        });
+
+        return {
+            ...updatedBooking,
+            paymentUrl: transaction.redirect_url!,
+            paymentToken: transaction.token!,
+        };
+    } else {
+        // Jika metode pembayaran adalah 'manual' atau lainnya, langsung kembalikan data booking
+        return newBooking;
     }
-
-    const updatedBooking = await reservationRepo.updateTransaction(newBooking.id, {
-        midtransOrderId: invoiceNumber,
-        paymentToken: transaction.token,
-        paymentUrl: transaction.redirect_url,
-    });
-
-    return {
-        ...updatedBooking,
-        paymentUrl: transaction.redirect_url!,
-        paymentToken: transaction.token!,
-    };
 };
 
 // dapat melihat semua reservasi milik pengguna

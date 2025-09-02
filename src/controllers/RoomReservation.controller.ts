@@ -9,10 +9,10 @@ class RoomReservationController {
     // USER CREATE RESERVATION
     public async createReservationController(req: Request, res: Response, next: NextFunction) {
         try {
-            const { propertyId, checkIn, checkOut, roomCount, guestInfo } = req.body;
+            const { propertyId, roomName, checkIn, checkOut, guestInfo, paymentMethod } = req.body;
 
             // Validasi input
-            if (!propertyId || !checkIn || !checkOut || !roomCount || !guestInfo?.email || !guestInfo?.name) {
+            if (!propertyId || !checkIn || !checkOut || !roomName || !guestInfo?.email || !guestInfo?.name || !paymentMethod) {
                 throw new ApiError(400, "Missing required reservation data.");
             }
 
@@ -20,14 +20,9 @@ class RoomReservationController {
             const user = await repo.findOrCreateAccount({ email: guestInfo.email, name: guestInfo.name });
 
             // Buat reservation + bookingRooms otomatis
-            const newReservation = await repo.createReservationWithRooms(
-                user.id,
-                propertyId,
-                new Date(checkIn),
-                new Date(checkOut),
-                roomCount
+            const newReservation = await createReservationService(
+                propertyId, roomName, new Date(checkIn), new Date(checkOut), guestInfo, paymentMethod
             );
-
             res.status(201).json({
                 success: true,
                 message: "Reservation created successfully",
@@ -130,20 +125,23 @@ class RoomReservationController {
         next: NextFunction,
     ): Promise<void> {
         try {
-            const { propertyId, roomName, checkIn, checkOut, guestInfo } = req.body;
+            // Pastikan 'paymentMethod' diambil dari req.body
+            const { propertyId, roomName, checkIn, checkOut, guestInfo, paymentMethod } = req.body;
 
-            if (!propertyId || !roomName || !checkIn || !checkOut || !guestInfo?.email || !guestInfo?.name) {
+            if (!propertyId || !roomName || !checkIn || !checkOut || !guestInfo?.email || !guestInfo?.name || !paymentMethod) {
                 throw new ApiError(400, "Data reservasi tidak lengkap.");
             }
 
+            // Pastikan 'paymentMethod' diteruskan ke service
             const newReservation = await createReservationService(
                 propertyId,
                 roomName,
                 new Date(checkIn),
                 new Date(checkOut),
-                guestInfo
+                guestInfo,
+                paymentMethod
             );
-
+            console.log("Request body:", req.body);
             res.status(201).json({
                 success: true,
                 message: "Reservasi berhasil dibuat.",
