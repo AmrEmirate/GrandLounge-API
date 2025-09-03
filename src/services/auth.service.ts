@@ -1,5 +1,7 @@
+// src/services/auth.service.ts
+
 import { prisma } from '../config/prisma';
-import { UserRole } from '../generated/prisma';
+import { UserRole } from '../generated/prisma'; // Pastikan UserRole diimpor
 import { hashPassword, comparePassword } from '../utils/hashing';
 import { generateToken } from '../utils/jwt';
 import { TokenService } from './token.service';
@@ -74,20 +76,38 @@ export const AuthService = {
     await TokenService.sendTokenEmail(user, token, 'EMAIL_VERIFICATION');
   },
 
+  // --- KODE LOGIN YANG DIPERBAIKI ---
   login: async (data: any) => {
+    const { email, password, type } = data;
+    const loginType = type || 'user'; // Default ke 'user' jika 'type' tidak disediakan
+
     const user = await prisma.user.findFirst({
       where: {
-        email: data.email,
-        deletedAt: null, // Perubahan di sini
+        email: email,
+        deletedAt: null,
       },
     });
-    if (!user || !user.password) throw new Error('Email atau password salah.');
-    if (!user.verified) throw new Error('Akun belum diverifikasi.');
-    const isPasswordValid = await comparePassword(data.password, user.password);
-    if (!isPasswordValid) throw new Error('Email atau password salah.');
+
+    if (!user || !user.password) {
+      throw new Error('Email atau password salah.');
+    }
+    if (!user.verified) {
+      throw new Error('Akun belum diverifikasi. Silakan cek email Anda.');
+    }
+
+    // **Logika Validasi Peran (Role)**
+    if (loginType === 'tenant' && user.role !== UserRole.TENANT) {
+      throw new Error('Akses ditolak. Anda bukan tenant. Silakan login sebagai pengguna biasa.');
+    }
+    if (loginType === 'user' && user.role !== UserRole.USER) {
+      throw new Error('Akses ditolak. Silakan login melalui halaman login untuk tenant.');
+    }
+
+    const isPasswordValid = await comparePassword(password, user.password);
+    if (!isPasswordValid) {
+      throw new Error('Email atau password salah.');
+    }
     
-    // --- PERBAIKAN DI SINI ---
-    // Tambahkan field `verified` dan `createdAt` ke dalam payload token.
     const jwt = generateToken({ 
         id: user.id, 
         role: user.role,
@@ -98,10 +118,9 @@ export const AuthService = {
         profilePicture: user.profilePicture
     });
     
-    // --- AKHIR PERBAIKAN ---
-
     return { user, token: jwt };
   },
+  // --- AKHIR PERBAIKAN ---
 
   requestPasswordReset: async (email: string) => {
     const user = await prisma.user.findFirst({
@@ -109,8 +128,6 @@ export const AuthService = {
     });
     // Jangan beri tahu jika user ada atau tidak untuk keamanan
     if (!user || !user.password) {
-      // Melempar error di sini sebenarnya tidak perlu karena pesan sukses dikirim di controller
-      // Namun, kita tetap lanjut seolah-olah proses berhasil
       return;
     }
     const token = await TokenService.createToken(user.id, 'PASSWORD_RESET');
@@ -127,7 +144,6 @@ export const AuthService = {
   },
 
   getProfile: async (userId: string) => {
-    // Diasumsikan `authMiddleware` sudah memfilter user yang di-soft delete
     return await prisma.user.findUnique({
       where: { id: userId },
       select: {

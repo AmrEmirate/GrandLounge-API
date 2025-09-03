@@ -1,3 +1,5 @@
+// src/controllers/auth.controller.ts
+
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { AuthRequest } from '../middleware/auth.middleware';
@@ -40,11 +42,18 @@ export const AuthController = {
     }
   },
 
+  /**
+   * Fungsi login yang telah diperbarui.
+   * Menerima seluruh req.body yang berisi email, password, dan 'type' (user/tenant).
+   * Meneruskan seluruh body ke AuthService untuk divalidasi.
+   */
   login: async (req: Request, res: Response) => {
     try {
+      // req.body sekarang akan berisi { email, password, type } dari frontend
       const { user, token } = await AuthService.login(req.body);
       res.status(200).json({ message: 'Login berhasil.', data: { user, token } });
     } catch (error: any) {
+      // Mengembalikan pesan error dari service jika login gagal (misal: peran tidak cocok)
       res.status(401).json({ message: error.message });
     }
   },
@@ -53,6 +62,7 @@ export const AuthController = {
     try {
       await AuthService.requestPasswordReset(req.body.email);
     } catch (error: any) {
+      // sengaja dikosongkan agar tidak memberitahu apakah email ada atau tidak
     } finally {
       res.status(200).json({ message: 'Jika email terdaftar dan menggunakan password, kami akan mengirimkan link reset.' });
     }

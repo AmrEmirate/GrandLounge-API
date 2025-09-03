@@ -1,3 +1,5 @@
+// src/services/token.service.ts
+
 import { prisma } from '../config/prisma';
 import { PrismaClient, TokenPurpose, User } from '../generated/prisma';
 import crypto from 'crypto';
@@ -7,8 +9,6 @@ import { sendEmail } from '../utils/mailer';
 type PrismaTransactionClient = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
 export const TokenService = {
-  // --- PERUBAHAN DI SINI ---
-  // Tipe data userId diubah dari 'number' menjadi 'string'
   createToken: async (userId: string, purpose: TokenPurpose, tx?: PrismaTransactionClient, expiresInHours: number = 1) => {
     const prismaClient = tx || prisma;
     const token = crypto.randomBytes(32).toString('hex');
@@ -29,7 +29,7 @@ export const TokenService = {
 
   sendTokenEmail: async (user: User, token: string, purpose: TokenPurpose, extraData?: any) => {
     if (purpose === 'EMAIL_VERIFICATION') {
-        const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+        const verificationLink = `${process.env.FRONTEND_URL}/auth/verify-email?token=${token}`; // Path sudah benar
         await sendEmail({
             to: user.email,
             subject: 'Verifikasi Akun Grand Lodge Anda',
@@ -41,7 +41,9 @@ export const TokenService = {
             `
         });
     } else if (purpose === 'PASSWORD_RESET') {
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+        // --- PERBAIKAN DI SINI ---
+        // Tambahkan "/auth" pada path URL
+        const resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
         await sendEmail({
             to: user.email,
             subject: 'Reset Password Akun Grand Lodge Anda',
@@ -54,7 +56,7 @@ export const TokenService = {
         });
     } else if (purpose === 'EMAIL_CHANGE') {
         const encodedNewEmail = encodeURIComponent(extraData.newEmail);
-        const confirmationLink = `${process.env.FRONTEND_URL}/confirm-email-change?token=${token}&newEmail=${encodedNewEmail}`;
+        const confirmationLink = `${process.env.FRONTEND_URL}/auth/confirm-email-change?token=${token}&newEmail=${encodedNewEmail}`; // Path sudah benar
         await sendEmail({
             to: user.email, // Kirim ke email LAMA
             subject: 'Konfirmasi Perubahan Alamat Email',
@@ -83,7 +85,6 @@ export const TokenService = {
 
     await prisma.token.delete({ where: { id: dbToken.id } });
 
-    // Fungsi ini sekarang akan mengembalikan userId sebagai string, sesuai skema baru.
     return dbToken.userId;
   },
 };
