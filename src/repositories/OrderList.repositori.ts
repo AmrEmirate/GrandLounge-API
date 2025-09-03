@@ -2,6 +2,12 @@ import { prisma } from "../config/prisma";
 import { Prisma, BookingStatus } from "../generated/prisma";
 
 export default class OrderListRepositroy {
+    async updateBookingStatus(bookingId: string, newStatus: string) {
+        return prisma.booking.update({
+            where: { id: bookingId },
+            data: { status: newStatus as BookingStatus },
+        });
+    }
     async findReservationByFilter(user: string, filter: {
         checkIn?: Date,
         checkOut?: Date,
@@ -52,6 +58,11 @@ export default class OrderListRepositroy {
             include: {
                 bookingRooms: true,
                 property: true,
+                review: {
+                    include: {
+                        user: true
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' }
         })

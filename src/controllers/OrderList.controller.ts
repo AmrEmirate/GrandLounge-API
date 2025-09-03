@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getTenantTransactionListService, OrderListService } from "../services/OrderList.service";
+import { completeOrderService, getTenantTransactionListService, OrderListService } from "../services/OrderList.service";
 import ApiError from "../utils/apiError";
 
 class OrderListController {
@@ -9,7 +9,7 @@ class OrderListController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const userId = (req.user as any).userId;
+            const userId = (req.user as any).id;
             const filter = {
                 checkIn: req.query.checkIn ? new Date(req.query.checkIn as string) : undefined,
                 checkOut: req.query.checkOut ? new Date(req.query.checkOut as string) : undefined,
@@ -58,6 +58,22 @@ class OrderListController {
             next(error)
         }
     }
+
+    public async completeOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const userId = (req.user as any).id;
+        const { bookingId } = req.params;
+        // Kita perlu membuat service untuk ini
+        const updatedOrder = await completeOrderService(userId, bookingId);
+        res.status(200).json({
+            success: true,
+            message: "Order has been marked as completed.",
+            data: updatedOrder,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
 }
 
 export default OrderListController;

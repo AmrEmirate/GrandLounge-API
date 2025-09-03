@@ -28,6 +28,13 @@ export default class OrderListRouter {
             isTenant,
             this.orderList.tenantTransactionList
         );
+
+        this.router.patch(
+            "/:bookingId/complete",
+            verifyToken,
+            isUser,
+            this.orderList.completeOrder
+        );
     }
 
     public getRouter(): Router {
