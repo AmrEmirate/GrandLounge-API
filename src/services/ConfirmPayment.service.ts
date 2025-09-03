@@ -8,8 +8,6 @@ import {
     sendPaymentRejectedEmail,
 } from "../services/SendEmailNotification.service";
 
-const bookingRepo = new ConfirmPaymentRepository();
-
 export const ConfirmPaymentService = async (
     tenantId: string,
     invoiceNumber: string,
@@ -32,7 +30,7 @@ export const ConfirmPaymentService = async (
             throw new ApiError(403, "You do not have permission to confirm this payment.");
         }
 
-        if (booking.status !== "MENUNGGU_PEMBAYARAN") {
+        if (booking.status !== "MENUNGGU_KONFIRMASI")  {
             throw new ApiError(400, "Cannot confirm payment for this booking status.");
         }
 
