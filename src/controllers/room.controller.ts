@@ -31,6 +31,23 @@ export const RoomController = {
     }
   },
 
+  getById: async (req: AuthRequest, res: Response) => {
+    try {
+      const tenantId = req.user?.tenant?.id;
+      if (!tenantId) {
+        return res.status(403).json({ message: 'Akses ditolak.' });
+      }
+      const { propertyId, roomId } = req.params;
+      const room = await RoomService.getRoomById(tenantId, propertyId, roomId);
+      if (!room) {
+        return res.status(404).json({ message: 'Kamar tidak ditemukan.' });
+      }
+      res.status(200).json({ data: room });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
   update: async (req: AuthRequest, res: Response) => {
     try {
         const tenantId = req.user?.tenant?.id;
