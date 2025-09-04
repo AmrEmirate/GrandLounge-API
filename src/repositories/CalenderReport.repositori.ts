@@ -4,6 +4,7 @@ export default class CalenderReportRepositori {
     async getRoomAvailibity(
         tenantId: string,
         propertyId?: string,
+        roomId?: string,
         startDate?: Date,
         endDate?: Date
     ) {
@@ -18,6 +19,7 @@ export default class CalenderReportRepositori {
                         tenantId: tenantId,
                         ...(propertyId ? { id: propertyId } : {}), 
                     },
+                    ...(roomId ? { id: roomId } : {}),  
                 },
             },
             include: {

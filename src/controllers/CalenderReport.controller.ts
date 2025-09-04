@@ -10,8 +10,14 @@ export class CalenderReportController {
     ): Promise<void> {
         try {
             const user = req.user as any;
-            const tenantId = user.id;
-            const { propertyId, startDate, endDate } = req.query;
+            const tenantId = user.tenant?.id;
+
+            if (!tenantId) {
+                throw new ApiError(403, "Tenant data not found for this user.");
+            }
+
+            const { propertyId, roomId } = req.params;
+            const { startDate, endDate } = req.query;
 
             if (!startDate || !endDate) {
                 throw new ApiError(400, "startDate and endDate are required.");
@@ -20,6 +26,7 @@ export class CalenderReportController {
             const reportData = await getCalenderReport(
                 tenantId,
                 propertyId as string,
+                roomId as string,
                 new Date(startDate as string),
                 new Date(endDate as string)
             );

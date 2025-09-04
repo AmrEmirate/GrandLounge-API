@@ -6,9 +6,9 @@ const calenderRepo = new CalenderReportRepositori();
 export const getCalenderReport = async (
     tenantId: string,
     propertyId?: string,
+    roomId?: string,
     startDate?: Date,
-    endDate?: Date
-) => {
+    endDate?: Date) => {
     if (!startDate || !endDate) {
         throw new ApiError(400, "StartDate and EndDate are required.");
     }
@@ -24,6 +24,7 @@ export const getCalenderReport = async (
     const rawAvailabilityData = await calenderRepo.getRoomAvailibity(
         tenantId,
         propertyId,
+        roomId,
         startDate,
         endDate
     );

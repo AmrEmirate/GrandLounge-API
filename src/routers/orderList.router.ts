@@ -23,7 +23,7 @@ export default class OrderListRouter {
         );
 
         this.router.get(
-            "/tenant-transaction-list",
+            "/tenant-transactions",
             verifyToken,
             isTenant,
             this.orderList.tenantTransactionList

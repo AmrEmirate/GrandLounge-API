@@ -15,7 +15,7 @@ export default class CalenderReportRouter {
 
     private initializeRoutes() {
         this.router.get(
-            "/calender",
+            "/:propertyId/:roomId",
             verifyToken,
             isTenant,
             this.calenderReport.getAvailabilityReport

@@ -34,7 +34,21 @@ export class ReviewRepository {
     async replyReview(reviewId: string, reply: string) {
         return prisma.review.update({
             where: { id: reviewId },
-            data: { reply }
+            data: { reply },
+            include: {
+                user: {
+                    select: {
+                        fullName: true,
+                        profilePicture: true,
+                    },
+                },
+                property: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
         });
     }
 

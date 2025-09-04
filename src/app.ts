@@ -83,8 +83,8 @@ class App {
         this.app.use("/api/send-reminder", sendConfirm.getRouter());
         this.app.use("/api/reviews", review.getRouter())
         this.app.use("/api/report", report.getRouter());
-        this.app.use("/api/calender", calender.getRouter());
-
+        this.app.use("/api/calendar-report", calender.getRouter());
+        
         // Rute dasar
         this.app.get("/", (req: Request, res: Response) => {
             res.status(200).send("<h1>Welcome to Final Project Grand Lodge</h1>");
