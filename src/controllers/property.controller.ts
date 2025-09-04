@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { PublicPropertyService } from '../services/publicProperty.service';
 import { TenantPropertyService } from '../services/tenantProperty.service';
 import { AuthRequest } from '../middleware/auth.middleware';
-import { prisma } from '../config/prisma'; // Pastikan prisma diimpor jika diperlukan
 
 export const PropertyController = {
   // --- Fungsi untuk User (Publik) ---
@@ -27,7 +26,6 @@ export const PropertyController = {
     }
   },
 
-  // --- Fungsi Baru untuk Cek Ketersediaan Kamar ---
   getAvailableRooms: async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -74,7 +72,9 @@ export const PropertyController = {
       if (!tenantId) {
         return res.status(403).json({ message: 'Akses ditolak. Akun ini bukan tenant.' });
       }
-      const property = await TenantPropertyService.createProperty(req.body, tenantId);
+      
+      const property = await TenantPropertyService.createProperty(req.body, tenantId, req.files as { [fieldname: string]: Express.Multer.File[] });
+      
       res.status(201).json({ message: 'Properti berhasil dibuat.', data: property });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -113,10 +113,15 @@ export const PropertyController = {
       if (!tenantId) {
         return res.status(403).json({ message: 'Akses ditolak. Akun ini bukan tenant.' });
       }
-      const property = await TenantPropertyService.updateProperty(req.params.id, tenantId, req.body);
+      const property = await TenantPropertyService.updateProperty(
+        req.params.id, 
+        tenantId, 
+        req.body,
+        req.files as { [fieldname: string]: Express.Multer.File[] }
+      );
       res.status(200).json({ message: 'Properti berhasil diperbarui.', data: property });
     } catch (error: any) {
-      res.status(404).json({ message: error.message });
+      res.status(400).json({ message: error.message });
     }
   },
 
@@ -132,44 +137,36 @@ export const PropertyController = {
       res.status(404).json({ message: error.message });
     }
   },
-
+  
   uploadImage: async (req: AuthRequest, res: Response) => {
     try {
       const tenantId = req.user?.tenant?.id;
-      if (!tenantId) throw new Error('Akses ditolak');
-
-      const file = req.file;
-      if (!file) throw new Error('Tidak ada file yang diunggah');
-
-      const property = await TenantPropertyService.uploadPropertyImage(
-        req.params.id,
-        tenantId,
-        file
-      );
-      res.status(200).json({ message: 'Gambar berhasil diunggah', data: property });
+      if (!tenantId) {
+        return res.status(403).json({ message: 'Akses ditolak. Akun ini bukan tenant.' });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: 'Tidak ada file yang diupload.' });
+      }
+      const property = await TenantPropertyService.uploadPropertyImage(req.params.id, tenantId, req.file);
+      res.status(200).json({ message: 'Gambar berhasil diupload.', data: property });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      res.status(404).json({ message: error.message });
     }
   },
-
+  
   uploadGallery: async (req: AuthRequest, res: Response) => {
     try {
-      const tenantId = req.user?.tenant?.id;
-      if (!tenantId) throw new Error('Akses ditolak');
-
-      const files = req.files as Express.Multer.File[];
-      if (!files || files.length === 0) {
-        throw new Error('Tidak ada file yang diunggah');
-      }
-      
-      const property = await TenantPropertyService.uploadGalleryImages(
-        req.params.id,
-        tenantId,
-        files
-      );
-      res.status(200).json({ message: 'Gambar galeri berhasil diunggah', data: property });
+        const tenantId = req.user?.tenant?.id;
+        if (!tenantId) {
+            return res.status(403).json({ message: 'Akses ditolak. Akun ini bukan tenant.' });
+        }
+        if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
+            return res.status(400).json({ message: 'Tidak ada file yang diupload.' });
+        }
+        const property = await TenantPropertyService.uploadGalleryImages(req.params.id, tenantId, req.files as Express.Multer.File[]);
+        res.status(200).json({ message: 'Gambar galeri berhasil diupload.', data: property });
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+        res.status(400).json({ message: error.message });
     }
   },
 };

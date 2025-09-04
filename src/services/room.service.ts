@@ -49,7 +49,6 @@ export const RoomService = {
   },
 
   uploadRoomGallery: async (tenantId: string, propertyId: string, roomId: string, files: Express.Multer.File[]) => {
-    // 1. Validasi kepemilikan
     const property = await PropertyRepository.findByIdAndTenantId(propertyId, tenantId);
     if (!property) {
       throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
@@ -60,14 +59,13 @@ export const RoomService = {
       throw new Error('Kamar tidak ditemukan di properti ini.');
     }
 
-    // 2. Proses upload ke Cloudinary
     const uploadPromises = files.map(file => 
         uploadToCloudinary(file.buffer, 'room_gallery')
     );
     const uploadResults = await Promise.all(uploadPromises);
     const imageUrls = uploadResults.map(result => result.secure_url);
 
-    // 3. Panggil repository untuk menyimpan URL
+    // --- PERBAIKAN RETURN VALUE ---
     return await RoomRepository.addGalleryImages(roomId, imageUrls);
   },
 };
