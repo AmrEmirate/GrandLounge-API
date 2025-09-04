@@ -1,8 +1,11 @@
+// anesputro95/be-finpro-grandlounge/BE-FINPRO-GRANDLOUNGE-71dcef406648b8dffdf87ae9dcef94ae141ea86a/src/controllers/user.controller.ts
+
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { UserService } from '../services/user.service';
 
 export const UserController = {
+  // Fungsi ini tidak ada perubahan
   updateProfile: async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.id;
@@ -17,6 +20,7 @@ export const UserController = {
     }
   },
 
+  // Fungsi ini tidak ada perubahan
   updatePassword: async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.id;
@@ -31,6 +35,7 @@ export const UserController = {
     }
   },
 
+  // Fungsi ini tidak ada perubahan
   requestEmailChange: async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.id;
@@ -44,11 +49,25 @@ export const UserController = {
     }
   },
 
+  // --- KODE YANG DIPERBARUI ADA DI FUNGSI INI ---
   confirmEmailChange: async (req: Request, res: Response) => {
     try {
       const { token, newEmail } = req.body;
-      await UserService.confirmEmailChange(token, newEmail);
-      res.status(200).json({ message: 'Perubahan email berhasil dikonfirmasi. Silakan cek email baru Anda untuk verifikasi akhir.' });
+      
+      // Menambahkan validasi input dasar
+      if (!token || !newEmail) {
+        return res.status(400).json({ message: "Token dan email baru diperlukan." });
+      }
+      
+      // Memanggil service yang sekarang mengembalikan object berisi message dan token baru
+      const result = await UserService.confirmEmailChange(token, newEmail);
+      
+      // Mengirimkan kembali token login baru ke frontend agar sesi tetap berjalan
+      res.status(200).json({ 
+        message: result.message, 
+        token: result.token 
+      });
+
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
