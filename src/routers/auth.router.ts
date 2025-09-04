@@ -12,10 +12,7 @@ router.post('/register/tenant', AuthController.registerTenant);
 
 // Rute Verifikasi Email
 router.post('/verify', AuthController.verifyAndSetPassword);
-
-// --- PERBAIKAN DI SINI ---
-// Nama route disesuaikan dengan yang dipanggil oleh frontend untuk mengatasi error 404
-router.post('/resend-verification-email', AuthController.resendVerification);
+router.post('/resend-verification', AuthController.resendVerification);
 
 // Rute Login
 router.post('/login', AuthController.login);

@@ -1,10 +1,7 @@
-// anesputro95/be-finpro-grandlounge/BE-FINPRO-GRANDLOUNGE-71dcef406648b8dffdf87ae9dcef94ae141ea86a/src/services/user.service.ts
-
 import { prisma } from '../config/prisma';
 import { comparePassword, hashPassword } from '../utils/hashing';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { TokenService } from './token.service';
-import { generateToken } from '../utils/jwt'; // <-- PERUBAHAN: Menambahkan import ini
 
 export const UserService = {
   updateProfile: async (userId: string, data: any, file: Express.Multer.File | undefined) => {
@@ -62,15 +59,12 @@ export const UserService = {
     if (existingEmail) throw new Error('Email baru sudah terdaftar oleh pengguna lain.');
 
     const token = await TokenService.createToken(userId, 'EMAIL_CHANGE');
-    // Kirim email ke alamat LAMA
     await TokenService.sendTokenEmail(user, token, 'EMAIL_CHANGE', { newEmail });
   },
 
   confirmEmailChange: async (token: string, newEmail: string) => {
-    // 1. Validasi token ganti email
     const userId = await TokenService.validateAndUseToken(token, 'EMAIL_CHANGE');
     
-    // 2. Update email dan set 'verified' menjadi false
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
@@ -79,24 +73,9 @@ export const UserService = {
       },
     });
 
-    // 3. Buat token verifikasi untuk email BARU
     const verificationToken = await TokenService.createToken(userId, 'EMAIL_VERIFICATION');
     await TokenService.sendTokenEmail(updatedUser, verificationToken, 'EMAIL_VERIFICATION');
 
-    // --- PERBAIKAN UTAMA: Buat dan kembalikan token login baru ---
-    const newLoginToken = generateToken({ 
-        id: updatedUser.id, 
-        role: updatedUser.role,
-        fullName: updatedUser.fullName, 
-        email: updatedUser.email,
-        verified: updatedUser.verified,
-        createdAt: updatedUser.createdAt,
-        profilePicture: updatedUser.profilePicture
-    });
-
-    return { 
-        message: 'Perubahan email berhasil. Silakan verifikasi email baru Anda.',
-        token: newLoginToken 
-    };
+    return updatedUser;
   },
 };
