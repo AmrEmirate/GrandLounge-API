@@ -37,13 +37,14 @@ export const authMiddleware = (roles: UserRole[] = []) => {
         return res.status(401).json({ message: 'User tidak ditemukan.' });
       }
 
+      // Cek apakah akun user sudah terverifikasi
       if (!user.verified) {
         return res.status(403).json({ message: 'Akun Anda belum terverifikasi.' });
       }
 
       req.user = user;
 
-      // --- PERBAIKAN LOGIKA OTORISASI DI SINI ---
+      // Logika otorisasi berdasarkan peran (role)
       if (roles.length > 0) {
         // 1. Cek apakah peran user sesuai dengan yang diizinkan
         if (!roles.includes(user.role)) {
@@ -55,7 +56,6 @@ export const authMiddleware = (roles: UserRole[] = []) => {
           return res.status(403).json({ message: 'Akses ditolak. Data tenant tidak ditemukan untuk akun ini.' });
         }
       }
-      // --- AKHIR PERBAIKAN ---
 
       next();
     } catch (error) {
