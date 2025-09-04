@@ -30,8 +30,11 @@ export const ConfirmPaymentService = async (
             throw new ApiError(403, "You do not have permission to confirm this payment.");
         }
 
-        if (booking.status !== "MENUNGGU_KONFIRMASI")  {
-            throw new ApiError(400, "Cannot confirm payment for this booking status.");
+        if (
+            booking.status !== "MENUNGGU_PEMBAYARAN" &&
+            booking.status !== "MENUNGGU_KONFIRMASI"
+        ) {
+            throw new ApiError(400, "This booking cannot be canceled at its current status.");
         }
 
         let newStatus: BookingStatus;
