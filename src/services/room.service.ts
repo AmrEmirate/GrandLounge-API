@@ -20,6 +20,20 @@ export const RoomService = {
     return await RoomRepository.findAllByPropertyId(propertyId);
   },
 
+  getRoomById: async (tenantId: string, propertyId: string, roomId: string): Promise<Room | null> => {
+    const property = await PropertyRepository.findByIdAndTenantId(propertyId, tenantId);
+    if (!property) {
+      throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
+    }
+
+    const room = await RoomRepository.findById(roomId);
+    if (!room || room.propertyId !== propertyId) {
+        return null;
+    }
+
+    return room;
+  },
+
   updateRoom: async (tenantId: string, propertyId: string, roomId: string, data: any): Promise<Room> => {
     const property = await PropertyRepository.findByIdAndTenantId(propertyId, tenantId);
     if (!property) {
@@ -65,7 +79,6 @@ export const RoomService = {
     const uploadResults = await Promise.all(uploadPromises);
     const imageUrls = uploadResults.map(result => result.secure_url);
 
-    // --- PERBAIKAN RETURN VALUE ---
     return await RoomRepository.addGalleryImages(roomId, imageUrls);
   },
 };
