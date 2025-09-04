@@ -28,6 +28,7 @@ export const TenantPropertyService = {
       galleryImageUrls = galleryResults.map(result => result.secure_url);
     }
     
+    // Objek data yang akan disimpan ke database
     const propertyData = {
       name,
       description,
@@ -37,6 +38,8 @@ export const TenantPropertyService = {
     
     const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
 
+    // --- PERBAIKAN KUNCI DI SINI ---
+    // Kirim categoryId dan cityId sebagai argumen terpisah ke repository
     const newProperty = await PropertyRepository.create(
       propertyData, 
       tenantId, 
@@ -64,39 +67,10 @@ export const TenantPropertyService = {
     return property;
   },
 
-  updateProperty: async (
-    id: string, 
-    tenantId: string, 
-    data: any, 
-    files?: { [fieldname: string]: Express.Multer.File[] }
-  ): Promise<Property> => {
+  updateProperty: async (id: string, tenantId: string, data: any): Promise<Property> => {
     await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
-    
-    const { amenityIds, deletedImageIds, ...propertyData } = data;
-
-    if (files?.mainImage && files.mainImage[0]) {
-      const result = await uploadToCloudinary(files.mainImage[0].buffer, 'property_images');
-      propertyData.mainImage = result.secure_url;
-    }
-
-    if (deletedImageIds) {
-      const idsToDelete = Array.isArray(deletedImageIds) ? deletedImageIds : [deletedImageIds];
-      if (idsToDelete.length > 0) {
-        await PropertyRepository.deleteGalleryImages(idsToDelete);
-      }
-    }
-
-    if (files?.galleryImages && files.galleryImages.length > 0) {
-      const galleryUploadPromises = files.galleryImages.map(file => 
-        uploadToCloudinary(file.buffer, 'property_gallery')
-      );
-      const galleryResults = await Promise.all(galleryUploadPromises);
-      const newImageUrls = galleryResults.map(result => result.secure_url);
-      await PropertyRepository.addGalleryImages(id, newImageUrls);
-    }
-    
-    const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
-    return await PropertyRepository.update(id, propertyData, amenityIdsArray);
+    const { amenityIds, ...propertyData } = data;
+    return await PropertyRepository.update(id, propertyData, amenityIds);
   },
 
   deleteProperty: async (id: string, tenantId: string): Promise<Property> => {

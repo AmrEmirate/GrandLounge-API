@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma';
 import { Property } from '../generated/prisma';
 
 export const PropertyRepository = {
+  // --- PERBAIKAN KUNCI DI SINI ---
   create: async (
     propertyData: any, 
     tenantId: string, 
@@ -17,10 +18,10 @@ export const PropertyRepository = {
           connect: { id: tenantId },
         },
         city: {
-          connect: { id: cityId },
+          connect: { id: cityId }, // Gunakan cityId dari argumen
         },
         category: {
-          connect: { id: categoryId },
+          connect: { id: categoryId }, // Gunakan categoryId dari argumen
         },
         amenities: {
           connect: amenityIds?.map((id) => ({ id })) || [],
@@ -28,6 +29,7 @@ export const PropertyRepository = {
       },
     });
   },
+  // --- AKHIR PERBAIKAN ---
 
   findAllByTenantId: async (tenantId: string): Promise<Property[]> => {
     return await prisma.property.findMany({
@@ -90,16 +92,6 @@ export const PropertyRepository = {
     return prisma.property.findUnique({
       where: { id: propertyId },
       include: { images: true }
-    });
-  },
-
-  deleteGalleryImages: async (imageIds: string[]): Promise<void> => {
-    await prisma.propertyImage.deleteMany({
-      where: {
-        id: {
-          in: imageIds,
-        },
-      },
     });
   },
 };
