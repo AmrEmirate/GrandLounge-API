@@ -60,7 +60,8 @@ export default class OrderListRepositroy {
                 property: true,
                 review: {
                     include: {
-                        user: true
+                        user: true,
+                        property: true
                     }
                 }
             },
