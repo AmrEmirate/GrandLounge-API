@@ -2,6 +2,7 @@ import { PropertyRepository } from '../repositories/property.repository';
 import { Property } from '../generated/prisma';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { Express } from 'express';
+import { prisma } from '../config/prisma'; // Pastikan prisma diimpor
 
 export const TenantPropertyService = {
   createProperty: async (
@@ -28,7 +29,6 @@ export const TenantPropertyService = {
       galleryImageUrls = galleryResults.map(result => result.secure_url);
     }
     
-    // Objek data yang akan disimpan ke database
     const propertyData = {
       name,
       description,
@@ -38,8 +38,6 @@ export const TenantPropertyService = {
     
     const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
 
-    // --- PERBAIKAN KUNCI DI SINI ---
-    // Kirim categoryId dan cityId sebagai argumen terpisah ke repository
     const newProperty = await PropertyRepository.create(
       propertyData, 
       tenantId, 
@@ -67,10 +65,50 @@ export const TenantPropertyService = {
     return property;
   },
 
-  updateProperty: async (id: string, tenantId: string, data: any): Promise<Property> => {
+  updateProperty: async (
+    id: string, 
+    tenantId: string, 
+    data: any, 
+    files?: { [fieldname: string]: Express.Multer.File[] }
+  ): Promise<Property> => {
+    // 1. Verifikasi bahwa properti ada dan dimiliki oleh tenant
     await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
-    const { amenityIds, ...propertyData } = data;
-    return await PropertyRepository.update(id, propertyData, amenityIds);
+
+    const { amenityIds, deletedImageIds, ...propertyData } = data;
+
+    // 2. Handle upload gambar utama baru jika ada
+    if (files && files.mainImage && files.mainImage[0]) {
+      const result = await uploadToCloudinary(files.mainImage[0].buffer, 'property_images');
+      propertyData.mainImage = result.secure_url;
+    }
+
+    // 3. Handle penghapusan gambar galeri lama
+    if (deletedImageIds) {
+      const idsToDelete = Array.isArray(deletedImageIds) ? deletedImageIds : [deletedImageIds];
+      if (idsToDelete.length > 0) {
+        await prisma.propertyImage.deleteMany({
+          where: { 
+            id: { in: idsToDelete },
+            propertyId: id // Pastikan hanya menghapus gambar dari properti ini
+          },
+        });
+      }
+    }
+
+    // 4. Handle upload gambar galeri baru
+    if (files && files.galleryImages && files.galleryImages.length > 0) {
+      const uploadPromises = files.galleryImages.map(file =>
+        uploadToCloudinary(file.buffer, 'property_gallery')
+      );
+      const galleryResults = await Promise.all(uploadPromises);
+      const newImageUrls = galleryResults.map(result => result.secure_url);
+      await PropertyRepository.addGalleryImages(id, newImageUrls);
+    }
+    
+    // 5. Update data properti (nama, deskripsi, dll) dan fasilitas
+    const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
+    
+    return await PropertyRepository.update(id, propertyData, amenityIdsArray);
   },
 
   deleteProperty: async (id: string, tenantId: string): Promise<Property> => {
