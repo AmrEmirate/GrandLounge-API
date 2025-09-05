@@ -16,6 +16,7 @@ import categoryRouter from './routers/category.router';
 import propertyRouter from './routers/property.router';
 import amenityRouter from './routers/amenity.router';
 import cityRouter from './routers/city.router';
+import peakSeasonRouter from './routers/peakSeason.router';
 
 // Impor Router dari Feature 2 
 import UploadPaymentRouter from "./routers/uploadPayment.router";
@@ -62,6 +63,7 @@ class App {
         this.app.use('/api/properties', propertyRouter);
         this.app.use('/api/amenities', amenityRouter);
         this.app.use('/api/cities', cityRouter);
+        this.app.use('/api/peak-seasons', peakSeasonRouter);
 
         // --- ROUTER UNTUK FEATURE 2 (Adi) 
         const reservationRouter = new RoomReservationRouter();

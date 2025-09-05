@@ -1,16 +1,20 @@
 // src/routers/peakSeason.router.ts
 import { Router } from 'express';
-import { peakSeasonController } from '../controllers/peakSeason.controller'; 
-import { isTenant } from '../middleware/isTenant';
+import { PeakSeasonController } from '../controllers/peakSeason.controller'; 
+import { authMiddleware } from '../middleware/auth.middleware';
+import { UserRole } from '../generated/prisma';
 
 const router = Router();
+const tenantOnly = authMiddleware([UserRole.TENANT]);
 
-// Endpoint untuk mendapatkan semua season milik satu kamar
-router.get('/room/:roomId', isTenant, peakSeasonController.getSeasons);
+// --- PERBAIKAN ---
+// Route ini lebih standar. Frontend akan memanggil: GET /api/peak-seasons/by-room/{roomId}
+// Ini lebih jelas menunjukkan bahwa kita mengambil data PeakSeason berdasarkan room.
+router.get('/by-room/:roomId', tenantOnly, PeakSeasonController.getByRoom);
 
-// Endpoint CRUD untuk peak season
-router.post('/', isTenant, peakSeasonController.createSeason);
-router.put('/:id', isTenant, peakSeasonController.updateSeason);
-router.delete('/:id', isTenant, peakSeasonController.deleteSeason);
+// Endpoint CRUD untuk peak season (ini sudah benar)
+router.post('/', tenantOnly, PeakSeasonController.create);
+router.put('/:id', tenantOnly, PeakSeasonController.update);
+router.delete('/:id', tenantOnly, PeakSeasonController.delete);
 
 export default router;

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { RoomService } from '../services/room.service';
+import { RoomAvailabilityService } from '../services/roomAvailability.service';
 
 export const RoomController = {
   create: async (req: AuthRequest, res: Response) => {
@@ -96,6 +97,29 @@ export const RoomController = {
         res.status(200).json({ message: 'Gambar galeri kamar berhasil diunggah', data: room });
     } catch (error: any) {
         res.status(400).json({ message: error.message });
+    }
+  },
+
+  getMonthlyAvailability: async (req: AuthRequest, res: Response) => {
+    try {
+      const tenantId = req.user?.tenant?.id;
+      if (!tenantId) {
+        return res.status(403).json({ message: 'Akses ditolak.' });
+      }
+
+      const { propertyId, roomId } = req.params;
+      const { month, year } = req.query;
+
+      if (!month || !year) {
+        return res.status(400).json({ message: 'Parameter bulan dan tahun dibutuhkan.' });
+      }
+
+      const availability = await RoomAvailabilityService.getMonthlyAvailability(
+        tenantId, propertyId, roomId, Number(month), Number(year)
+      );
+      res.status(200).json({ data: availability });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
     }
   },
 };

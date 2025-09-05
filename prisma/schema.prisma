@@ -40,6 +40,11 @@ enum TokenPurpose {
   EMAIL_CHANGE
 }
 
+enum AdjustmentType {
+  NOMINAL
+  PERCENTAGE
+}
+
 model User {
   id             String      @id @default(uuid())
   role           UserRole
@@ -147,7 +152,7 @@ model Room {
   images         RoomImage[]
   availabilities RoomAvailability[]
   bookingRooms   BookingRoom[]
-  peakSeasons    PeakSeason[] 
+  peakSeasons    PeakSeason[]
 }
 
 model RoomImage {
@@ -171,18 +176,16 @@ model RoomAvailability {
 }
 
 model PeakSeason {
-  id              String   @id @default(uuid())
-  name            String
-  startDate       DateTime
-  endDate         DateTime
-  adjustmentType  String // "percentage" atau "fixed"
-  adjustmentValue Float
+  id              String         @id @default(uuid())
   roomId          String
-  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@map("peak_seasons")
+  name            String
+  startDate       DateTime       @db.Date
+  endDate         DateTime       @db.Date
+  adjustmentValue Float          
+  adjustmentType  AdjustmentType
+  room            Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
 
 model Booking {
@@ -208,17 +211,17 @@ model Booking {
 }
 
 model BookingRoom {
-  id               String   @id @default(uuid())
-  bookingId        String
-  roomId           String
-  guestCount       Int
-  pricePerNight    Float
-  numberOfNights   Int
-  totalPrice       Float
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  booking          Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  room             Room     @relation(fields: [roomId], references: [id])
+  id             String   @id @default(uuid())
+  bookingId      String
+  roomId         String
+  guestCount     Int
+  pricePerNight  Float
+  numberOfNights Int
+  totalPrice     Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  room           Room     @relation(fields: [roomId], references: [id])
 }
 
 model Review {
