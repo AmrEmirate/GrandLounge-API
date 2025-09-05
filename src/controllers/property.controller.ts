@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { PublicPropertyService } from '../services/publicProperty.service';
 import { TenantPropertyService } from '../services/tenantProperty.service';
 import { AuthRequest } from '../middleware/auth.middleware';
-import upload from '../middleware/upload.middleware'; // 1. Impor middleware upload
 
 export const PropertyController = {
   // --- Fungsi untuk User (Publik) ---
@@ -68,7 +67,6 @@ export const PropertyController = {
 
   // --- Fungsi untuk Tenant ---
 
-  // --- PERBAIKAN KUNCI DI SINI ---
   create: async (req: AuthRequest, res: Response) => {
     try {
       const tenantId = req.user?.tenant?.id;
@@ -76,15 +74,17 @@ export const PropertyController = {
         return res.status(403).json({ message: 'Akses ditolak. Akun ini bukan tenant.' });
       }
       
-      // 3. Panggil service dengan menyertakan req.files
-      const property = await TenantPropertyService.createProperty(req.body, tenantId, req.files as { [fieldname: string]: Express.Multer.File[] });
+      const property = await TenantPropertyService.createProperty(
+        req.body, 
+        tenantId, 
+        req.files as { [fieldname: string]: Express.Multer.File[] }
+      );
       
       res.status(201).json({ message: 'Properti berhasil dibuat.', data: property });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
   },
-  // --- AKHIR PERBAIKAN ---
 
   getPropertiesByTenant: async (req: AuthRequest, res: Response) => {
     try {
@@ -112,18 +112,26 @@ export const PropertyController = {
     }
   },
 
+  // --- FUNGSI UPDATE YANG DIPERBARUI ---
   update: async (req: AuthRequest, res: Response) => {
     try {
       const tenantId = req.user?.tenant?.id;
       if (!tenantId) {
         return res.status(403).json({ message: 'Akses ditolak. Akun ini bukan tenant.' });
       }
-      const property = await TenantPropertyService.updateProperty(req.params.id, tenantId, req.body);
+      const property = await TenantPropertyService.updateProperty(
+        req.params.id, 
+        tenantId, 
+        req.body,
+        req.files as { [fieldname: string]: Express.Multer.File[] }
+      );
       res.status(200).json({ message: 'Properti berhasil diperbarui.', data: property });
     } catch (error: any) {
+      // Jika service melempar error (misal: properti tidak ditemukan), kirim 404
       res.status(404).json({ message: error.message });
     }
   },
+  // --- AKHIR FUNGSI UPDATE ---
 
   delete: async (req: AuthRequest, res: Response) => {
     try {
