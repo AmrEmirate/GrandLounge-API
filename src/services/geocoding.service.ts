@@ -18,12 +18,10 @@ export const GeocodingService = {
 
       if (response.data && response.data.results.length > 0) {
         const coords = response.data.results[0].geometry;
-        console.log(`Geocoding success for ${address}:`, { latitude: coords.lat, longitude: coords.lng });
         return { latitude: coords.lat, longitude: coords.lng };
       }
       return { latitude: null, longitude: null };
     } catch (error) {
-      console.error('Geocoding failed:', error);
       return { latitude: null, longitude: null };
     }
   },

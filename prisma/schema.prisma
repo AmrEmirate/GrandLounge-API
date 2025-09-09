@@ -142,24 +142,15 @@ model Room {
   category       RoomCategory
   description    String
   bedOption      BedOption
-  imageRoom      String?
   capacity       Int
   basePrice      Float
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   deletedAt      DateTime?
   property       Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  images         RoomImage[]
   availabilities RoomAvailability[]
   bookingRooms   BookingRoom[]
   peakSeasons    PeakSeason[]
-}
-
-model RoomImage {
-  id       String @id @default(uuid())
-  roomId   String
-  imageUrl String
-  room     Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
 
 model RoomAvailability {

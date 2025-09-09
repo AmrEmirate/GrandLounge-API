@@ -22,13 +22,13 @@ export const RoomRepository = {
 
   findAllByPropertyId: async (propertyId: string): Promise<Room[]> => {
     return await prisma.room.findMany({
-      where: { propertyId: propertyId, deletedAt: null }, // Filter data aktif
+      where: { propertyId: propertyId, deletedAt: null },
     });
   },
 
   findById: async (roomId: string): Promise<Room | null> => {
     return await prisma.room.findFirst({
-      where: { id: roomId, deletedAt: null }, // Filter data aktif
+      where: { id: roomId, deletedAt: null },
     });
   },
 
@@ -39,23 +39,10 @@ export const RoomRepository = {
     });
   },
 
-  // Mengubah delete menjadi softDelete
   delete: async (roomId: string): Promise<Room> => {
     return await prisma.room.update({
       where: { id: roomId },
       data: { deletedAt: new Date() },
-    });
-  },
-
-  addGalleryImages: async (roomId: string, imageUrls: string[]) => {
-    const imageData = imageUrls.map(url => ({
-      roomId: roomId,
-      imageUrl: url,
-    }));
-    await prisma.roomImage.createMany({ data: imageData });
-    return prisma.room.findUnique({
-      where: { id: roomId },
-      include: { images: true },
     });
   },
 };
