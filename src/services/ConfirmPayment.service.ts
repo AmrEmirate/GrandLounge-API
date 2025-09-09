@@ -46,15 +46,13 @@ export const ConfirmPaymentService = async (
 
         const result = await transactionalRepo.updateBookingStatus(booking.id, newStatus);
 
-        // Jika pembayaran ditolak, bersihkan link bukti pembayaran lama
         if (!isAccepted) {
             await transactionalRepo.clearPaymentProof(booking.id);
         }
 
-        return result; // Kembalikan hasil dari dalam transaksi
+        return result; 
     });
 
-    // Kirim notifikasi HANYA JIKA transaksi di atas berhasil
     try {
         if (isAccepted) {
             const message = "Pembayaran Anda telah diterima. Pemesanan Anda sedang diproses.";

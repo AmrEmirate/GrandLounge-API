@@ -17,10 +17,10 @@ export default class ConfirmPaymentRepository {
         });
     }
 
-    async updateBookingStatus(bookingId: string, status: BookingStatus) {
+    async updateBookingStatus(bookingId: string, newStatus: BookingStatus) {
         return this.prismaClient.booking.update({
             where: { id: bookingId },
-            data: { status },
+            data: { status: newStatus },
             include: { property: true, user: true },
         });
     }

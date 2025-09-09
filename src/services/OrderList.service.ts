@@ -46,7 +46,6 @@ export const completeOrderService = async (userId: string, bookingId: string) =>
     if (!booking) throw new ApiError(404, "Booking not found or you are not the owner.");
     if (booking.status !== "DIPROSES") throw new ApiError(400, "Only in-process bookings can be completed.");
 
-    // Asumsi Anda punya method ini di repository
     const updatedBooking = await orderRepo.updateBookingStatus(bookingId, "SELESAI");
     return updatedBooking;
 };
