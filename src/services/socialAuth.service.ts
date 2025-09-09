@@ -1,102 +1,55 @@
 import { prisma } from '../config/prisma';
 
+const _findOrCreateUser = async (provider: string, profile: any, emailExtractor: (p: any) => string, photoExtractor: (p: any) => string | null) => {
+    const existingUser = await prisma.user.findUnique({
+        where: { provider_providerId: { provider, providerId: profile.id } },
+    });
+    if (existingUser) return existingUser;
+
+    const email = emailExtractor(profile);
+    if (!email) throw new Error(`Email tidak ditemukan dari profil ${provider}.`);
+    
+    const userByEmail = await prisma.user.findUnique({ where: { email } });
+    if (userByEmail) throw new Error('Email sudah terdaftar dengan metode lain.');
+
+    return prisma.user.create({
+        data: {
+            email,
+            fullName: profile.displayName,
+            provider,
+            providerId: profile.id,
+            role: 'USER',
+            verified: true,
+            profilePicture: photoExtractor(profile),
+        },
+    });
+};
+
 export const SocialAuthService = {
-  findOrCreateGoogleUser: async (profile: any) => {
-    const user = await prisma.user.findUnique({
-      where: { provider_providerId: { provider: 'google', providerId: profile.id } },
-    });
+    findOrCreateGoogleUser: async (profile: any) => {
+        return _findOrCreateUser(
+            'google',
+            profile,
+            p => p.emails[0].value,
+            p => p.photos[0].value
+        );
+    },
 
-    if (user) {
-      return user;
-    }
+    findOrCreateFacebookUser: async (profile: any) => {
+        return _findOrCreateUser(
+            'facebook',
+            profile,
+            p => p.emails?.[0]?.value,
+            p => p.photos?.[0]?.value ?? null
+        );
+    },
 
-    const email = profile.emails[0].value;
-    const existingEmail = await prisma.user.findUnique({ where: { email } });
-
-    if (existingEmail) {
-      throw new Error('Email sudah terdaftar dengan metode lain.');
-    }
-
-    const newUser = await prisma.user.create({
-      data: {
-        email: email,
-        fullName: profile.displayName,
-        provider: 'google',
-        providerId: profile.id,
-        role: 'USER',
-        verified: true,
-        profilePicture: profile.photos[0].value,
-      },
-    });
-
-    return newUser;
-  },
-
-  findOrCreateFacebookUser: async (profile: any) => {
-    const user = await prisma.user.findUnique({
-      where: { provider_providerId: { provider: 'facebook', providerId: profile.id } },
-    });
-
-    if (user) {
-      return user;
-    }
-
-    if (!profile.emails || !profile.emails[0]?.value) {
-      throw new Error('Email tidak ditemukan dari profil Facebook.');
-    }
-    const email = profile.emails[0].value;
-
-    const existingEmail = await prisma.user.findUnique({ where: { email } });
-    if (existingEmail) {
-      throw new Error('Email sudah terdaftar dengan metode lain.');
-    }
-
-    const newUser = await prisma.user.create({
-      data: {
-        email: email,
-        fullName: profile.displayName,
-        provider: 'facebook',
-        providerId: profile.id,
-        role: 'USER',
-        verified: true,
-        profilePicture: profile.photos ? profile.photos[0].value : null,
-      },
-    });
-
-    return newUser;
-  },
-
-  findOrCreateTwitterUser: async (profile: any) => {
-    const user = await prisma.user.findUnique({
-      where: { provider_providerId: { provider: 'twitter', providerId: profile.id } },
-    });
-
-    if (user) {
-      return user;
-    }
-
-    if (!profile.emails || !profile.emails[0]?.value) {
-      throw new Error('Email tidak bisa didapatkan dari profil Twitter. Pastikan aplikasi Anda memiliki izin yang cukup.');
-    }
-    const email = profile.emails[0].value;
-
-    const existingEmail = await prisma.user.findUnique({ where: { email } });
-    if (existingEmail) {
-      throw new Error('Email sudah terdaftar dengan metode lain.');
-    }
-
-    const newUser = await prisma.user.create({
-      data: {
-        email: email,
-        fullName: profile.displayName,
-        provider: 'twitter',
-        providerId: profile.id,
-        role: 'USER',
-        verified: true,
-        profilePicture: profile.photos ? profile.photos[0].value.replace('_normal', '') : null,
-      },
-    });
-
-    return newUser;
-  },
+    findOrCreateTwitterUser: async (profile: any) => {
+        return _findOrCreateUser(
+            'twitter',
+            profile,
+            p => p.emails?.[0]?.value,
+            p => p.photos?.[0]?.value.replace('_normal', '') ?? null
+        );
+    },
 };
