@@ -37,19 +37,16 @@ export default class OrderListRepositroy {
         }
 
         if (filter.checkIn) {
-            // Ambil tanggal dari filter
             const targetDate = new Date(filter.checkIn);
 
-            // Tentukan awal hari (pukul 00:00:00) DARI TANGGAL TERSEBUT
             const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
 
-            // Tentukan awal hari BERIKUTNYA
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 1);
 
             whereCondition.checkIn = {
-                gte: startDate, // Lebih besar atau sama dengan awal hari yang dipilih
-                lt: endDate     // Lebih KECIL dari awal hari berikutnya
+                gte: startDate, 
+                lt: endDate     
             };
         }
 
@@ -80,7 +77,8 @@ export default class OrderListRepositroy {
                         }
                     }
                 }
-            }
+            },
+            
         };
 
         if (status) {
@@ -90,19 +88,21 @@ export default class OrderListRepositroy {
         return prisma.booking.findMany({
             where: whereCondition,
             include: {
-                bookingRooms: {
+                user: true,
+                property: true,
+                review: {
                     include: {
-                        room: {
-                            include: {
-                                property: true
-                            }
-                        }
+                        user: true,
+                        property: true
                     }
                 },
-                user: true,
-                property: true
+                bookingRooms: {     
+                    include: {
+                        room: true 
+                    }
+                }
             },
-            orderBy: { createdAt: "desc" }
-        });
+            orderBy: { createdAt: 'desc' }
+        })
     }
 }

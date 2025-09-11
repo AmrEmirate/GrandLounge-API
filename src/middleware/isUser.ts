@@ -5,8 +5,7 @@ export const isUser = (
     res: Response,
     next: NextFunction
 ): void => {
-    const user = res.locals.descript;
-
+    const user = (req as any).user;
     if (!user) {
         res.status(403).send({
             success: false,
