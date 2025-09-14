@@ -75,7 +75,7 @@ export const PropertyController = {
         try {
             const tenantId = getTenantId(req, res);
             if (!tenantId) return;
-            
+
             const property = await TenantPropertyService.createProperty(
                 req.body, tenantId, req.files as { [fieldname: string]: Express.Multer.File[] }
             );
@@ -159,6 +159,28 @@ export const PropertyController = {
             res.status(200).json({ message: 'Gambar galeri berhasil diupload.', data: property });
         } catch (error: any) {
             res.status(400).json({ message: error.message });
+        }
+    },
+
+    getNearbyProperties: async (req: Request, res: Response) => {
+        try {
+            const { lat, lon, radius } = req.query;
+            if (!lat || !lon) {
+                return res.status(400).json({ message: 'Latitude dan Longitude dibutuhkan.' });
+            }
+
+            const properties = await PublicPropertyService.findNearby(
+                parseFloat(lat as string),
+                parseFloat(lon as string),
+                radius ? parseInt(radius as string) : undefined
+            );
+
+            res.status(200).json({
+                message: 'Properti terdekat berhasil ditemukan',
+                data: properties
+            });
+        } catch (error: any) {
+            res.status(500).json({ message: 'Gagal mengambil data properti terdekat.' });
         }
     },
 };

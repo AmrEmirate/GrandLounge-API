@@ -148,4 +148,36 @@ export const PublicPropertyService = {
             orderBy: { name: 'asc' }
         });
     },
+
+    findNearby: async (lat: number, lon: number, radius: number = 10000) => { // radius in meters
+        const properties = await prisma.$queryRaw<Property[]>`
+        SELECT
+          p.id, p.name, p.latitude, p.longitude,
+          json_build_object('id', c.id, 'name', c.name) as category,
+          json_build_object('id', city.id, 'name', city.name) as city,
+          (
+            SELECT COALESCE(json_agg(json_build_object('id', r.id, 'name', r.name, 'price', r."basePrice")), '[]'::json)
+            FROM "Room" r
+            WHERE r."propertyId" = p.id AND r."deletedAt" IS NULL
+            ORDER BY r."basePrice" ASC
+            LIMIT 1
+          ) as rooms
+        FROM
+          "Property" p
+        LEFT JOIN
+          "Category" c ON p."categoryId" = c.id
+        LEFT JOIN
+          "City" city ON p."cityId" = city.id
+        WHERE
+          ST_DWithin(
+            ST_MakePoint(p.longitude, p.latitude)::geography,
+            ST_MakePoint(${lon}, ${lat})::geography,
+            ${radius}
+          )
+          AND p."deletedAt" IS NULL
+        LIMIT 15;
+      `;
+        return properties;
+    },
 };
+

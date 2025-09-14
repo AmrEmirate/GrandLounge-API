@@ -65,4 +65,8 @@ export class ReviewService {
         });
     }
 
+    async getReviewsByTenant(tenantId: string, limit: number) {
+        return this.reviewRepo.findReviewsByTenant(tenantId, limit);
+    }
+
 }

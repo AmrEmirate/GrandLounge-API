@@ -71,4 +71,20 @@ export class ReviewController {
         }
     }
 
+    public async getTenantReviews(req: Request, res: Response, next: NextFunction) {
+        try {
+            const tenantId = (req.user as any).tenant.id;
+            const limit = req.query.limit ? parseInt(req.query.limit as string) : 3;
+            const reviews = await reviewService.getReviewsByTenant(tenantId, limit); 
+
+            res.status(200).json({
+                success: true,
+                message: "Berhasil mendapatkan ulasan untuk tenant",
+                data: { reviews },
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
 }

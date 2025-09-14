@@ -2,6 +2,39 @@ import { prisma } from "../config/prisma";
 import { BookingStatus } from "../generated/prisma";
 
 export default class ReportRepositori {
+    async getTenantStats(tenantId: string) {
+        const totalRevenue = await prisma.booking.aggregate({
+            _sum: { totalPrice: true },
+            where: {
+                property: { tenantId },
+                status: BookingStatus.SELESAI,
+            },
+        });
+
+        const totalBookings = await prisma.booking.count({
+            where: {
+                property: { tenantId },
+                status: { in: [BookingStatus.SELESAI, BookingStatus.DIPROSES] },
+            },
+        });
+
+        const totalRooms = await prisma.room.count({
+            where: {
+                property: { tenantId },
+                deletedAt: null
+            }
+        });
+
+        const occupancyRate = totalRooms > 0 ? (totalBookings / (totalRooms * 30)) * 100 : 0;
+
+        return {
+            totalRevenue: totalRevenue._sum.totalPrice || 0,
+            totalBookings: totalBookings,
+            occupancyRate: occupancyRate,
+            totalRooms: totalRooms,
+        };
+    }
+
     async getAggregateSales(tenantId: string, startDate?: Date, endDate?: Date) {
         let whereClause: any = {
             status: BookingStatus.SELESAI,
@@ -84,5 +117,30 @@ export default class ReportRepositori {
         }
 
         return result;
+    }
+
+    async getSalesByDay(tenantId: string, startDate: Date, endDate: Date) {
+        const result = await prisma.booking.groupBy({
+            by: ['createdAt'],
+            where: {
+                status: BookingStatus.SELESAI,
+                property: { tenantId },
+                createdAt: {
+                    gte: startDate,
+                    lte: endDate,
+                },
+            },
+            _sum: {
+                totalPrice: true,
+            },
+            orderBy: {
+                createdAt: 'asc',
+            },
+        });
+
+        return result.map(item => ({
+            date: item.createdAt,
+            _sum: item._sum
+        }));
     }
 }

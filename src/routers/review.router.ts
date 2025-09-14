@@ -27,6 +27,9 @@ export default class ReviewRouter {
 
         // Lihat review berdasarkan nama hotel
         this.router.get("/property/name/:propertyName", this.reviewController.getReviewByPropertyName);
+
+        this.router.get("/tenant", verifyToken, isTenant, this.reviewController.getTenantReviews);
+
     }
 
     public getRouter(): Router {

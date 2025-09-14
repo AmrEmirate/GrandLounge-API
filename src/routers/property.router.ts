@@ -79,5 +79,6 @@ router.post(
     PropertyController.uploadGallery
 );
 
+router.get('/nearby', PropertyController.getNearbyProperties);
 
 export default router;

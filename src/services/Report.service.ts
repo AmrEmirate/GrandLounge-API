@@ -4,10 +4,10 @@ import ReportRepositori from "../repositories/Report.repositori";
 const reportRepo = new ReportRepositori();
 
 export const getSalesByTenant = async (tenantId: string, query: any) => {
-    const startDate = query.startDate ? new Date(query.startDate) : undefined;
-    const endDate = query.endDate ? new Date(query.endDate) : undefined;
+    const endDate = query.to ? new Date(query.to) : new Date();
+    const startDate = query.from ? new Date(query.from) : new Date(new Date().setDate(endDate.getDate() - 6));
     const groupBy = query.groupBy;
-    const sortBy = query.sortBy || "total"; 
+    const sortBy = query.sortBy || "total";
 
     let salesReport;
 
@@ -18,7 +18,10 @@ export const getSalesByTenant = async (tenantId: string, query: any) => {
         case "user":
             salesReport = await reportRepo.getSalesByUser(tenantId, startDate, endDate, sortBy);
             break;
-        case "transaction":
+        case "day":
+            salesReport = await reportRepo.getSalesByDay(tenantId, startDate, endDate,);
+            break;
+        default:
             salesReport = await reportRepo.getAggregateSales(tenantId, startDate, endDate);
             break;
     }

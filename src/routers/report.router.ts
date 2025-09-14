@@ -20,6 +20,13 @@ export default class ReportRouter {
             isTenant,
             this.report.getSalesReport
         )
+
+        this.router.get(
+            "/stats",
+            verifyToken,
+            isTenant,
+            this.report.getStatsReport
+        );
     }
 
     public getRouter(): Router {

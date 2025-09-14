@@ -63,4 +63,21 @@ export class ReviewRepository {
         });
     }
 
+    async findReviewsByTenant(tenantId: string, limit: number) {
+        return prisma.review.findMany({
+            where: {
+                property: {
+                    tenantId: tenantId,
+                },
+            },
+            include: {
+                user: { select: { fullName: true, profilePicture: true } },
+                property: { select: { id: true, name: true } },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+            take: limit,
+        });
+    }
 }
