@@ -64,12 +64,9 @@ export const sendPaymentRejectedEmail = async (
     console.log(`❌ Email penolakan pembayaran dikirim ke ${booking.user.email}`);
 };
 
-// Fungsi ini bisa dibuat sederhana atau kompleks sesuai kebutuhan
+
 export const sendNotification = async (userId: string, message: string) => {
-    // Di sini Anda bisa menambahkan logika push notification, dll.
-    // Untuk sekarang, kita bisa log saja sebagai placeholder.
-    console.log(`🔔 Notifikasi untuk user ${userId}: "${message}"`);
-    // Karena ini tidak mengirim email, tidak perlu memanggil transporter
+
     return Promise.resolve();
 };
 

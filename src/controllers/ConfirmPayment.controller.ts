@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import ApiError from "../utils/apiError";
 import { ConfirmPaymentService } from "../services/ConfirmPayment.service";
-import { prisma } from "../config/prisma"; // Pastikan Anda mengimpor Prisma
+import { prisma } from "../config/prisma";
 
 class ConfirmPaymentController {
     public async confirmPayment(

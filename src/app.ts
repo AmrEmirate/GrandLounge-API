@@ -29,7 +29,6 @@ import ReportRouter from "./routers/report.router";
 import CalenderRouter from "./routers/calenderReport.router";
 import { startSchedulers } from "./scheduler/index";
 import ReviewRouter from "./routers/review.router";
-import midtransWebhookRouter from "./routers/midtransWebhook.router";
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -77,7 +76,6 @@ class App {
         const calender = new CalenderRouter();
 
         this.app.use("/api/reservations", reservationRouter.getRouter());
-        this.app.use("/api/webhook", midtransWebhookRouter);
         this.app.use("/api/payments", uploadPayment.getRouter());
         this.app.use("/api/orders", orderList.getRouter());
         this.app.use("/api/order-cancel", cancelOrder.getRouter());

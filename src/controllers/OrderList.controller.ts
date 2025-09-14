@@ -63,8 +63,8 @@ class OrderListController {
     try {
         const userId = (req.user as any).id;
         const { bookingId } = req.params;
-        // Kita perlu membuat service untuk ini
         const updatedOrder = await completeOrderService(userId, bookingId);
+        
         res.status(200).json({
             success: true,
             message: "Order has been marked as completed.",

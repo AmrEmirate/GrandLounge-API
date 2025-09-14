@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { CancelOrderService } from "../services/CancelOrder.service";
-import { isTenant } from "../middleware/isTenant";
 
 export class CancelOrderControllers {
     public async cancelOrder(

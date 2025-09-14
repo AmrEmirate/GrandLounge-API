@@ -6,9 +6,7 @@ import { DefaultArgs } from "../generated/prisma/runtime/library";
 import { eachDayOfInterval } from 'date-fns';
 
 export default class RoomReservationRepository {
-    // --- FUNGSI YANG DIPERBAIKI ---
     async checkRoomAvailability(roomId: string, newStartDate: Date, newEndDate: Date, tx: Omit<PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">) {
-        // 1. Cek tumpang tindih dengan booking yang sudah ada (status MENUNGGU_PEMBAYARAN atau DIPROSES)
         const existingBookings = await tx.bookingRoom.count({
             where: {
                 roomId: roomId,
@@ -21,24 +19,21 @@ export default class RoomReservationRepository {
         });
 
         if (existingBookings > 0) {
-            return false; // Langsung return false jika sudah ada booking
+            return false; 
         }
 
-        // 2. Cek ketersediaan manual yang di-set oleh tenant di tabel RoomAvailability
         const datesInRange = eachDayOfInterval({ start: newStartDate, end: new Date(newEndDate.getTime() - 1) });
         
         const unavailableDatesCount = await tx.roomAvailability.count({
             where: {
                 roomId: roomId,
                 date: { in: datesInRange },
-                isAvailable: false // Cari tanggal yang secara eksplisit ditandai "tidak tersedia"
+                isAvailable: false 
             }
         });
-
-        // Jika ada satu saja tanggal yang tidak tersedia di rentang itu, maka kamar tidak tersedia.
         return unavailableDatesCount === 0;
     }
-    // --- AKHIR FUNGSI YANG DIPERBAIKI ---
+
 
     async createTransaction(data: Prisma.BookingCreateInput) {
         return prisma.booking.create({ data });

@@ -1,7 +1,6 @@
 import { BookingStatus, RoomCategory } from "../generated/prisma";
 import ReservationRepositori from "../repositories/RoomReservation.repositori";
 import ApiError from "../utils/apiError";
-import snap from "../config/midtrans";
 import crypto from "crypto";
 import { prisma } from "../config/prisma";
 
@@ -9,12 +8,7 @@ const reservationRepo = new ReservationRepositori();
 
 // membuat reservasi kamar
 export const createReservationService = async (
-    propertyId: string,
-    roomName: string,
-    checkIn: Date,
-    checkOut: Date,
-    guestInfo: { name: string; email: string; password?: string },
-    paymentMethod: string, // <-- Pastikan parameter ini ada
+propertyId: string, roomName: string, checkIn: Date, checkOut: Date, guestInfo: { name: string; email: string; password?: string; }, 
 ) => {
     if (checkOut <= checkIn) {
         throw new ApiError(400, "End date must be after start date");
@@ -64,43 +58,12 @@ export const createReservationService = async (
         return booking;
     });
 
-    // --- LOGIKA PEMBAYARAN YANG DIPERBAIKI ---
-    if (paymentMethod === 'gateway') {
-        let transaction;
-        try {
-            transaction = await snap.createTransaction({
-                transaction_details: {
-                    order_id: newBooking.invoiceNumber,
-                    gross_amount: newBooking.totalPrice,
-                },
-                customer_details: {
-                    first_name: guestInfo.name,
-                    email: guestInfo.email,
-                },
-            } as any);
-        } catch (err) {
-            await reservationRepo.updateTransaction(newBooking.id, { status: BookingStatus.DIBATALKAN });
-            throw new ApiError(500, "Gagal membuat transaksi Midtrans");
-        }
+    
 
-        const updatedBooking = await reservationRepo.updateTransaction(newBooking.id, {
-            midtransOrderId: newBooking.invoiceNumber,
-            paymentToken: transaction.token,
-            paymentUrl: transaction.redirect_url,
-        });
-
-        return {
-            ...updatedBooking,
-            paymentUrl: transaction.redirect_url!,
-            paymentToken: transaction.token!,
-        };
-    } else {
-        // Jika metode pembayaran adalah 'manual' atau lainnya, langsung kembalikan data booking
         return newBooking;
-    }
+    
 };
 
-// dapat melihat semua reservasi milik pengguna
 export const getUserReservationsService = async (userId: string) => {
     const reservation = await reservationRepo.findTransactionByAccountId(userId);
     return reservation;

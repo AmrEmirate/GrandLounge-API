@@ -21,7 +21,7 @@ export default class ReportController {
                 throw new ApiError(403, "Tenant account not found.");
             }
 
-            const reportData = await getSalesByTenant(tenant.id, req.query); // Gunakan tenant.id
+            const reportData = await getSalesByTenant(tenant.id, req.query); 
 
             res.status(200).json({
                 success: true,

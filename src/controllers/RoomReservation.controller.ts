@@ -21,7 +21,7 @@ class RoomReservationController {
 
             // Buat reservation + bookingRooms otomatis
             const newReservation = await createReservationService(
-                propertyId, roomName, new Date(checkIn), new Date(checkOut), guestInfo, paymentMethod
+                propertyId, roomName, new Date(checkIn), new Date(checkOut), guestInfo
             );
             res.status(201).json({
                 success: true,
@@ -139,7 +139,6 @@ class RoomReservationController {
                 new Date(checkIn),
                 new Date(checkOut),
                 guestInfo,
-                paymentMethod
             );
             console.log("Request body:", req.body);
             res.status(201).json({
