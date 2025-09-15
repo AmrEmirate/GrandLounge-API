@@ -112,6 +112,8 @@ model Property {
   cityId      String
   zipCode     String
   mainImage   String?
+  latitude    Float?
+  longitude   Float?
   deletedAt   DateTime?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt

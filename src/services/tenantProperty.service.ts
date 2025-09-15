@@ -1,3 +1,5 @@
+// src/services/tenantProperty.service.ts
+
 import { PropertyRepository } from '../repositories/property.repository';
 import { Property } from '../generated/prisma';
 import { uploadToCloudinary } from '../utils/cloudinary';
@@ -40,11 +42,25 @@ export const TenantPropertyService = {
         tenantId: string,
         files: { [fieldname: string]: Express.Multer.File[] }
     ): Promise<Property> => {
-        const { name, categoryId, description, zipCode, amenityIds, cityId } = data;
+        // --- MODIFIKASI DIMULAI ---
+        const { name, categoryId, description, zipCode, amenityIds, cityId, latitude, longitude } = data;
+        // --- MODIFIKASI SELESAI ---
+        
         const mainImageUrl = await _uploadMainImage(files);
         const galleryImageUrls = await _uploadGalleryImages(files);
 
-        const propertyData = { name, description, zipCode, mainImage: mainImageUrl };
+        // --- MODIFIKASI DIMULAI ---
+        const propertyData = { 
+            name, 
+            description, 
+            zipCode, 
+            mainImage: mainImageUrl,
+            // Tambahkan konversi latitude & longitude ke float
+            latitude: latitude ? parseFloat(latitude) : undefined,
+            longitude: longitude ? parseFloat(longitude) : undefined,
+        };
+        // --- MODIFIKASI SELESAI ---
+
         const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
 
         const newProperty = await PropertyRepository.create(
@@ -77,7 +93,10 @@ export const TenantPropertyService = {
         files?: { [fieldname: string]: Express.Multer.File[] }
     ): Promise<Property> => {
         await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
-        const { amenityIds, deletedImageIds, ...propertyData } = data;
+        
+        // --- MODIFIKASI DIMULAI ---
+        const { amenityIds, deletedImageIds, latitude, longitude, ...propertyData } = data;
+        // --- MODIFIKASI SELESAI ---
 
         if (files) {
             propertyData.mainImage = await _uploadMainImage(files) ?? propertyData.mainImage;
@@ -86,6 +105,16 @@ export const TenantPropertyService = {
                 await PropertyRepository.addGalleryImages(id, newImageUrls);
             }
         }
+
+        // --- MODIFIKASI DIMULAI ---
+        // Tambahkan latitude dan longitude ke data yang akan diupdate
+        if (latitude) {
+            propertyData.latitude = parseFloat(latitude);
+        }
+        if (longitude) {
+            propertyData.longitude = parseFloat(longitude);
+        }
+        // --- MODIFIKASI SELESAI ---
 
         await _handleDeletedImages(deletedImageIds, id);
         const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
