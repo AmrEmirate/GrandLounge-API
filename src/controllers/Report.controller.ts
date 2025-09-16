@@ -1,18 +1,41 @@
 import { Request, Response, NextFunction, json } from "express";
-import { getSalesByTenant } from "../services/Report.service";
+import { getDashboardWidgets, getSalesByTenant } from "../services/Report.service";
 import ApiError from "../utils/apiError";
 import { prisma } from "../config/prisma";
 import ReportRepositori from "../repositories/Report.repositori";
 
-const reportRepo = new ReportRepositori(); 
+const reportRepo = new ReportRepositori();
 
 export default class ReportController {
+    public async getDashboardWidgetData(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = (req.user as any)?.id;
+            const tenant = await prisma.tenant.findUnique({ where: { userId } });
+
+            if (!tenant) {
+                throw new ApiError(403, "Tenant account not found.");
+            }
+
+            const widgetData = await getDashboardWidgets(tenant.id);
+
+            res.status(200).json({
+                success: true,
+                message: "Dashboard widget data fetched successfully.",
+                data: widgetData,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     public async getSalesReport(
         req: Request,
         res: Response,
         next: NextFunction
     ): Promise<void> {
         try {
+            console.log('--- [CONTROLLER] Menerima Query Params ---');
+            console.log(req.query);
             const userId = (req.user as any)?.id;
 
             const tenant = await prisma.tenant.findUnique({
@@ -24,7 +47,7 @@ export default class ReportController {
                 throw new ApiError(403, "Tenant account not found.");
             }
 
-            const reportData = await getSalesByTenant(tenant.id, req.query); 
+            const reportData = await getSalesByTenant(tenant.id, req.query);
 
             res.status(200).json({
                 success: true,

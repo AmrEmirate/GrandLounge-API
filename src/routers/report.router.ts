@@ -27,6 +27,13 @@ export default class ReportRouter {
             isTenant,
             this.report.getStatsReport
         );
+
+        this.router.get(
+            "/widgets", 
+            verifyToken,
+            isTenant,
+            this.report.getDashboardWidgetData
+        );
     }
 
     public getRouter(): Router {

@@ -42,7 +42,7 @@ export default class ReportRepositori {
         };
 
         if (startDate && endDate) {
-            whereClause.createdAt = { gte: startDate, lte: endDate };
+            whereClause.checkIn = { gte: startDate, lte: endDate };
         }
 
         return prisma.booking.aggregate({
@@ -57,7 +57,7 @@ export default class ReportRepositori {
             property: { tenantId }
         };
         if (startDate && endDate) {
-            whereClause.createdAt = { gte: startDate, lte: endDate };
+            whereClause.checkIn = { gte: startDate, lte: endDate };
         }
 
         const groupedSales = await prisma.booking.groupBy({
@@ -76,7 +76,7 @@ export default class ReportRepositori {
         const propertyMap = new Map(properties.map(p => [p.id, p.name]));
 
         return groupedSales.map(item => ({
-            propertyName: propertyMap.get(item.propertyId),
+            name: propertyMap.get(item.propertyId),
             total: item._sum.totalPrice
         }));
     }
@@ -88,11 +88,14 @@ export default class ReportRepositori {
         };
 
         if (startDate && endDate) {
-            whereClause.createdAt = { gte: startDate, lte: endDate };
+            whereClause.checkIn = { gte: startDate, lte: endDate };
         }
 
+        console.log('--- [REPOSITORY] Klausa WHERE Final Untuk Prisma ---');
+        console.log(JSON.stringify(whereClause, null, 2));
+
         const groupedSales = await prisma.booking.groupBy({
-            by: ['userId'], // Kelompokkan berdasarkan userId
+            by: ['userId'],
             where: whereClause,
             _sum: {
                 totalPrice: true,
@@ -108,7 +111,7 @@ export default class ReportRepositori {
         const userMap = new Map(users.map(u => [u.id, u.fullName]));
 
         const result = groupedSales.map(item => ({
-            userName: userMap.get(item.userId) || 'Unknown User',
+            name: userMap.get(item.userId) || 'Unknown User',
             total: item._sum.totalPrice
         }));
 
@@ -125,7 +128,7 @@ export default class ReportRepositori {
             where: {
                 status: BookingStatus.SELESAI,
                 property: { tenantId },
-                createdAt: {
+                checkIn: {
                     gte: startDate,
                     lte: endDate,
                 },
