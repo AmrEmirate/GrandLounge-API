@@ -8,63 +8,93 @@ export default class OrderListRepositroy {
             data: { status: newStatus as BookingStatus },
         });
     }
+
     async findReservationByFilter(user: string, filter: {
-        checkIn?: Date,
-        checkOut?: Date,
-        invoiceNumber?: string,
-        status?: string,
-        propertyName?: string
+        checkIn?: Date;
+        searchQuery?: string;
+        status?: string;
+        propertyName?: string;
     }) {
-        const whereCondition: Prisma.BookingWhereInput = {
+        // Inisialisasi object 'where' utama
+        const where: Prisma.BookingWhereInput = {
             userId: user,
-            ...(filter.status && { status: filter.status as BookingStatus }),
         };
 
-        if (filter.invoiceNumber) {
-            whereCondition.invoiceNumber = {
-                contains: filter.invoiceNumber,
-                mode: "insensitive"
-            };
-        };
+        // Kumpulkan semua kondisi filter ke dalam array AND
+        const andConditions: Prisma.BookingWhereInput[] = [];
 
-        if (filter.propertyName) {
-            whereCondition.property = {
-                name: {
-                    contains: filter.propertyName,
-                    mode: 'insensitive'
-                }
-            };
+        // 1. Tambahkan filter status jika ada
+        if (filter.status) {
+            where.status = filter.status as BookingStatus;
         }
 
+        // 2. Tambahkan filter nama properti jika ada
+        if (filter.propertyName) {
+            andConditions.push({
+                property: {
+                    name: {
+                        contains: filter.propertyName,
+                        mode: 'insensitive',
+                    },
+                },
+            });
+        }
+
+        // 3. Tambahkan filter tanggal check-in jika ada
         if (filter.checkIn) {
             const targetDate = new Date(filter.checkIn);
-
             const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
-
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 1);
 
-            whereCondition.checkIn = {
-                gte: startDate, 
-                lt: endDate     
-            };
+            andConditions.push({
+                checkIn: {
+                    gte: startDate,
+                    lt: endDate,
+                },
+            });
         }
 
+        // 4. Tambahkan filter pencarian gabungan (Invoice / No. Pesanan) jika ada
+        if (filter.searchQuery) {
+            andConditions.push({
+                OR: [
+                    {
+                        invoiceNumber: {
+                            contains: filter.searchQuery,
+                            mode: "insensitive",
+                        },
+                    },
+                    {
+                        reservationId: {
+                            startsWith: filter.searchQuery,
+                            mode: "insensitive",
+                        },
+                    },
+                ],
+            });
+        }
+
+        // Jika ada kondisi di dalam andConditions, tambahkan ke object 'where' utama
+        if (andConditions.length > 0) {
+            where.AND = andConditions;
+        }
+
+        // Query ke database dengan 'where' clause yang sudah final
         return prisma.booking.findMany({
-            where: whereCondition,
+            where,
             include: {
                 bookingRooms: true,
                 property: true,
                 review: {
                     include: {
                         user: true,
-                        property: true
-                    }
-                }
+                        property: true,
+                    },
+                },
             },
-            orderBy: { createdAt: 'desc' }
-        })
-
+            orderBy: { createdAt: 'desc' },
+        });
     }
 
     async tenantTransactionList(tenantId: string, status?: string) {
@@ -73,17 +103,16 @@ export default class OrderListRepositroy {
                 some: {
                     room: {
                         property: {
-                            tenantId: tenantId
-                        }
-                    }
-                }
+                            tenantId: tenantId,
+                        },
+                    },
+                },
             },
-            
         };
 
         if (status) {
             whereCondition.status = status as BookingStatus;
-        };
+        }
 
         return prisma.booking.findMany({
             where: whereCondition,
@@ -93,16 +122,16 @@ export default class OrderListRepositroy {
                 review: {
                     include: {
                         user: true,
-                        property: true
-                    }
+                        property: true,
+                    },
                 },
-                bookingRooms: {     
+                bookingRooms: {
                     include: {
-                        room: true 
-                    }
-                }
+                        room: true,
+                    },
+                },
             },
-            orderBy: { createdAt: 'desc' }
-        })
+            orderBy: { createdAt: 'desc' },
+        });
     }
 }

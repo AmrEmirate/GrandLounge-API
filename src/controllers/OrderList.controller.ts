@@ -43,7 +43,7 @@ class OrderListController {
             const userId = (req.user as any).id;
             const status = req.query.status as string | undefined;
 
-            if (!userId) { 
+            if (!userId) {
                 throw new ApiError(400, "User ID is required");
             }
 
@@ -60,20 +60,20 @@ class OrderListController {
     }
 
     public async completeOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-        const userId = (req.user as any).id;
-        const { bookingId } = req.params;
-        const updatedOrder = await completeOrderService(userId, bookingId);
-        
-        res.status(200).json({
-            success: true,
-            message: "Order has been marked as completed.",
-            data: updatedOrder,
-        });
-    } catch (error) {
-        next(error);
+        try {
+            const userId = (req.user as any).id;
+            const { bookingId } = req.params;
+            const updatedOrder = await completeOrderService(userId, bookingId);
+
+            res.status(200).json({
+                success: true,
+                message: "Order has been marked as completed.",
+                data: updatedOrder,
+            });
+        } catch (error) {
+            next(error);
+        }
     }
-}
 }
 
 export default OrderListController;

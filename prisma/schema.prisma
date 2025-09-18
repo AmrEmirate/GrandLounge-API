@@ -186,6 +186,7 @@ model Booking {
   userId          String
   propertyId      String
   invoiceNumber   String        @unique
+  reservationId   String?        @unique @default(uuid())
   checkIn         DateTime
   checkOut        DateTime
   totalPrice      Float

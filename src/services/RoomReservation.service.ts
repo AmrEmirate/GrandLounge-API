@@ -2,13 +2,18 @@ import { BookingStatus, RoomCategory } from "../generated/prisma";
 import ReservationRepositori from "../repositories/RoomReservation.repositori";
 import ApiError from "../utils/apiError";
 import crypto from "crypto";
+import { v4 as uuidv4 } from 'uuid';
 import { prisma } from "../config/prisma";
 
 const reservationRepo = new ReservationRepositori();
 
 // membuat reservasi kamar
 export const createReservationService = async (
-propertyId: string, roomName: string, checkIn: Date, checkOut: Date, guestInfo: { name: string; email: string; password?: string; }, 
+    propertyId: string,
+    roomName: string,
+    checkIn: Date,
+    checkOut: Date,
+    guestInfo: { name: string; email: string; password?: string; },
 ) => {
     if (checkOut <= checkIn) {
         throw new ApiError(400, "End date must be after start date");
@@ -23,6 +28,7 @@ propertyId: string, roomName: string, checkIn: Date, checkOut: Date, guestInfo: 
 
     const durationDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / 86_400_000);
     const totalPrice = room.basePrice * durationDays;
+    const reservationId = uuidv4(); 
     const invoiceNumber = `INV-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
 
     const newBooking = await prisma.$transaction(async (tx) => {
@@ -34,6 +40,7 @@ propertyId: string, roomName: string, checkIn: Date, checkOut: Date, guestInfo: 
         const booking = await tx.booking.create({
             data: {
                 invoiceNumber,
+                reservationId,
                 checkIn: checkIn,
                 checkOut: checkOut,
                 totalPrice,
@@ -57,8 +64,6 @@ propertyId: string, roomName: string, checkIn: Date, checkOut: Date, guestInfo: 
 
         return booking;
     });
-
-    
 
         return newBooking;
     
