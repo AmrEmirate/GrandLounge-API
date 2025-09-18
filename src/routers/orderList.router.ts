@@ -23,10 +23,10 @@ export default class OrderListRouter {
         );
 
         this.router.get(
-            "/tenant-transactions",
+            "/tenant-transactions/pending", 
             verifyToken,
             isTenant,
-            this.orderList.tenantTransactionList
+            this.orderList.pendingConfirmationList
         );
 
         this.router.patch(

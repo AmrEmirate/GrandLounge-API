@@ -9,26 +9,94 @@ export default class OrderListRepositroy {
         });
     }
 
+    async findTransactionsByFilterForTenant(tenantId: string, filter: {
+        checkIn?: Date;
+        searchQuery?: string;
+        status?: BookingStatus;
+        propertyId?: string;
+    }) {
+        const where: Prisma.BookingWhereInput = {
+            user: {
+                id: { not: undefined }
+            },
+            property: {
+                tenantId: tenantId,
+                id: { not: undefined }
+            },
+        };
+
+        const andConditions: Prisma.BookingWhereInput[] = [];
+
+        if (filter.status) {
+            where.status = filter.status;
+        }
+
+        if (filter.propertyId) {
+            andConditions.push({
+                propertyId: filter.propertyId,
+            });
+        }
+
+        if (filter.searchQuery) {
+            andConditions.push({
+                OR: [
+                    { invoiceNumber: { contains: filter.searchQuery, mode: 'insensitive' } },
+                    { reservationId: { contains: filter.searchQuery, mode: 'insensitive' } },
+                    { user: { fullName: { contains: filter.searchQuery, mode: 'insensitive' } } }
+                ],
+            });
+        }
+
+        if (filter.checkIn) {
+            const targetDate = new Date(filter.checkIn);
+            const startDate = new Date(Date.UTC(
+                targetDate.getUTCFullYear(),
+                targetDate.getUTCMonth(),
+                targetDate.getUTCDate(),
+                0, 0, 0, 0
+            ));
+            const endDate = new Date(startDate);
+            endDate.setUTCDate(startDate.getUTCDate() + 1);
+
+            andConditions.push({
+                checkIn: {
+                    gte: startDate,
+                    lt: endDate,
+                },
+            });
+        }
+
+        if (andConditions.length > 0) {
+            where.AND = andConditions;
+        }
+
+        return prisma.booking.findMany({
+            where,
+            include: {
+                user: { select: { fullName: true } },
+                property: { select: { name: true, mainImage: true } }, // sertakan mainImage
+                review: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+
     async findReservationByFilter(user: string, filter: {
         checkIn?: Date;
         searchQuery?: string;
         status?: string;
         propertyName?: string;
     }) {
-        // Inisialisasi object 'where' utama
         const where: Prisma.BookingWhereInput = {
             userId: user,
         };
 
-        // Kumpulkan semua kondisi filter ke dalam array AND
         const andConditions: Prisma.BookingWhereInput[] = [];
 
-        // 1. Tambahkan filter status jika ada
         if (filter.status) {
             where.status = filter.status as BookingStatus;
         }
 
-        // 2. Tambahkan filter nama properti jika ada
         if (filter.propertyName) {
             andConditions.push({
                 property: {
@@ -40,13 +108,18 @@ export default class OrderListRepositroy {
             });
         }
 
-        // 3. Tambahkan filter tanggal check-in jika ada
         if (filter.checkIn) {
             const targetDate = new Date(filter.checkIn);
-            const startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+            const startDate = new Date(Date.UTC(
+                targetDate.getUTCFullYear(),
+                targetDate.getUTCMonth(),
+                targetDate.getUTCDate(),
+                0, 0, 0, 0
+            ));
             const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 1);
+            endDate.setUTCDate(startDate.getUTCDate() + 1);
 
+            // HANYA SATU BLOK INI YANG DIPERLUKAN
             andConditions.push({
                 checkIn: {
                     gte: startDate,
@@ -55,7 +128,6 @@ export default class OrderListRepositroy {
             });
         }
 
-        // 4. Tambahkan filter pencarian gabungan (Invoice / No. Pesanan) jika ada
         if (filter.searchQuery) {
             andConditions.push({
                 OR: [
@@ -67,7 +139,7 @@ export default class OrderListRepositroy {
                     },
                     {
                         reservationId: {
-                            startsWith: filter.searchQuery,
+                            contains: filter.searchQuery,
                             mode: "insensitive",
                         },
                     },
@@ -75,12 +147,10 @@ export default class OrderListRepositroy {
             });
         }
 
-        // Jika ada kondisi di dalam andConditions, tambahkan ke object 'where' utama
         if (andConditions.length > 0) {
             where.AND = andConditions;
         }
 
-        // Query ke database dengan 'where' clause yang sudah final
         return prisma.booking.findMany({
             where,
             include: {
@@ -97,41 +167,26 @@ export default class OrderListRepositroy {
         });
     }
 
-    async tenantTransactionList(tenantId: string, status?: string) {
-        const whereCondition: Prisma.BookingWhereInput = {
-            bookingRooms: {
-                some: {
-                    room: {
-                        property: {
-                            tenantId: tenantId,
-                        },
-                    },
-                },
-            },
-        };
-
-        if (status) {
-            whereCondition.status = status as BookingStatus;
-        }
-
+    async findPendingConfirmationForTenant(tenantId: string, limit: number = 5) {
         return prisma.booking.findMany({
-            where: whereCondition,
-            include: {
-                user: true,
-                property: true,
-                review: {
-                    include: {
-                        user: true,
-                        property: true,
-                    },
+            where: {
+                status: BookingStatus.MENUNGGU_KONFIRMASI,
+                property: {
+                    tenantId: tenantId,
                 },
-                bookingRooms: {
-                    include: {
-                        room: true,
-                    },
+                // Pastikan hanya mengambil yang relevan
+                paymentProof: {
+                    not: null
                 },
             },
-            orderBy: { createdAt: 'desc' },
+            include: {
+                user: { select: { fullName: true, profilePicture: true } },
+                property: { select: { name: true } },
+            },
+            orderBy: {
+                updatedAt: 'desc',
+            },
+            take: limit,
         });
     }
 }

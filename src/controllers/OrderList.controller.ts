@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { completeOrderService, getTenantTransactionListService, OrderListService } from "../services/OrderList.service";
+import { completeOrderService, getPendingConfirmationService, getTenantTransactionsService, OrderListService } from "../services/OrderList.service";
 import ApiError from "../utils/apiError";
 
 class OrderListController {
@@ -11,16 +11,10 @@ class OrderListController {
         try {
             const userId = (req.user as any).id;
             const filter = {
-                checkIn: req.query.checkIn ? new Date(req.query.checkIn as string) : undefined,
-                checkOut: req.query.checkOut ? new Date(req.query.checkOut as string) : undefined,
-                invoiceNumber: req.query.invoiceNumber as string | undefined,
-                status: req.query.status as string,
-                propertyName: req.query.propertyName as string | undefined
+                searchQuery: req.query.searchQuery as string | undefined,
+                propertyName: req.query.propertyName as string | undefined,
+                checkIn: req.query.checkIn ? new Date(req.query.checkIn as string) : undefined
             };
-
-            if (filter.checkIn && filter.checkOut && filter.checkIn > filter.checkOut) {
-                throw new ApiError(400, "Check-in date cannot be after check-out date");
-            }
 
             const orderlist = await OrderListService(userId, filter);
 
@@ -40,22 +34,24 @@ class OrderListController {
         next: NextFunction
     ): Promise<void> {
         try {
-            const userId = (req.user as any).id;
-            const status = req.query.status as string | undefined;
+            const tenantId = (req.user as any).tenant.id;
 
-            if (!userId) {
-                throw new ApiError(400, "User ID is required");
-            }
+            const filter = {
+                searchQuery: req.query.searchQuery as string | undefined,
+                propertyId: req.query.propertyId as string | undefined,
+                checkIn: req.query.checkIn ? new Date(req.query.checkIn as string) : undefined,
+                status: req.query.status as any | undefined
+            };
 
-            const reservation = await getTenantTransactionListService(userId, status);
+            const transactions = await getTenantTransactionsService(tenantId, filter);
 
             res.status(200).json({
                 success: true,
                 message: "Tenant transaction list retrieved successfully",
-                data: reservation
+                data: transactions
             });
         } catch (error) {
-            next(error)
+            next(error);
         }
     }
 
@@ -69,6 +65,24 @@ class OrderListController {
                 success: true,
                 message: "Order has been marked as completed.",
                 data: updatedOrder,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public async pendingConfirmationList(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const tenantId = (req.user as any).tenant.id;
+            const transactions = await getPendingConfirmationService(tenantId);
+            res.status(200).json({
+                success: true,
+                message: "Pending confirmation list retrieved successfully",
+                data: transactions
             });
         } catch (error) {
             next(error);
