@@ -29,7 +29,6 @@ import ReportRouter from "./routers/report.router";
 import CalenderRouter from "./routers/calenderReport.router";
 import { startSchedulers } from "./scheduler/index";
 import ReviewRouter from "./routers/review.router";
-import PaymentRouter from "./routers/payment.router";
 
 const PORT: string = process.env.PORT || "2020";
 
@@ -71,7 +70,6 @@ class App {
         const orderList = new OrderListRouter();
         const cancelOrder = new CancelOrderRouter();
         const confirmPayment = new ConfirmPaymentRouter();
-        const paymentGateway = new PaymentRouter();
         const sendConfirm = new OrderReminderRouter();
         const review = new ReviewRouter();
         const report = new ReportRouter();
@@ -82,7 +80,6 @@ class App {
         this.app.use("/api/orders", orderList.getRouter());
         this.app.use("/api/order-cancel", cancelOrder.getRouter());
         this.app.use("/api/payment-confirm", confirmPayment.getRouter());
-        this.app.use('/api/payment-gateway', paymentGateway.getRouter());
         this.app.use("/api/send-reminder", sendConfirm.getRouter());
         this.app.use("/api/reviews", review.getRouter())
         this.app.use("/api/report", report.getRouter());

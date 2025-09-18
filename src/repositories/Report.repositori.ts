@@ -28,7 +28,7 @@ export default class ReportRepositori {
         const occupancyRate = totalRooms > 0 ? (totalBookings / (totalRooms * 30)) * 100 : 0;
 
         return {
-            totalRevenue: totalRevenue._sum.totalPrice || 0,
+            totalRevenue: totalRevenue._sum?.totalPrice || 0,
             totalBookings: totalBookings,
             occupancyRate: occupancyRate,
             totalRooms: totalRooms,
@@ -49,6 +49,8 @@ export default class ReportRepositori {
             _sum: { totalPrice: true },
             where: whereClause
         });
+
+        
     }
 
     async getSalesByProperty(tenantId: string, startDate?: Date, endDate?: Date, sortBy?: any) {

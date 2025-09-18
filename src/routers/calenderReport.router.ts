@@ -20,6 +20,12 @@ export default class CalenderReportRouter {
             isTenant,
             this.calenderReport.getAvailabilityReport
         )
+        this.router.get(
+            "/property/:propertyId", 
+            verifyToken,
+            isTenant,
+            this.calenderReport.getPropertyReport 
+        );
     }
 
     public getRouter(): Router {

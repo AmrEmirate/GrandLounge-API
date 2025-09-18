@@ -32,7 +32,8 @@ export default class CalenderReportRepositori {
                                 id: true,
                                 name: true,
                             }
-                        }
+                        },
+                        basePrice: true
                     },
                 },
             },
