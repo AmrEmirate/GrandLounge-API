@@ -40,28 +40,28 @@ export default class OrderListRepositroy {
         if (filter.searchQuery) {
             andConditions.push({
                 OR: [
+                    { user: { fullName: { contains: filter.searchQuery, mode: 'insensitive' } } },
+                    { property: { name: { contains: filter.searchQuery, mode: 'insensitive' } } },
                     { invoiceNumber: { contains: filter.searchQuery, mode: 'insensitive' } },
                     { reservationId: { contains: filter.searchQuery, mode: 'insensitive' } },
-                    { user: { fullName: { contains: filter.searchQuery, mode: 'insensitive' } } }
                 ],
             });
         }
 
         if (filter.checkIn) {
             const targetDate = new Date(filter.checkIn);
-            const startDate = new Date(Date.UTC(
-                targetDate.getUTCFullYear(),
-                targetDate.getUTCMonth(),
-                targetDate.getUTCDate(),
-                0, 0, 0, 0
-            ));
-            const endDate = new Date(startDate);
-            endDate.setUTCDate(startDate.getUTCDate() + 1);
+            const startDate = new Date(
+                Date.UTC(targetDate.getUTCFullYear(), targetDate.getUTCMonth(), targetDate.getUTCDate(), 0, 0, 0, 0)
+            );
+
+            const endDate = new Date(
+                Date.UTC(targetDate.getUTCFullYear(), targetDate.getUTCMonth(), targetDate.getUTCDate(), 23, 59, 59, 999)
+            );
 
             andConditions.push({
                 checkIn: {
                     gte: startDate,
-                    lt: endDate,
+                    lte: endDate,
                 },
             });
         }
@@ -74,7 +74,7 @@ export default class OrderListRepositroy {
             where,
             include: {
                 user: { select: { fullName: true } },
-                property: { select: { name: true, mainImage: true } }, // sertakan mainImage
+                property: { select: { name: true, mainImage: true } }, 
                 review: true,
             },
             orderBy: { createdAt: 'desc' },
@@ -119,7 +119,6 @@ export default class OrderListRepositroy {
             const endDate = new Date(startDate);
             endDate.setUTCDate(startDate.getUTCDate() + 1);
 
-            // HANYA SATU BLOK INI YANG DIPERLUKAN
             andConditions.push({
                 checkIn: {
                     gte: startDate,

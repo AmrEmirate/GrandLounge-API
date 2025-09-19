@@ -23,7 +23,7 @@ export default class OrderListRouter {
         );
 
         this.router.get(
-            "/tenant-transactions/pending", 
+            "/tenant-transactions/pending",
             verifyToken,
             isTenant,
             this.orderList.pendingConfirmationList
@@ -34,6 +34,13 @@ export default class OrderListRouter {
             verifyToken,
             isUser,
             this.orderList.completeOrder
+        );
+
+        this.router.get(
+            "/tenant-transactions", 
+            verifyToken,
+            isTenant,
+            this.orderList.tenantTransactionList
         );
     }
 
