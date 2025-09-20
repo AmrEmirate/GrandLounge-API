@@ -61,15 +61,16 @@ export const UserService = {
     },
 
     confirmEmailChange: async (token: string, newEmail: string) => {
-        const userId = await TokenService.validateAndUseToken(token, 'EMAIL_CHANGE');
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: { email: newEmail, verified: false },
-        });
+    const userId = await TokenService.validateAndUseToken(token, 'EMAIL_CHANGE');
+    const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { email: newEmail, verified: false }, // Email diperbarui di sini
+    });
 
-        const verificationToken = await TokenService.createToken(userId, 'EMAIL_VERIFICATION');
-        await TokenService.sendTokenEmail(updatedUser, verificationToken, 'EMAIL_VERIFICATION');
+    // Membuat token baru untuk verifikasi email BARU
+    const verificationToken = await TokenService.createToken(userId, 'EMAIL_VERIFICATION');
+    await TokenService.sendTokenEmail(updatedUser, verificationToken, 'EMAIL_VERIFICATION');
 
-        return updatedUser;
-    },
+    return updatedUser;
+},
 };

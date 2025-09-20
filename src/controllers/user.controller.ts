@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { UserService } from '../services/user.service';
+import { generateToken } from '../utils/jwt';
 
 export const UserController = {
   updateProfile: async (req: AuthRequest, res: Response) => {
@@ -47,8 +48,21 @@ export const UserController = {
   confirmEmailChange: async (req: Request, res: Response) => {
     try {
       const { token, newEmail } = req.body;
-      await UserService.confirmEmailChange(token, newEmail);
-      res.status(200).json({ message: 'Perubahan email berhasil dikonfirmasi. Silakan cek email baru Anda untuk verifikasi akhir.' });
+      const updatedUser = await UserService.confirmEmailChange(token, newEmail);
+      
+      const payload = {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        verified: updatedUser.verified,
+      };
+
+      const accessToken = generateToken(payload);
+      
+      res.status(200).json({ 
+        message: 'Email berhasil diubah dan sesi Anda telah diperbarui.',
+        token: accessToken
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }
