@@ -62,7 +62,7 @@ export default class ReportRepositori {
         });
     }
 
-    async getSalesByProperty(tenantId: string, startDate?: Date, endDate?: Date) {
+    async getSalesByProperty(tenantId: string, startDate?: Date, endDate?: Date, sortBy?: any) {
         const whereClause = this.createReportWhereClause(tenantId, startDate, endDate);
         const groupedSales = await prisma.booking.groupBy({
             by: ['propertyId'],

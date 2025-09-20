@@ -5,7 +5,6 @@ import ApiError from "../utils/apiError";
 export class ReviewService {
     private reviewRepo = new ReviewRepository();
 
-    // Create review
     async createReview(userId: string, bookingId: string, rating: number, comment?: string) {
         const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
         if (!booking) throw new ApiError(404, "Booking tidak ditemukan");
@@ -35,7 +34,6 @@ export class ReviewService {
         });
     }
 
-    // Reply review tenant
     async replyReview(reviewId: string, reply: string) {
         try {
             return await this.reviewRepo.replyReview(reviewId, reply);
@@ -48,12 +46,10 @@ export class ReviewService {
         }
     }
 
-    // Get reviews by propertyId
     async getReviewsByProperty(propertyId: string) {
         return this.getReviewsByPropertyId(propertyId);
     }
 
-    // Get reviews by propertyName (hotel name)
     async getReviewsByPropertyName(propertyName: string) {
         return this.reviewRepo.getReviewsByPropertyName(propertyName);
     }
