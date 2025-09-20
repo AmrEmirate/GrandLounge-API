@@ -6,7 +6,15 @@ import { Prisma, Property, Room, RoomAvailability } from '../generated/prisma';
 const roomReservationRepo = new RoomReservationRepository();
 
 const _buildPropertyWhereClause = (filters: any): Prisma.PropertyWhereInput => {
-    const where: Prisma.PropertyWhereInput = { deletedAt: null, rooms: { some: { deletedAt: null } } };
+    const where: Prisma.PropertyWhereInput = { 
+        deletedAt: null, 
+        rooms: { 
+            some: { 
+                deletedAt: null 
+            } 
+        } 
+    };
+
     if (filters.search) {
         where.name = { contains: filters.search, mode: 'insensitive' };
     }
@@ -21,6 +29,19 @@ const _buildPropertyWhereClause = (filters: any): Prisma.PropertyWhereInput => {
             none: { date: { gte: new Date(filters.startDate), lte: new Date(filters.endDate) }, isAvailable: false },
         };
     }
+    
+    if (filters.minPrice || filters.maxPrice) {
+        const priceFilter: Prisma.FloatFilter = {};
+        if (filters.minPrice) {
+            priceFilter.gte = parseFloat(filters.minPrice as string);
+        }
+        if (filters.maxPrice) {
+            priceFilter.lte = parseFloat(filters.maxPrice as string);
+        }
+        (where.rooms!.some as Prisma.RoomWhereInput).basePrice = priceFilter;
+    }
+    // --- AKHIR DARI KODE TAMBAHAN ---
+
     return where;
 };
 

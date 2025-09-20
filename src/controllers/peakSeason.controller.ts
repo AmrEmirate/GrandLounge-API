@@ -1,11 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import { PeakSeasonService } from '../services/peakSeason.service';
 import { AuthRequest } from '../middleware/auth.middleware';
+import ApiError from '../utils/apiError'; // Pastikan untuk import ApiError
 
 export const PeakSeasonController = {
   create: async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { name, startDate, endDate, adjustmentType, adjustmentValue, roomId } = req.body;
+
+      // VALIDASI BARU: Tambahkan pengecekan roomId di sini
+      if (!roomId) {
+        throw new ApiError(400, 'Request body harus menyertakan roomId.');
+      }
       
       const payload = {
         name,
@@ -38,10 +44,8 @@ export const PeakSeasonController = {
           const { id } = req.params;
           const { startDate, endDate, adjustmentValue, ...otherData } = req.body;
 
-          // Buat objek data baru yang akan dikirim untuk update
           const updateData: any = { ...otherData };
           
-          // Konversi string tanggal menjadi objek Date jika ada di body
           if (startDate) {
             updateData.startDate = new Date(startDate);
           }
@@ -49,7 +53,6 @@ export const PeakSeasonController = {
             updateData.endDate = new Date(endDate);
           }
           
-          // Konversi adjustmentValue menjadi float jika ada
           if (adjustmentValue !== undefined) {
             updateData.adjustmentValue = parseFloat(adjustmentValue);
           }

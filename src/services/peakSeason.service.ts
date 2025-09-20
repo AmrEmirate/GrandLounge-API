@@ -1,7 +1,14 @@
-// src/services/peakSeason.service.ts
 import { PeakSeasonRepository } from '../repositories/peakSeason.repository';
 import { PeakSeason, Prisma } from '../generated/prisma';
 import ApiError from '../utils/apiError';
+
+// Fungsi helper untuk menambahkan 1 hari (menggunakan UTC untuk konsistensi)
+const addOneDayUTC = (date: Date): Date => {
+  const newDate = new Date(date);
+  newDate.setUTCDate(newDate.getUTCDate() + 1);
+  newDate.setUTCHours(0, 0, 0, 0); // Pastikan waktunya adalah awal hari
+  return newDate;
+};
 
 export const PeakSeasonService = {
   createSeason: async (data: Prisma.PeakSeasonUncheckedCreateInput): Promise<PeakSeason> => {
@@ -15,7 +22,13 @@ export const PeakSeasonService = {
         throw new ApiError(400, 'Adjustment value must be a positive number.');
     }
 
-    return PeakSeasonRepository.create(data);
+    const adjustedData = {
+      ...data,
+      // endDate sekarang adalah hari berikutnya dari yang dipilih
+      endDate: addOneDayUTC(new Date(data.endDate as string)),
+    };
+
+    return PeakSeasonRepository.create(adjustedData);
   },
 
   getSeasonsByRoom: async (roomId: string): Promise<PeakSeason[]> => {
@@ -27,7 +40,14 @@ export const PeakSeasonService = {
     if (!existing) {
         throw new ApiError(404, "Peak season not found.");
     }
-    return PeakSeasonRepository.update(id, data);
+    
+    const adjustedUpdateData = { ...data };
+    if (data.endDate) {
+      // Terapkan logika yang sama untuk update
+      adjustedUpdateData.endDate = addOneDayUTC(new Date(data.endDate as string));
+    }
+
+    return PeakSeasonRepository.update(id, adjustedUpdateData);
   },
 
   deleteSeason: async (id: string): Promise<PeakSeason> => {
