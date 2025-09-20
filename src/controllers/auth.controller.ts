@@ -1,5 +1,3 @@
-// src/controllers/auth.controller.ts
-
 import { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { AuthRequest } from '../middleware/auth.middleware';
@@ -42,18 +40,11 @@ export const AuthController = {
     }
   },
 
-  /**
-   * Fungsi login yang telah diperbarui.
-   * Menerima seluruh req.body yang berisi email, password, dan 'type' (user/tenant).
-   * Meneruskan seluruh body ke AuthService untuk divalidasi.
-   */
   login: async (req: Request, res: Response) => {
     try {
-      // req.body sekarang akan berisi { email, password, type } dari frontend
       const { user, token } = await AuthService.login(req.body);
       res.status(200).json({ message: 'Login berhasil.', data: { user, token } });
     } catch (error: any) {
-      // Mengembalikan pesan error dari service jika login gagal (misal: peran tidak cocok)
       res.status(401).json({ message: error.message });
     }
   },
@@ -73,6 +64,20 @@ export const AuthController = {
       const { token, password } = req.body;
       await AuthService.resetPassword(token, password);
       res.status(200).json({ message: 'Password berhasil direset. Silakan login kembali.' });
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
+  confirmEmailChange: async (req: Request, res: Response) => {
+    try {
+      const { token, newEmail } = req.body;
+      const { token: newToken } = await AuthService.confirmEmailChange(token, newEmail);
+      
+      res.status(200).json({ 
+          message: 'Email berhasil diubah. Silakan verifikasi email baru Anda dari halaman profil.', 
+          token: newToken 
+      });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
     }

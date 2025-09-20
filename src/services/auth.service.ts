@@ -132,6 +132,38 @@ export const AuthService = {
         });
     },
 
+    confirmEmailChange: async (token: string, newEmail: string) => {
+        const userId = await TokenService.validateAndUseToken(token, 'EMAIL_CHANGE');
+
+        const emailExists = await prisma.user.findFirst({
+            where: { email: newEmail, deletedAt: null },
+        });
+
+        if (emailExists) {
+            throw new Error('Alamat email ini sudah digunakan oleh akun lain.');
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                email: newEmail,
+                verified: false,
+            },
+        });
+
+        const newToken = generateToken({
+            id: updatedUser.id,
+            role: updatedUser.role,
+            fullName: updatedUser.fullName,
+            email: updatedUser.email,
+            verified: updatedUser.verified, // Akan bernilai false
+            createdAt: updatedUser.createdAt,
+            profilePicture: updatedUser.profilePicture,
+        });
+
+        return { token: newToken };
+    },
+
     getProfile: async (userId: string) => {
         return await prisma.user.findUnique({
             where: { id: userId },

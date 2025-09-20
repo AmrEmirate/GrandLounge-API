@@ -21,6 +21,9 @@ router.post('/login', AuthController.login);
 router.post('/password-reset/request', AuthController.requestPasswordReset);
 router.post('/password-reset/confirm', AuthController.resetPassword);
 
+// Rute Konfirmasi Perubahan Email
+router.post('/confirm-email-change', AuthController.confirmEmailChange);
+
 // Rute Profil
 router.get('/profile', authMiddleware(), AuthController.getProfile);
 
