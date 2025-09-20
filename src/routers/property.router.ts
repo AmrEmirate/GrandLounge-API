@@ -15,6 +15,7 @@ const tenantOnly = authMiddleware([UserRole.TENANT]);
 // Mendapatkan semua properti (dengan filter dan paginasi)
 router.get('/', PropertyController.getAll);
 
+router.get('/nearby', PropertyController.getNearbyProperties);
 // Mendapatkan detail satu properti
 router.get('/:id', PropertyController.getOne);
 

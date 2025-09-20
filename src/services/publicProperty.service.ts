@@ -6,13 +6,13 @@ import { Prisma, Property, Room, RoomAvailability } from '../generated/prisma';
 const roomReservationRepo = new RoomReservationRepository();
 
 const _buildPropertyWhereClause = (filters: any): Prisma.PropertyWhereInput => {
-    const where: Prisma.PropertyWhereInput = { 
-        deletedAt: null, 
-        rooms: { 
-            some: { 
-                deletedAt: null 
-            } 
-        } 
+    const where: Prisma.PropertyWhereInput = {
+        deletedAt: null,
+        rooms: {
+            some: {
+                deletedAt: null
+            }
+        }
     };
 
     if (filters.search) {
@@ -29,7 +29,7 @@ const _buildPropertyWhereClause = (filters: any): Prisma.PropertyWhereInput => {
             none: { date: { gte: new Date(filters.startDate), lte: new Date(filters.endDate) }, isAvailable: false },
         };
     }
-    
+
     if (filters.minPrice || filters.maxPrice) {
         const priceFilter: Prisma.FloatFilter = {};
         if (filters.minPrice) {
@@ -40,7 +40,6 @@ const _buildPropertyWhereClause = (filters: any): Prisma.PropertyWhereInput => {
         }
         (where.rooms!.some as Prisma.RoomWhereInput).basePrice = priceFilter;
     }
-    // --- AKHIR DARI KODE TAMBAHAN ---
 
     return where;
 };
@@ -170,34 +169,44 @@ export const PublicPropertyService = {
         });
     },
 
-    findNearby: async (lat: number, lon: number, radius: number = 10000) => { // radius in meters
+    findNearby: async (lat: number, lon: number, radius: number = 10000) => {
         const properties = await prisma.$queryRaw<Property[]>`
-        SELECT
-          p.id, p.name, p.latitude, p.longitude,
-          json_build_object('id', c.id, 'name', c.name) as category,
-          json_build_object('id', city.id, 'name', city.name) as city,
-          (
-            SELECT COALESCE(json_agg(json_build_object('id', r.id, 'name', r.name, 'price', r."basePrice")), '[]'::json)
-            FROM "Room" r
-            WHERE r."propertyId" = p.id AND r."deletedAt" IS NULL
-            ORDER BY r."basePrice" ASC
-            LIMIT 1
-          ) as rooms
-        FROM
-          "Property" p
-        LEFT JOIN
-          "Category" c ON p."categoryId" = c.id
-        LEFT JOIN
-          "City" city ON p."cityId" = city.id
-        WHERE
-          ST_DWithin(
-            ST_MakePoint(p.longitude, p.latitude)::geography,
-            ST_MakePoint(${lon}, ${lat})::geography,
-            ${radius}
+      SELECT
+        p.id,
+        p.name,
+        p."mainImage",
+        json_build_object('id', c.id::text, 'name', c.name::text) as category,
+        json_build_object('id', ct.id::text, 'name', ct.name::text) as city,
+        (
+          SELECT COALESCE(
+            json_agg(
+              json_build_object('id', r.id::text, 'name', r.name::text, 'basePrice', r."basePrice")
+            ),
+            '[]'::json
           )
-          AND p."deletedAt" IS NULL
-        LIMIT 15;
-      `;
+          FROM (
+            SELECT *
+            FROM "Room" as r_inner
+            WHERE r_inner."propertyId" = p.id AND r_inner."deletedAt" IS NULL
+            ORDER BY r_inner."basePrice" ASC
+            LIMIT 1
+          ) as r
+        ) as rooms
+      FROM
+        "Property" as p
+      LEFT JOIN
+        "Category" as c ON p."categoryId" = c.id
+      LEFT JOIN
+        "City" as ct ON p."cityId" = ct.id
+      WHERE
+        ST_DWithin(
+          ST_MakePoint(p.longitude::double precision, p.latitude::double precision)::geography,
+          ST_MakePoint(${lon}, ${lat})::geography,
+          ${radius}
+        )
+        AND p."deletedAt" IS NULL
+      LIMIT 15;
+    `;
         return properties;
     },
 };
