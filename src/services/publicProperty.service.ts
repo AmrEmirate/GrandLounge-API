@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import RoomReservationRepository from '../repositories/RoomReservation.repositori';
 import { Prisma, Property, Room, RoomAvailability } from '../generated/prisma';
+import { PropertyRepository } from '../repositories/property.repository'; // Pastikan ini diimpor
 
 const roomReservationRepo = new RoomReservationRepository();
 
@@ -115,19 +116,8 @@ export const PublicPropertyService = {
     },
 
     getPropertyById: async (id: string) => {
-        const property = await prisma.property.findFirst({
-            where: { id, deletedAt: null },
-            include: {
-                category: true, city: true,
-                tenant: { include: { user: { select: { fullName: true, profilePicture: true } } } },
-                rooms: { where: { deletedAt: null } },
-                amenities: { where: { deletedAt: null } },
-                reviews: { where: { deletedAt: null }, include: { user: { select: { fullName: true, profilePicture: true } } } },
-                images: true,
-            },
-        });
-
-        if (property && (property.category?.deletedAt || property.city?.deletedAt || property.tenant?.deletedAt)) {
+        const property = await PropertyRepository.findPublicById(id);
+        if (!property) {
             return null;
         }
         return property;
@@ -210,4 +200,3 @@ export const PublicPropertyService = {
         return properties;
     },
 };
-

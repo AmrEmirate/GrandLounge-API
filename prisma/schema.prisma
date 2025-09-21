@@ -109,6 +109,7 @@ model Property {
   name        String
   categoryId  String
   description String
+  address     String?
   cityId      String
   zipCode     String
   mainImage   String?

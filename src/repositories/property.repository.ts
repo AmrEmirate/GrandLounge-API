@@ -2,7 +2,6 @@ import { prisma } from '../config/prisma';
 import { Property } from '../generated/prisma';
 
 export const PropertyRepository = {
-  // --- PERBAIKAN KUNCI DI SINI ---
   create: async (
     propertyData: any, 
     tenantId: string, 
@@ -18,10 +17,10 @@ export const PropertyRepository = {
           connect: { id: tenantId },
         },
         city: {
-          connect: { id: cityId }, // Gunakan cityId dari argumen
+          connect: { id: cityId },
         },
         category: {
-          connect: { id: categoryId }, // Gunakan categoryId dari argumen
+          connect: { id: categoryId },
         },
         amenities: {
           connect: amenityIds?.map((id) => ({ id })) || [],
@@ -29,7 +28,6 @@ export const PropertyRepository = {
       },
     });
   },
-  // --- AKHIR PERBAIKAN ---
 
   findAllByTenantId: async (tenantId: string): Promise<Property[]> => {
     return await prisma.property.findMany({
@@ -52,6 +50,32 @@ export const PropertyRepository = {
         amenities: true,
         rooms: true,
         images: true,
+      },
+    });
+  },
+
+  findPublicById: async (id: string): Promise<Property | null> => {
+    return await prisma.property.findFirst({
+      where: { id: id, deletedAt: null },
+      include: {
+        category: true,
+        city: true,
+        amenities: true,
+        images: true,
+        rooms: {
+          where: { deletedAt: null },
+        },
+        tenant: {
+          select: {
+            createdAt: true, // <-- TAMBAHKAN BARIS INI
+            user: {
+              select: {
+                fullName: true,
+                profilePicture: true,
+              },
+            },
+          },
+        },
       },
     });
   },

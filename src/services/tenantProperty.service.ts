@@ -1,5 +1,3 @@
-// src/services/tenantProperty.service.ts
-
 import { PropertyRepository } from '../repositories/property.repository';
 import { Property } from '../generated/prisma';
 import { uploadToCloudinary } from '../utils/cloudinary';
@@ -42,24 +40,20 @@ export const TenantPropertyService = {
         tenantId: string,
         files: { [fieldname: string]: Express.Multer.File[] }
     ): Promise<Property> => {
-        // --- MODIFIKASI DIMULAI ---
-        const { name, categoryId, description, zipCode, amenityIds, cityId, latitude, longitude } = data;
-        // --- MODIFIKASI SELESAI ---
+        const { name, categoryId, description, address, zipCode, amenityIds, cityId, latitude, longitude } = data;
         
         const mainImageUrl = await _uploadMainImage(files);
         const galleryImageUrls = await _uploadGalleryImages(files);
 
-        // --- MODIFIKASI DIMULAI ---
         const propertyData = { 
             name, 
             description, 
+            address,
             zipCode, 
             mainImage: mainImageUrl,
-            // Tambahkan konversi latitude & longitude ke float
             latitude: latitude ? parseFloat(latitude) : undefined,
             longitude: longitude ? parseFloat(longitude) : undefined,
         };
-        // --- MODIFIKASI SELESAI ---
 
         const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
 
@@ -94,9 +88,7 @@ export const TenantPropertyService = {
     ): Promise<Property> => {
         await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
         
-        // --- MODIFIKASI DIMULAI ---
         const { amenityIds, deletedImageIds, latitude, longitude, ...propertyData } = data;
-        // --- MODIFIKASI SELESAI ---
 
         if (files) {
             propertyData.mainImage = await _uploadMainImage(files) ?? propertyData.mainImage;
@@ -106,15 +98,12 @@ export const TenantPropertyService = {
             }
         }
 
-        // --- MODIFIKASI DIMULAI ---
-        // Tambahkan latitude dan longitude ke data yang akan diupdate
         if (latitude) {
             propertyData.latitude = parseFloat(latitude);
         }
         if (longitude) {
             propertyData.longitude = parseFloat(longitude);
         }
-        // --- MODIFIKASI SELESAI ---
 
         await _handleDeletedImages(deletedImageIds, id);
         const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
