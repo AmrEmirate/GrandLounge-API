@@ -1,7 +1,8 @@
-import { eachDayOfInterval } from "date-fns";
+import { eachDayOfInterval, isWithinInterval } from "date-fns";
 import { prisma } from "../config/prisma";
 import CalenderReportRepositori from "../repositories/CalenderReport.repositori";
 import ApiError from "../utils/apiError";
+import { BookingStatus } from "../generated/prisma";
 
 const calenderRepo = new CalenderReportRepositori();
 
@@ -10,17 +11,35 @@ export const getCalenderReport = async (
     propertyId?: string,
     roomId?: string,
     startDate?: Date,
-    endDate?: Date) => {
-    if (!startDate || !endDate) {
-        throw new ApiError(400, "StartDate and EndDate are required.");
+    endDate?: Date
+) => {
+    if (!startDate || !endDate || !roomId) {
+        throw new ApiError(400, "StartDate, EndDate, and RoomID are required.");
     }
-
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
         throw new ApiError(400, "Invalid date time");
     }
-
     if (startDate > endDate) {
         throw new ApiError(400, "Start date cannot be after end date.");
+    }
+
+    const roomData = await prisma.room.findFirst({
+        where: {
+            id: roomId,
+            property: {
+                id: propertyId,
+                tenantId: tenantId
+            }
+        },
+        select: {
+            name: true,
+            basePrice: true,
+            property: { select: { id: true, name: true } }
+        }
+    });
+
+    if (!roomData) {
+        throw new ApiError(404, `Room with id ${roomId} not found in property ${propertyId} for this tenant.`);
     }
 
     const rawAvailabilityData = await calenderRepo.getRoomAvailibity(
@@ -31,22 +50,49 @@ export const getCalenderReport = async (
         endDate
     );
 
-    const calenderDate: { [key: string]: any[] } = {};
+    const bookings = await prisma.booking.findMany({
+        where: {
+            bookingRooms: { some: { roomId: roomId } },
+            status: { not: BookingStatus.DIBATALKAN },
+            checkIn: { lte: endDate },
+            checkOut: { gte: startDate },
+        },
+        select: { checkIn: true, checkOut: true, status: true },
+    });
 
-    for (const record of rawAvailabilityData) {
-        const dateString = record.date.toISOString().split('T')[0];
-        if (!calenderDate[dateString]) {
-            calenderDate[dateString] = [];
+    const calenderDate: { [key: string]: any } = {};
+    const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
+
+    for (const day of dateRange) {
+        const dateString = day.toISOString().split('T')[0];
+        let dayStatus: 'AVAILABLE' | 'BOOKED' | 'PENDING' | 'UNAVAILABLE' = 'AVAILABLE';
+        let dayPrice = roomData.basePrice;
+
+        const activeBooking = bookings.find(b => day >= b.checkIn && day < b.checkOut);
+        if (activeBooking) {
+            dayStatus = activeBooking.status === BookingStatus.MENUNGGU_PEMBAYARAN ? 'PENDING' : 'BOOKED';
+        } else {
+            const availabilityRecord = rawAvailabilityData.find(r => r.date.toISOString().split('T')[0] === dateString);
+            if (availabilityRecord) {
+                if (!availabilityRecord.isAvailable) {
+                    dayStatus = 'UNAVAILABLE';
+                }
+                if (availabilityRecord.price > 0) {
+                    dayPrice = availabilityRecord.price;
+                }
+            }
         }
-        calenderDate[dateString].push({
-            propertyId: record.room.property.id,
-            propertyName: record.room.property.name,
-            roomId: record.roomId,
-            roomName: record.room.name,
-            isAvailable: record.isAvailable,
-            price: record.price,
-        });
+
+        calenderDate[dateString] = {
+            propertyId: roomData.property.id,
+            propertyName: roomData.property.name,
+            roomId: roomId,
+            roomName: roomData.name,
+            status: dayStatus,
+            price: dayPrice,
+        };
     }
+
     return calenderDate;
 }
 
@@ -66,7 +112,6 @@ export const getAggregatedPropertyReport = async (
 
     if (totalRoomsInProperty === 0) return {};
 
-    // Kelompokkan data yang ada untuk akses cepat
     const groupedByDate = new Map<string, any[]>();
     for (const record of rawAvailabilityData) {
         const dateString = record.date.toISOString().split('T')[0];
@@ -85,7 +130,7 @@ export const getAggregatedPropertyReport = async (
     } = {};
 
     const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
-    
+
     for (const day of dateRange) {
         const dateString = day.toISOString().split('T')[0];
         const recordsForDate = groupedByDate.get(dateString) || [];

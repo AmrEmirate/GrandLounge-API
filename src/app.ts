@@ -83,7 +83,7 @@ class App {
         this.app.use("/api/send-reminder", sendConfirm.getRouter());
         this.app.use("/api/reviews", review.getRouter())
         this.app.use("/api/report", report.getRouter());
-        this.app.use("/api/calendar-report", calender.getRouter());
+        this.app.use("/api/reports/availability", calender.getRouter());
         
         // Rute dasar
         this.app.get("/", (req: Request, res: Response) => {
