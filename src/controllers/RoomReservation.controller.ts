@@ -9,24 +9,20 @@ class RoomReservationController {
     // USER CREATE RESERVATION
     public async createReservationController(req: Request, res: Response, next: NextFunction) {
         try {
-            const { propertyId, roomName, checkIn, checkOut, guestInfo, paymentMethod } = req.body;
+            const { propertyId, roomName, checkIn, checkOut, guestInfo } = req.body;
 
-            // Validasi input
-            if (!propertyId || !checkIn || !checkOut || !roomName || !guestInfo?.email || !guestInfo?.name || !paymentMethod) {
-                throw new ApiError(400, "Missing required reservation data.");
-            }
-
-            // Buat account jika belum ada
-            const user = await repo.findOrCreateAccount({ email: guestInfo.email, name: guestInfo.name });
-
-            // Buat reservation + bookingRooms otomatis
-            const newReservation = await createReservationService(
-                propertyId, roomName, new Date(checkIn), new Date(checkOut), guestInfo
+            const newBooking = await createReservationService(
+                propertyId,
+                roomName,
+                new Date(checkIn),
+                new Date(checkOut),
+                guestInfo
             );
+
             res.status(201).json({
                 success: true,
-                message: "Reservation created successfully",
-                data: newReservation,
+                message: "Reservasi berhasil dibuat.",
+                data: newBooking,
             });
         } catch (error: any) {
             next(error);

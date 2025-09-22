@@ -52,10 +52,25 @@ export const getCalenderReport = async (
 
     const bookings = await prisma.booking.findMany({
         where: {
-            bookingRooms: { some: { roomId: roomId } },
+            propertyId: propertyId,
+            bookingRooms: {
+                some: {
+                    roomId: roomId,
+                },
+            },
             status: { not: BookingStatus.DIBATALKAN },
-            checkIn: { lte: endDate },
-            checkOut: { gte: startDate },
+            AND: [
+                {
+                    checkIn: {
+                        lt: endDate, 
+                    },
+                },
+                {
+                    checkOut: {
+                        gt: startDate,
+                    },
+                },
+            ],
         },
         select: { checkIn: true, checkOut: true, status: true },
     });

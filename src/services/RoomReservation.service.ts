@@ -7,7 +7,6 @@ import { prisma } from "../config/prisma";
 
 const reservationRepo = new ReservationRepositori();
 
-// membuat reservasi kamar
 export const createReservationService = async (
     propertyId: string,
     roomName: string,
@@ -18,6 +17,10 @@ export const createReservationService = async (
     if (checkOut <= checkIn) {
         throw new ApiError(400, "End date must be after start date");
     }
+
+    console.log("--- DEBUGGING RESERVASI ---");
+    console.log("Mencari kamar dengan NAMA:", roomName);
+    console.log("Di dalam PROPERTI ID:", propertyId);
 
     const room = await reservationRepo.findRoomByName(propertyId, roomName);
     if (!room) {

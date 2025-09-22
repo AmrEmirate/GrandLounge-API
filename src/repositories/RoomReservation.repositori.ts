@@ -40,10 +40,10 @@ export default class RoomReservationRepository {
     }
 
     async findRoomByName(propertyId: string, name: string) {
-        return prisma.room.findFirst({
+        return await prisma.room.findFirst({
             where: {
                 propertyId: propertyId,
-                name: name
+                name: name,
             },
             select: { id: true, propertyId: true, basePrice: true },
         });

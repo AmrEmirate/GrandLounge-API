@@ -3,7 +3,6 @@ import { BookingStatus, Prisma } from "../generated/prisma";
 
 export default class ReportRepositori {
 
-    // Helper function untuk membuat klausa 'where' yang konsisten
     private createReportWhereClause(tenantId: string, startDate?: Date, endDate?: Date): Prisma.BookingWhereInput {
         const where: Prisma.BookingWhereInput = {
             status: BookingStatus.SELESAI,
@@ -11,7 +10,6 @@ export default class ReportRepositori {
         };
 
         if (startDate && endDate) {
-            // Menggunakan logika UTC yang sudah terbukti berhasil
             const start = new Date(Date.UTC(
                 startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate(), 0, 0, 0, 0
             ));
@@ -28,7 +26,6 @@ export default class ReportRepositori {
     }
 
     async getTenantStats(tenantId: string) {
-        // Logika ini sudah benar, jadi tidak perlu diubah
         const totalRevenue = await prisma.booking.aggregate({
             _sum: { totalPrice: true },
             where: {
@@ -110,7 +107,6 @@ export default class ReportRepositori {
     async getSalesByDay(tenantId: string, startDate: Date, endDate: Date) {
         const whereClause = this.createReportWhereClause(tenantId, startDate, endDate);
 
-        // Menggunakan query mentah untuk mengelompokkan berdasarkan tanggal dari 'checkIn'
         const result: { day: Date, sum: number }[] = await prisma.$queryRaw`
             SELECT 
                 DATE(b."checkIn" AT TIME ZONE 'UTC') as day,
