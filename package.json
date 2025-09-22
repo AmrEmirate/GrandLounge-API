@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "test": "jest",
-    "dev": "nodemon src/index.ts",
-    "postinstall": "prisma generate"
+    "dev": "nodemon src/index.ts"
   },
   "keywords": [],
   "author": "",
