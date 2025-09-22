@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const amenity_controller_1 = require("../controllers/amenity.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+const prisma_1 = require("../generated/prisma");
+const router = (0, express_1.Router)();
+const tenantOnly = (0, auth_middleware_1.authMiddleware)([prisma_1.UserRole.TENANT]);
+router.post('/', tenantOnly, amenity_controller_1.AmenityController.create);
+router.get('/', tenantOnly, amenity_controller_1.AmenityController.getAll);
+router.patch('/:id', tenantOnly, amenity_controller_1.AmenityController.update);
+router.delete('/:id', tenantOnly, amenity_controller_1.AmenityController.delete);
+exports.default = router;
