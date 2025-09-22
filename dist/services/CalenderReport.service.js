@@ -17,7 +17,7 @@ const date_fns_1 = require("date-fns");
 const prisma_1 = require("../config/prisma");
 const CalenderReport_repositori_1 = __importDefault(require("../repositories/CalenderReport.repositori"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
-const prisma_2 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const calenderRepo = new CalenderReport_repositori_1.default();
 const getCalenderReport = (tenantId, propertyId, roomId, startDate, endDate) => __awaiter(void 0, void 0, void 0, function* () {
     if (!startDate || !endDate || !roomId) {
@@ -55,7 +55,7 @@ const getCalenderReport = (tenantId, propertyId, roomId, startDate, endDate) => 
                     roomId: roomId,
                 },
             },
-            status: { not: prisma_2.BookingStatus.DIBATALKAN },
+            status: { not: client_1.BookingStatus.DIBATALKAN },
             AND: [
                 {
                     checkIn: {
@@ -79,7 +79,7 @@ const getCalenderReport = (tenantId, propertyId, roomId, startDate, endDate) => 
         let dayPrice = roomData.basePrice;
         const activeBooking = bookings.find(b => day >= b.checkIn && day < b.checkOut);
         if (activeBooking) {
-            dayStatus = activeBooking.status === prisma_2.BookingStatus.MENUNGGU_PEMBAYARAN ? 'PENDING' : 'BOOKED';
+            dayStatus = activeBooking.status === client_1.BookingStatus.MENUNGGU_PEMBAYARAN ? 'PENDING' : 'BOOKED';
         }
         else {
             const availabilityRecord = rawAvailabilityData.find(r => r.date.toISOString().split('T')[0] === dateString);

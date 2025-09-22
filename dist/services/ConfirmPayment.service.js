@@ -13,14 +13,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConfirmPaymentService = void 0;
-const prisma_1 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const ConfirmPayment_repositori_1 = __importDefault(require("../repositories/ConfirmPayment.repositori"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
-const prisma_2 = require("../config/prisma"); // Import prisma untuk memulai transaksi
+const prisma_1 = require("../config/prisma");
 const SendEmailNotification_service_1 = require("../services/SendEmailNotification.service");
 const ConfirmPaymentService = (tenantId, invoiceNumber, isAccepted) => __awaiter(void 0, void 0, void 0, function* () {
     // Mulai transaksi untuk memastikan semua operasi DB aman
-    const updatedBooking = yield prisma_2.prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+    const updatedBooking = yield prisma_1.prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         // Buat instance repo BARU KHUSUS untuk transaksi ini
         // dengan memberikan 'tx' ke constructor
         const transactionalRepo = new ConfirmPayment_repositori_1.default(tx);
@@ -38,10 +38,10 @@ const ConfirmPaymentService = (tenantId, invoiceNumber, isAccepted) => __awaiter
         }
         let newStatus;
         if (isAccepted) {
-            newStatus = prisma_1.BookingStatus.DIPROSES;
+            newStatus = client_1.BookingStatus.DIPROSES;
         }
         else {
-            newStatus = prisma_1.BookingStatus.MENUNGGU_PEMBAYARAN;
+            newStatus = client_1.BookingStatus.MENUNGGU_PEMBAYARAN;
         }
         const result = yield transactionalRepo.updateBookingStatus(booking.id, newStatus);
         if (!isAccepted) {

@@ -16,7 +16,7 @@ exports.PublicPropertyService = void 0;
 const prisma_1 = require("../config/prisma");
 const date_fns_1 = require("date-fns");
 const RoomReservation_repositori_1 = __importDefault(require("../repositories/RoomReservation.repositori"));
-const property_repository_1 = require("../repositories/property.repository"); // Pastikan ini diimpor
+const property_repository_1 = require("../repositories/property.repository");
 const roomReservationRepo = new RoomReservation_repositori_1.default();
 const _buildPropertyWhereClause = (filters) => {
     const where = {

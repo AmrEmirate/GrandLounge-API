@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  TENANT
+  USER
+}
+
+enum BookingStatus {
+  MENUNGGU_PEMBAYARAN
+  MENUNGGU_KONFIRMASI
+  DIPROSES
+  DIBATALKAN
+  SELESAI
+}
+
+enum BedOption {
+  SINGLE
+  DOUBLE
+  TWIN
+}
+
+enum RoomCategory {
+  STANDARD
+  DELUXE
+  SUITE
+}
+
+enum TokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  EMAIL_CHANGE
+}
+
+enum AdjustmentType {
+  NOMINAL
+  PERCENTAGE
+}
+
+model User {
+  id             String    @id @default(uuid())
+  role           UserRole
+  fullName       String
+  email          String    @unique
+  password       String?
+  profilePicture String?
+  provider       String?
+  providerId     String?
+  verified       Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+  tenant         Tenant?
+  bookings       Booking[]
+  reviews        Review[]
+  tokens         Token[]
+
+  @@unique([provider, providerId])
+}
+
+model Tenant {
+  id                 String     @id @default(uuid())
+  userId             String     @unique
+  companyName        String
+  addressCompany     String
+  phoneNumberCompany String
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  deletedAt          DateTime?
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties         Property[]
+}
+
+model Category {
+  id         String     @id @default(uuid())
+  name       String     @unique
+  properties Property[]
+  deletedAt  DateTime?
+}
+
+model Amenity {
+  id         String     @id @default(uuid())
+  name       String     @unique
+  properties Property[] @relation()
+  deletedAt  DateTime?
+}
+
+model City {
+  id         String     @id @default(uuid())
+  name       String     @unique
+  provinsi   String
+  latitude   Float
+  longitude  Float
+  properties Property[]
+  deletedAt  DateTime?
+}
+
+model Property {
+  id          String          @id @default(uuid())
+  tenantId    String
+  name        String
+  categoryId  String
+  description String
+  address     String?
+  cityId      String
+  zipCode     String
+  mainImage   String?
+  latitude    Float?
+  longitude   Float?
+  deletedAt   DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  city        City            @relation(fields: [cityId], references: [id])
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category    Category        @relation(fields: [categoryId], references: [id])
+  images      PropertyImage[]
+  rooms       Room[]
+  bookings    Booking[]
+  reviews     Review[]
+  amenities   Amenity[]       @relation()
+
+  @@index([categoryId])
+  @@index([cityId])
+}
+
+model PropertyImage {
+  id         String   @id @default(uuid())
+  propertyId String
+  imageUrl   String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Room {
+  id             String             @id @default(uuid())
+  propertyId     String
+  name           String
+  category       RoomCategory
+  description    String
+  bedOption      BedOption
+  capacity       Int
+  basePrice      Float
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  deletedAt      DateTime?
+  property       Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  availabilities RoomAvailability[]
+  bookingRooms   BookingRoom[]
+  peakSeasons    PeakSeason[]
+}
+
+model RoomAvailability {
+  id          String   @id @default(uuid())
+  roomId      String
+  isAvailable Boolean  @default(true)
+  date        DateTime @db.Date
+  price       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, date])
+}
+
+model PeakSeason {
+  id              String         @id @default(uuid())
+  roomId          String
+  name            String
+  startDate       DateTime       @db.Date
+  endDate         DateTime       @db.Date
+  adjustmentValue Float
+  adjustmentType  AdjustmentType
+  room            Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  userId          String
+  propertyId      String
+  invoiceNumber   String        @unique
+  reservationId   String?       @unique @default(uuid())
+  checkIn         DateTime
+  checkOut        DateTime
+  totalPrice      Float
+  status          BookingStatus @default(MENUNGGU_PEMBAYARAN)
+  paymentDeadline DateTime
+  paymentProof    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property        Property      @relation(fields: [propertyId], references: [id])
+  bookingRooms    BookingRoom[]
+  review          Review?
+}
+
+model BookingRoom {
+  id             String   @id @default(uuid())
+  bookingId      String
+  roomId         String
+  guestCount     Int
+  pricePerNight  Float
+  numberOfNights Int
+  totalPrice     Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  booking        Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  room           Room     @relation(fields: [roomId], references: [id])
+}
+
+model Review {
+  id          String    @id @default(uuid())
+  userId      String
+  propertyId  String
+  bookingId   String    @unique
+  rating      Int
+  comment     String?
+  tenantReply String?
+  reply       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  booking     Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Token {
+  id        String       @id @default(uuid())
+  token     String       @unique
+  purpose   TokenPurpose
+  expiresAt DateTime
+  userId    String
+  createdAt DateTime     @default(now())
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

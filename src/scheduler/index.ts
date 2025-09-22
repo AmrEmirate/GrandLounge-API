@@ -1,7 +1,7 @@
 // src/scheduler/index.ts
 import cron from 'node-cron';
 import { prisma } from '../config/prisma';
-import { BookingStatus } from '../../prisma/generated/prisma';
+import { BookingStatus } from '../../prisma/generated/client';
 import { sendDailyReminders } from '../services/OrderReminder.service';
 
 export const startSchedulers = () => {

@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { Category } from "../../prisma/generated/prisma";
+import { Category } from "../../prisma/generated/client";
 
 export const CategoryRepository = {
   create: async (name: string): Promise<Category> => {

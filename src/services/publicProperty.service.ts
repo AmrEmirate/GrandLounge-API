@@ -1,7 +1,7 @@
 import { prisma } from '../config/prisma';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import RoomReservationRepository from '../repositories/RoomReservation.repositori';
-import { Prisma, Property, Room, RoomAvailability } from '../../prisma/generated/prisma';
+import { Prisma, Property, Room, RoomAvailability } from '../../prisma/generated/client';
 import { PropertyRepository } from '../repositories/property.repository'; 
 
 const roomReservationRepo = new RoomReservationRepository();

@@ -13,12 +13,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateReservationStatusService = exports.getReservationByNameService = exports.getUserReservationsService = exports.createReservationService = void 0;
-const prisma_1 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const RoomReservation_repositori_1 = __importDefault(require("../repositories/RoomReservation.repositori"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
 const crypto_1 = __importDefault(require("crypto"));
 const uuid_1 = require("uuid");
-const prisma_2 = require("../config/prisma");
+const prisma_1 = require("../config/prisma");
 const reservationRepo = new RoomReservation_repositori_1.default();
 const createReservationService = (propertyId, roomName, checkIn, checkOut, guestInfo) => __awaiter(void 0, void 0, void 0, function* () {
     if (checkOut <= checkIn) {
@@ -36,7 +36,7 @@ const createReservationService = (propertyId, roomName, checkIn, checkOut, guest
     const totalPrice = room.basePrice * durationDays;
     const reservationId = (0, uuid_1.v4)();
     const invoiceNumber = `INV-${Date.now()}-${crypto_1.default.randomBytes(4).toString("hex")}`;
-    const newBooking = yield prisma_2.prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+    const newBooking = yield prisma_1.prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
         const isAvailable = yield reservationRepo.checkRoomAvailability(room.id, checkIn, checkOut, tx);
         if (!isAvailable) {
             throw new apiError_1.default(400, "Kamar ini tidak tersedia pada tanggal yang dipilih.");
@@ -48,7 +48,7 @@ const createReservationService = (propertyId, roomName, checkIn, checkOut, guest
                 checkIn: checkIn,
                 checkOut: checkOut,
                 totalPrice,
-                status: prisma_1.BookingStatus.MENUNGGU_PEMBAYARAN,
+                status: client_1.BookingStatus.MENUNGGU_PEMBAYARAN,
                 paymentDeadline: new Date(Date.now() + 1 * 60 * 60 * 1000),
                 user: { connect: { id: user.id } },
                 property: { connect: { id: room.propertyId } },

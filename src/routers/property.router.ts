@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { PropertyController } from '../controllers/property.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '../../prisma/generated/prisma';
+import { UserRole } from '../../prisma/generated/client';
 import roomRouter from './room.router';
 import upload from '../middleware/upload.middleware';
 

@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const prisma_1 = require("../config/prisma");
-const prisma_2 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const hashing_1 = require("../utils/hashing");
 const jwt_1 = require("../utils/jwt");
 const token_service_1 = require("./token.service");
@@ -28,7 +28,7 @@ const _createUserAndTenant = (data, tx) => {
         data: {
             fullName: data.fullName,
             email: data.email,
-            role: prisma_2.UserRole.TENANT,
+            role: client_1.UserRole.TENANT,
         },
     });
 };
@@ -52,10 +52,10 @@ const _validateLoginAttempt = (user, pass) => __awaiter(void 0, void 0, void 0, 
         throw new Error('Email atau password salah.');
 });
 const _validateUserRole = (loginType, userRole) => {
-    if (loginType === 'tenant' && userRole !== prisma_2.UserRole.TENANT) {
+    if (loginType === 'tenant' && userRole !== client_1.UserRole.TENANT) {
         throw new Error('Akses ditolak. Anda bukan tenant. Silakan login sebagai pengguna biasa.');
     }
-    if (loginType === 'user' && userRole !== prisma_2.UserRole.USER) {
+    if (loginType === 'user' && userRole !== client_1.UserRole.USER) {
         throw new Error('Akses ditolak. Silakan login melalui halaman login untuk tenant.');
     }
 };
@@ -63,7 +63,7 @@ exports.AuthService = {
     registerUser: (data) => __awaiter(void 0, void 0, void 0, function* () {
         yield _checkIfUserExists(data.email);
         const user = yield prisma_1.prisma.user.create({
-            data: { fullName: data.fullName, email: data.email, role: prisma_2.UserRole.USER },
+            data: { fullName: data.fullName, email: data.email, role: client_1.UserRole.USER },
         });
         const verificationToken = yield token_service_1.TokenService.createToken(user.id, 'EMAIL_VERIFICATION');
         yield token_service_1.TokenService.sendTokenEmail(user, verificationToken, 'EMAIL_VERIFICATION');

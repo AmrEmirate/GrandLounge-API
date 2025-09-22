@@ -1,4 +1,4 @@
-import { BookingStatus } from "../../prisma/generated/prisma";
+import { BookingStatus } from "../../prisma/generated/client";
 import ReservationRepositori from "../repositories/RoomReservation.repositori";
 import ApiError from "../utils/apiError";
 import crypto from "crypto";

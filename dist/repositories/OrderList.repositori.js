@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const prisma_1 = require("../config/prisma");
-const prisma_2 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 class OrderListRepositroy {
     updateBookingStatus(bookingId, newStatus) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -147,7 +147,7 @@ class OrderListRepositroy {
         return __awaiter(this, arguments, void 0, function* (tenantId, limit = 5) {
             return prisma_1.prisma.booking.findMany({
                 where: {
-                    status: prisma_2.BookingStatus.MENUNGGU_KONFIRMASI,
+                    status: client_1.BookingStatus.MENUNGGU_KONFIRMASI,
                     property: {
                         tenantId: tenantId,
                     },

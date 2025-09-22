@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { BookingStatus, Prisma } from "../../prisma/generated/prisma";
+import { BookingStatus, Prisma } from "../../prisma/generated/client";
 
 export default class ReportRepositori {
 

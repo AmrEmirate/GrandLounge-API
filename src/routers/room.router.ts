@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { RoomController } from '../controllers/room.controller';
 import roomAvailabilityRouter from './roomAvailability.router';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '../../prisma/generated/prisma';
+import { UserRole } from '../../prisma/generated/client';
 
 const router = Router({ mergeParams: true });
 const tenantOnly = authMiddleware([UserRole.TENANT]);

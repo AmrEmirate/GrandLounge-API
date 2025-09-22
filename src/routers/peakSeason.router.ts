@@ -2,7 +2,7 @@
 import { Router } from 'express';
 import { PeakSeasonController } from '../controllers/peakSeason.controller'; 
 import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '../../prisma/generated/prisma';
+import { UserRole } from '../../prisma/generated/client';
 
 const router = Router();
 const tenantOnly = authMiddleware([UserRole.TENANT]);

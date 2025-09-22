@@ -1,5 +1,5 @@
 import { PeakSeasonRepository } from '../repositories/peakSeason.repository';
-import { PeakSeason, Prisma } from '../../prisma/generated/prisma';
+import { PeakSeason, Prisma } from '../../prisma/generated/client';
 import ApiError from '../utils/apiError';
 
 // Fungsi helper untuk menambahkan 1 hari (menggunakan UTC untuk konsistensi)

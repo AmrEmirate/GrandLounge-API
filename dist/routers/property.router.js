@@ -6,11 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const property_controller_1 = require("../controllers/property.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
-const prisma_1 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const room_router_1 = __importDefault(require("./room.router"));
 const upload_middleware_1 = __importDefault(require("../middleware/upload.middleware"));
 const router = (0, express_1.Router)();
-const tenantOnly = (0, auth_middleware_1.authMiddleware)([prisma_1.UserRole.TENANT]);
+const tenantOnly = (0, auth_middleware_1.authMiddleware)([client_1.UserRole.TENANT]);
 // =================================================================
 //                      ENDPOINT PUBLIK
 // =================================================================

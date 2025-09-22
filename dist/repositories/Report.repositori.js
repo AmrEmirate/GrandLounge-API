@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const prisma_1 = require("../config/prisma");
-const prisma_2 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 class ReportRepositori {
     createReportWhereClause(tenantId, startDate, endDate) {
         const where = {
-            status: prisma_2.BookingStatus.SELESAI,
+            status: client_1.BookingStatus.SELESAI,
             property: { tenantId }
         };
         if (startDate && endDate) {
@@ -34,13 +34,13 @@ class ReportRepositori {
                 _sum: { totalPrice: true },
                 where: {
                     property: { tenantId },
-                    status: prisma_2.BookingStatus.SELESAI,
+                    status: client_1.BookingStatus.SELESAI,
                 },
             });
             const totalBookings = yield prisma_1.prisma.booking.count({
                 where: {
                     property: { tenantId },
-                    status: { in: [prisma_2.BookingStatus.SELESAI, prisma_2.BookingStatus.DIPROSES] },
+                    status: { in: [client_1.BookingStatus.SELESAI, client_1.BookingStatus.DIPROSES] },
                 },
             });
             const totalRooms = yield prisma_1.prisma.room.count({
@@ -118,10 +118,10 @@ class ReportRepositori {
             FROM "Booking" b
             WHERE b.id IN (
                 SELECT id FROM "Booking"
-                WHERE ${prisma_2.Prisma.sql `"propertyId" IN (SELECT id FROM "Property" WHERE "tenantId" = ${tenantId})`}
-                AND ${prisma_2.Prisma.sql `"status" = 'SELESAI'::"BookingStatus"`}
-                AND ${prisma_2.Prisma.sql `"checkIn" >= ${startDate}`}
-                AND ${prisma_2.Prisma.sql `"checkIn" < ${endDate}`}
+                WHERE ${client_1.Prisma.sql `"propertyId" IN (SELECT id FROM "Property" WHERE "tenantId" = ${tenantId})`}
+                AND ${client_1.Prisma.sql `"status" = 'SELESAI'::"BookingStatus"`}
+                AND ${client_1.Prisma.sql `"checkIn" >= ${startDate}`}
+                AND ${client_1.Prisma.sql `"checkIn" < ${endDate}`}
             )
             GROUP BY day
             ORDER BY day ASC;

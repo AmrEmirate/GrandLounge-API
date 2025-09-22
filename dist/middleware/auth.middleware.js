@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = void 0;
 const jwt_1 = require("../utils/jwt");
 const prisma_1 = require("../config/prisma");
-const prisma_2 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const authMiddleware = (roles = []) => {
     return (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
         const authHeader = req.headers.authorization;
@@ -49,7 +49,7 @@ const authMiddleware = (roles = []) => {
                     return res.status(403).json({ message: 'Anda tidak memiliki hak akses untuk sumber daya ini.' });
                 }
                 // 2. Jika peran TENANT dibutuhkan, pastikan data tenant ada
-                if (roles.includes(prisma_2.UserRole.TENANT) && !user.tenant) {
+                if (roles.includes(client_1.UserRole.TENANT) && !user.tenant) {
                     return res.status(403).json({ message: 'Akses ditolak. Data tenant tidak ditemukan untuk akun ini.' });
                 }
             }

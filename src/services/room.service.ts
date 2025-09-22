@@ -1,6 +1,6 @@
 import { RoomRepository } from '../repositories/room.repository';
 import { PropertyRepository } from '../repositories/property.repository';
-import { Room } from '../../prisma/generated/prisma';
+import { Room } from '../../prisma/generated/client';
 
 export const RoomService = {
   createRoom: async (tenantId: string, propertyId: string, data: any): Promise<Room> => {

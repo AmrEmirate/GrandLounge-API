@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { Prisma, BookingStatus } from "../../prisma/generated/prisma";
+import { Prisma, BookingStatus } from "../../prisma/generated/client";
 
 export default class OrderListRepositroy {
     async updateBookingStatus(bookingId: string, newStatus: string) {

@@ -1,7 +1,7 @@
-import { BookingStatus } from "../../prisma/generated/prisma";
+import { BookingStatus } from "../../prisma/generated/client";
 import ConfirmPaymentRepository from "../repositories/ConfirmPayment.repositori";
 import ApiError from "../utils/apiError";
-import { prisma } from "../config/prisma"; // Import prisma untuk memulai transaksi
+import { prisma } from "../config/prisma"; 
 import {
     sendNotification,
     sendBookingConfirmEmail,

@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { City } from '../../prisma/generated/prisma';
+import { City } from '../../prisma/generated/client';
 
 export const CityRepository = {
   create: async (data: { name: string; provinsi: string; latitude: number; longitude: number }): Promise<City> => {

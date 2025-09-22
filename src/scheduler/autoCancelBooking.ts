@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { BookingStatus } from "../../prisma/generated/prisma";
+import { BookingStatus } from "../../prisma/generated/client";
 
 // Fungsi ini akan dijalankan setiap beberapa menit untuk cek booking pending
 export const autoCancelBooking = async () => {

@@ -12,10 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const prisma_1 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const crypto_1 = __importDefault(require("crypto"));
-const prisma_2 = require("../config/prisma");
+const prisma_1 = require("../config/prisma");
 const date_fns_1 = require("date-fns");
 class RoomReservationRepository {
     checkRoomAvailability(roomId, newStartDate, newEndDate, tx) {
@@ -24,7 +24,7 @@ class RoomReservationRepository {
                 where: {
                     roomId: roomId,
                     booking: {
-                        status: { in: [prisma_1.BookingStatus.MENUNGGU_PEMBAYARAN, prisma_1.BookingStatus.DIPROSES] },
+                        status: { in: [client_1.BookingStatus.MENUNGGU_PEMBAYARAN, client_1.BookingStatus.DIPROSES] },
                         checkOut: { gt: newStartDate },
                         checkIn: { lt: newEndDate }
                     }
@@ -46,12 +46,12 @@ class RoomReservationRepository {
     }
     createTransaction(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            return prisma_2.prisma.booking.create({ data });
+            return prisma_1.prisma.booking.create({ data });
         });
     }
     findRoomByName(propertyId, name) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield prisma_2.prisma.room.findFirst({
+            return yield prisma_1.prisma.room.findFirst({
                 where: {
                     propertyId: propertyId,
                     name: name,
@@ -65,7 +65,7 @@ class RoomReservationRepository {
             var _a;
             const raw = (_a = userData.password) !== null && _a !== void 0 ? _a : crypto_1.default.randomBytes(8).toString("hex");
             const hashed = yield bcrypt_1.default.hash(raw, 10);
-            return prisma_2.prisma.user.upsert({
+            return prisma_1.prisma.user.upsert({
                 where: { email: userData.email },
                 update: { fullName: userData.name },
                 create: {
@@ -79,7 +79,7 @@ class RoomReservationRepository {
     }
     findTransactionByAccountId(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return prisma_2.prisma.booking.findMany({
+            return prisma_1.prisma.booking.findMany({
                 where: { userId: userId },
                 include: {
                     property: true,
@@ -90,7 +90,7 @@ class RoomReservationRepository {
     }
     findTransactionByRoomName(roomName, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return prisma_2.prisma.booking.findFirst({
+            return prisma_1.prisma.booking.findFirst({
                 where: {
                     userId,
                     bookingRooms: {
@@ -117,7 +117,7 @@ class RoomReservationRepository {
     }
     updateTransaction(bookingId, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            return prisma_2.prisma.booking.update({
+            return prisma_1.prisma.booking.update({
                 where: { id: bookingId },
                 data,
             });
@@ -125,10 +125,10 @@ class RoomReservationRepository {
     }
     createReservationWithRooms(userId, propertyId, checkIn, checkOut, roomCount) {
         return __awaiter(this, void 0, void 0, function* () {
-            const rooms = yield prisma_2.prisma.room.findMany({ where: { propertyId } });
+            const rooms = yield prisma_1.prisma.room.findMany({ where: { propertyId } });
             const availableRooms = [];
             for (const room of rooms) {
-                const isAvailable = yield this.checkRoomAvailability(room.id, checkIn, checkOut, prisma_2.prisma);
+                const isAvailable = yield this.checkRoomAvailability(room.id, checkIn, checkOut, prisma_1.prisma);
                 if (isAvailable) {
                     availableRooms.push({ id: room.id, basePrice: room.basePrice });
                 }
@@ -151,7 +151,7 @@ class RoomReservationRepository {
                     totalPrice: totalPrice,
                 };
             });
-            const transactionResult = yield prisma_2.prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
+            const transactionResult = yield prisma_1.prisma.$transaction((prisma) => __awaiter(this, void 0, void 0, function* () {
                 const booking = yield prisma.booking.create({
                     data: {
                         userId,
@@ -159,7 +159,7 @@ class RoomReservationRepository {
                         checkIn,
                         checkOut,
                         totalPrice: calculatedTotalPrice,
-                        status: prisma_1.BookingStatus.MENUNGGU_PEMBAYARAN,
+                        status: client_1.BookingStatus.MENUNGGU_PEMBAYARAN,
                         invoiceNumber: `INV-${Date.now()}`,
                         paymentDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
                         bookingRooms: {
@@ -172,7 +172,7 @@ class RoomReservationRepository {
                 });
                 return booking;
             }));
-            return prisma_2.prisma.booking.findMany({
+            return prisma_1.prisma.booking.findMany({
                 where: { id: transactionResult.id },
                 include: { bookingRooms: { include: { room: true } }, property: true },
             });
@@ -180,10 +180,10 @@ class RoomReservationRepository {
     }
     getAvailableRooms(propertyId, checkIn, checkOut) {
         return __awaiter(this, void 0, void 0, function* () {
-            const rooms = yield prisma_2.prisma.room.findMany({ where: { propertyId } });
+            const rooms = yield prisma_1.prisma.room.findMany({ where: { propertyId } });
             const availableRooms = [];
             for (const room of rooms) {
-                const isAvailable = yield this.checkRoomAvailability(room.id, checkIn, checkOut, prisma_2.prisma);
+                const isAvailable = yield this.checkRoomAvailability(room.id, checkIn, checkOut, prisma_1.prisma);
                 if (isAvailable)
                     availableRooms.push(room.id);
             }

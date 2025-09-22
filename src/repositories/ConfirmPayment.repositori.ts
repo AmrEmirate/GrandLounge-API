@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { PrismaClient, BookingStatus } from "../../prisma/generated/prisma";
+import { PrismaClient, BookingStatus } from "../../prisma/generated/client";
 
 type PrismaTransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
 

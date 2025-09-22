@@ -4,10 +4,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const category_controller_1 = require("../controllers/category.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
-const prisma_1 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const router = (0, express_1.Router)();
 const allAuthenticated = (0, auth_middleware_1.authMiddleware)(); // Middleware untuk semua yang sudah login
-const tenantOnly = (0, auth_middleware_1.authMiddleware)([prisma_1.UserRole.TENANT]); // Middleware khusus tenant
+const tenantOnly = (0, auth_middleware_1.authMiddleware)([client_1.UserRole.TENANT]); // Middleware khusus tenant
 // Endpoint ini sekarang bisa diakses semua user yang sudah login
 // Endpoint ini sekarang bisa diakses oleh publik
 router.get('/', category_controller_1.CategoryController.getAll);

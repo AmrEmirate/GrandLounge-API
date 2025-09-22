@@ -4,9 +4,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const peakSeason_controller_1 = require("../controllers/peakSeason.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
-const prisma_1 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const router = (0, express_1.Router)();
-const tenantOnly = (0, auth_middleware_1.authMiddleware)([prisma_1.UserRole.TENANT]);
+const tenantOnly = (0, auth_middleware_1.authMiddleware)([client_1.UserRole.TENANT]);
 // --- PERBAIKAN ---
 // Route ini lebih standar. Frontend akan memanggil: GET /api/peak-seasons/by-room/{roomId}
 // Ini lebih jelas menunjukkan bahwa kita mengambil data PeakSeason berdasarkan room.

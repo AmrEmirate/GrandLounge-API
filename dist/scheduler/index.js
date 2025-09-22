@@ -16,7 +16,7 @@ exports.startSchedulers = void 0;
 // src/scheduler/index.ts
 const node_cron_1 = __importDefault(require("node-cron"));
 const prisma_1 = require("../config/prisma");
-const prisma_2 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const OrderReminder_service_1 = require("../services/OrderReminder.service");
 const startSchedulers = () => {
     /**
@@ -30,10 +30,10 @@ const startSchedulers = () => {
             // Update semua booking yang expired sekaligus
             const result = yield prisma_1.prisma.booking.updateMany({
                 where: {
-                    status: prisma_2.BookingStatus.MENUNGGU_PEMBAYARAN,
+                    status: client_1.BookingStatus.MENUNGGU_PEMBAYARAN,
                     paymentDeadline: { lt: now },
                 },
-                data: { status: prisma_2.BookingStatus.DIBATALKAN },
+                data: { status: client_1.BookingStatus.DIBATALKAN },
             });
             if (result.count > 0) {
                 console.log(`✅ ${result.count} bookings were cancelled automatically.`);

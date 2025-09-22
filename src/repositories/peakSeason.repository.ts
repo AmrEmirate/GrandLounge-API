@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { PeakSeason, Prisma } from '../../prisma/generated/prisma';
+import { PeakSeason, Prisma } from '../../prisma/generated/client';
 
 export const PeakSeasonRepository = {
   create: async (data: Prisma.PeakSeasonUncheckedCreateInput): Promise<PeakSeason> => {

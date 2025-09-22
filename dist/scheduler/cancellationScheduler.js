@@ -15,19 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.startBookingCancellationScheduler = void 0;
 const node_cron_1 = __importDefault(require("node-cron"));
 const prisma_1 = require("../config/prisma");
-const prisma_2 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 const startBookingCancellationScheduler = () => {
     node_cron_1.default.schedule("*/30 * * * *", () => __awaiter(void 0, void 0, void 0, function* () {
         console.log("Running booking cancellation job...");
         const now = new Date();
         try {
             const expiredBookings = yield prisma_1.prisma.booking.findMany({
-                where: { status: prisma_2.BookingStatus.MENUNGGU_PEMBAYARAN, paymentDeadline: { lt: now } },
+                where: { status: client_1.BookingStatus.MENUNGGU_PEMBAYARAN, paymentDeadline: { lt: now } },
             });
             if (expiredBookings.length > 0) {
                 const result = yield prisma_1.prisma.booking.updateMany({
                     where: { id: { in: expiredBookings.map(b => b.id) } },
-                    data: { status: prisma_2.BookingStatus.DIBATALKAN },
+                    data: { status: client_1.BookingStatus.DIBATALKAN },
                 });
                 console.log(`✅ ${result.count} bookings cancelled automatically.`);
             }

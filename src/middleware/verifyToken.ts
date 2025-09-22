@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import logger from "../utils/logger";
-import { JwtPayload, verify } from "jsonwebtoken";
+import { verify } from "jsonwebtoken";
 import ApiError from "../utils/apiError";
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {

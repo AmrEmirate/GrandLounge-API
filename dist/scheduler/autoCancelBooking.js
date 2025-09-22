@@ -11,21 +11,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.autoCancelBooking = void 0;
 const prisma_1 = require("../config/prisma");
-const prisma_2 = require("../generated/prisma");
+const client_1 = require("../../prisma/generated/client");
 // Fungsi ini akan dijalankan setiap beberapa menit untuk cek booking pending
 const autoCancelBooking = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const now = new Date();
         const pendingBookings = yield prisma_1.prisma.booking.findMany({
             where: {
-                status: prisma_2.BookingStatus.MENUNGGU_PEMBAYARAN,
+                status: client_1.BookingStatus.MENUNGGU_PEMBAYARAN,
                 paymentDeadline: { lt: now },
             },
         });
         for (const booking of pendingBookings) {
             yield prisma_1.prisma.booking.update({
                 where: { id: booking.id },
-                data: { status: prisma_2.BookingStatus.DIBATALKAN },
+                data: { status: client_1.BookingStatus.DIBATALKAN },
             });
             console.log(`Booking ${booking.id} auto-cancelled due to expired paymentDeadline`);
         }
