@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { Room, RoomCategory, BedOption } from '../generated/prisma';
+import { Room, RoomCategory, BedOption } from '../../prisma/generated/prisma';
 
 interface RoomData {
   name: string;

@@ -2,7 +2,7 @@ import { eachDayOfInterval, isWithinInterval } from "date-fns";
 import { prisma } from "../config/prisma";
 import CalenderReportRepositori from "../repositories/CalenderReport.repositori";
 import ApiError from "../utils/apiError";
-import { BookingStatus } from "../generated/prisma";
+import { BookingStatus } from "../../prisma/generated/prisma";
 
 const calenderRepo = new CalenderReportRepositori();
 

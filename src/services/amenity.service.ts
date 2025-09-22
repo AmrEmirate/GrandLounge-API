@@ -1,6 +1,6 @@
 import { AmenityRepository } from '../repositories/amenity.repository';
 import { prisma } from '../config/prisma';
-import { Amenity } from '../generated/prisma';
+import { Amenity } from '../../prisma/generated/prisma';
 
 export const AmenityService = {
   createAmenity: async (name: string): Promise<Amenity> => {

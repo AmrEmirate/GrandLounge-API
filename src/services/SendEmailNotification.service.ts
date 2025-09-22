@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { Booking, User, Property } from "../generated/prisma";
+import { Booking, User, Property } from "../../prisma/generated/prisma";
 
 const transporter = nodemailer.createTransport({
     service: "gmail",

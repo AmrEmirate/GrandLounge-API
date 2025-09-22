@@ -1,4 +1,4 @@
-import { BookingStatus } from "../generated/prisma";
+import { BookingStatus } from "../../prisma/generated/prisma";
 import ConfirmPaymentRepository from "../repositories/ConfirmPayment.repositori";
 import ApiError from "../utils/apiError";
 import { prisma } from "../config/prisma"; // Import prisma untuk memulai transaksi

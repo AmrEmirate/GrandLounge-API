@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { prisma } from "../config/prisma";
-import { BookingStatus } from "../generated/prisma";
+import { BookingStatus } from "../../prisma/generated/prisma";
 
 export const startBookingCancellationScheduler = () => {
     cron.schedule("*/30 * * * *", async () => {

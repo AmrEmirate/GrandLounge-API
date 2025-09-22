@@ -1,6 +1,6 @@
 import { CityRepository } from '../repositories/city.repository';
 import { prisma } from '../config/prisma';
-import { City } from '../generated/prisma';
+import { City } from '../../prisma/generated/prisma';
 import { GeocodingService } from './geocoding.service';
 
 export const CityService = {

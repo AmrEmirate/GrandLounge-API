@@ -1,5 +1,5 @@
 import { PropertyRepository } from '../repositories/property.repository';
-import { Property } from '../generated/prisma';
+import { Property } from '../../prisma/generated/prisma';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { Express } from 'express';
 import { prisma } from '../config/prisma';

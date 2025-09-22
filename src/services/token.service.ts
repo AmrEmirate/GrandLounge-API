@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { PrismaClient, TokenPurpose, User } from '../generated/prisma';
+import { PrismaClient, TokenPurpose, User } from '../../prisma/generated/prisma';
 import crypto from 'crypto';
 import { addHours } from 'date-fns';
 import { sendEmail } from '../utils/mailer';

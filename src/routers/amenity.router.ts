@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AmenityController } from '../controllers/amenity.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '../generated/prisma';
+import { UserRole } from '../../prisma/generated/prisma';
 
 const router = Router();
 const tenantOnly = authMiddleware([UserRole.TENANT]);

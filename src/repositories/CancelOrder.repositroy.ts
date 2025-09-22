@@ -1,5 +1,5 @@
 import { prisma } from "../config/prisma";
-import { BookingStatus } from "../generated/prisma";
+import { BookingStatus } from "../../prisma/generated/prisma";
 
 export default class CancelOrderRepository {
     async findBookingById(invoiceNumber: string) {

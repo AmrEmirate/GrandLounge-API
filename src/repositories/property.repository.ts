@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { Property } from '../generated/prisma';
+import { Property } from '../../prisma/generated/prisma';
 
 export const PropertyRepository = {
   create: async (

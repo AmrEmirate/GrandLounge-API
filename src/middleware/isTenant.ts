@@ -1,5 +1,3 @@
-// src/middleware/isTenant.ts
-
 import { NextFunction, Request, Response } from "express";
 import ApiError from "../utils/apiError";
 import { AuthRequest } from "./auth.middleware"; 

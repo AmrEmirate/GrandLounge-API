@@ -1,8 +1,8 @@
-import { Prisma, BookingStatus, PrismaClient } from "../generated/prisma";
+import { Prisma, BookingStatus, PrismaClient } from "../../prisma/generated/prisma";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { prisma } from "../config/prisma";
-import { DefaultArgs } from "../generated/prisma/runtime/library";
+import { DefaultArgs } from "../../prisma/generated/prisma/runtime/library";
 import { eachDayOfInterval } from 'date-fns';
 
 export default class RoomReservationRepository {

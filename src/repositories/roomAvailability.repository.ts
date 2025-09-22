@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma';
-import { RoomAvailability, Prisma } from '../generated/prisma';
+import { RoomAvailability, Prisma } from '../../prisma/generated/prisma';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
 export const RoomAvailabilityRepository = {
