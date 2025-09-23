@@ -1,5 +1,5 @@
-import { User as PrismaUser, Tenant as PrismaTenant } from '../generated/prisma';
-
+import { Request, Response, NextFunction } from "express";
+import { getAggregatedPropertyReport, getCalenderReport } from "../services/CalenderReport.service";
 
 declare global {
   namespace Express {

@@ -10,13 +10,13 @@ export class CalenderReportController {
         next: NextFunction
     ): Promise<void> {
         try {
-            if (!req.user) {
-                throw new ApiError(401, "Unauthorized: User not authenticated.");
+            if (!res.locals.descript || !res.locals.descript.id) {
+                throw new ApiError(401, "Unauthorized: User data not found in token.");
             }
             
-            const userId = req.user.id;
+            const userId = res.locals.descript.id;
             const tenant = await prisma.tenant.findUnique({
-                where: { userId: userId }, // Gunakan userId, bukan seluruh objek user
+                where: { userId: userId },
                 select: { id: true }
             });
 
@@ -52,11 +52,11 @@ export class CalenderReportController {
 
     public async getPropertyReport(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            if (!req.user) {
-                throw new ApiError(401, "Unauthorized: User not authenticated.");
+            if (!res.locals.descript || !res.locals.descript.id) {
+                throw new ApiError(401, "Unauthorized: User data not found in token.");
             }
 
-            const userId = req.user.id;
+            const userId = res.locals.descript.id;
             const tenant = await prisma.tenant.findUnique({
                 where: { userId: userId }, // Gunakan userId, bukan seluruh objek user
                 select: { id: true }
