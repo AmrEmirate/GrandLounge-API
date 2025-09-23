@@ -44,42 +44,4 @@ router.get('/google/callback', passport_1.default.authenticate('google', {
     const token = (0, jwt_1.generateToken)(tokenPayload);
     res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
 });
-// Facebook
-router.get('/facebook', passport_1.default.authenticate('facebook', { scope: ['email'] }));
-router.get('/facebook/callback', passport_1.default.authenticate('facebook', {
-    session: false,
-    failureRedirect: `${process.env.FRONTEND_URL}/login`,
-}), (req, res) => {
-    const user = req.user;
-    const tokenPayload = {
-        id: user.id,
-        role: user.role,
-        fullName: user.fullName,
-        email: user.email,
-        verified: user.verified,
-        createdAt: user.createdAt,
-        profilePicture: user.profilePicture
-    };
-    const token = (0, jwt_1.generateToken)(tokenPayload);
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
-});
-// Twitter
-router.get('/twitter', passport_1.default.authenticate('twitter'));
-router.get('/twitter/callback', passport_1.default.authenticate('twitter', {
-    session: false,
-    failureRedirect: `${process.env.FRONTEND_URL}/login`,
-}), (req, res) => {
-    const user = req.user;
-    const tokenPayload = {
-        id: user.id,
-        role: user.role,
-        fullName: user.fullName,
-        email: user.email,
-        verified: user.verified,
-        createdAt: user.createdAt,
-        profilePicture: user.profilePicture
-    };
-    const token = (0, jwt_1.generateToken)(tokenPayload);
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
-});
 exports.default = router;

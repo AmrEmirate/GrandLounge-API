@@ -20,12 +20,12 @@ class CalenderReportController {
     getAvailabilityReport(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                if (!req.user) {
-                    throw new apiError_1.default(401, "Unauthorized: User not authenticated.");
+                if (!res.locals.descript || !res.locals.descript.id) {
+                    throw new apiError_1.default(401, "Unauthorized: User data not found in token.");
                 }
-                const userId = req.user.id;
+                const userId = res.locals.descript.id;
                 const tenant = yield prisma_1.prisma.tenant.findUnique({
-                    where: { userId: userId }, // Gunakan userId, bukan seluruh objek user
+                    where: { userId: userId },
                     select: { id: true }
                 });
                 if (!tenant) {
@@ -52,10 +52,10 @@ class CalenderReportController {
     getPropertyReport(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                if (!req.user) {
-                    throw new apiError_1.default(401, "Unauthorized: User not authenticated.");
+                if (!res.locals.descript || !res.locals.descript.id) {
+                    throw new apiError_1.default(401, "Unauthorized: User data not found in token.");
                 }
-                const userId = req.user.id;
+                const userId = res.locals.descript.id;
                 const tenant = yield prisma_1.prisma.tenant.findUnique({
                     where: { userId: userId }, // Gunakan userId, bukan seluruh objek user
                     select: { id: true }
