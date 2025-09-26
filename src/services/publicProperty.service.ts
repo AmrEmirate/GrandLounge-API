@@ -1,8 +1,8 @@
 import { prisma } from '../config/prisma';
-import { startOfMonth, endOfMonth } from 'date-fns';
+import { startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import RoomReservationRepository from '../repositories/RoomReservation.repositori';
-import { Prisma, Property, Room, RoomAvailability } from '../../prisma/generated/client';
-import { PropertyRepository } from '../repositories/property.repository'; 
+import { Prisma, Property, Room, RoomAvailability, PeakSeason } from '../../prisma/generated/client';
+import { PropertyRepository } from '../repositories/property.repository';
 
 const roomReservationRepo = new RoomReservationRepository();
 
@@ -16,9 +16,15 @@ const _buildPropertyWhereClause = (filters: any): Prisma.PropertyWhereInput => {
         }
     };
 
-    if (filters.search) {
-        where.name = { contains: filters.search, mode: 'insensitive' };
+    const searchTerm = filters.q || filters.search;
+    if (searchTerm) {
+        where.OR = [
+            { name: { contains: searchTerm, mode: 'insensitive' } },
+            { city: { name: { contains: searchTerm, mode: 'insensitive' } } },
+            { category: { name: { contains: searchTerm, mode: 'insensitive' } } }
+        ];
     }
+
     if (filters.category) {
         where.category = { name: { equals: filters.category as string, mode: 'insensitive' }, deletedAt: null };
     }
@@ -82,20 +88,44 @@ const _buildAvailabilityMap = (availabilities: RoomAvailability[]) => {
     return availabilityMap;
 };
 
-const _generateDateRangeResult = (startDate: Date, endDate: Date, map: Map<any, any>, defaultPrice: number) => {
+const _applyPeakSeason = (basePrice: number, date: Date, peakSeasons: PeakSeason[]): number => {
+    let finalPrice = basePrice;
+    const applicableSeason = peakSeasons.find(s =>
+        isWithinInterval(date, { start: new Date(s.startDate), end: new Date(s.endDate) })
+    );
+
+    if (applicableSeason) {
+        if (applicableSeason.adjustmentType === 'NOMINAL') {
+            finalPrice += applicableSeason.adjustmentValue;
+        } else {
+            finalPrice *= (1 + applicableSeason.adjustmentValue / 100);
+        }
+    }
+    return finalPrice;
+};
+
+const _generateDateRangeResult = (
+    startDate: Date,
+    endDate: Date,
+    map: Map<any, any>,
+    defaultPrice: number,
+    peakSeasons: PeakSeason[]
+) => {
     const result = [];
     for (let day = new Date(startDate); day <= endDate; day.setDate(day.getDate() + 1)) {
         const dateStr = day.toISOString().split('T')[0];
         const availability = map.get(dateStr);
+
+        const priceWithSeason = _applyPeakSeason(defaultPrice, day, peakSeasons);
+
         result.push({
             date: dateStr,
             isAvailable: availability ? availability.isAvailable : true,
-            price: availability && availability.lowestPrice !== Infinity ? availability.lowestPrice : defaultPrice
+            price: availability && availability.lowestPrice !== Infinity ? availability.lowestPrice : priceWithSeason
         });
     }
     return result;
 };
-
 
 export const PublicPropertyService = {
     getProperties: async (filters: any) => {
@@ -142,14 +172,19 @@ export const PublicPropertyService = {
         });
         if (rooms.length === 0) return [];
 
+        const roomIds = rooms.map(r => r.id);
+        const peakSeasons = await prisma.peakSeason.findMany({
+            where: { roomId: { in: roomIds } }
+        });
+
         const roomAvailabilities = await prisma.roomAvailability.findMany({
-            where: { roomId: { in: rooms.map(r => r.id) }, date: { gte: startDate, lte: endDate } },
+            where: { roomId: { in: roomIds }, date: { gte: startDate, lte: endDate } },
         });
 
         const availabilityMap = _buildAvailabilityMap(roomAvailabilities);
         const defaultLowestPrice = Math.min(...rooms.map(r => r.basePrice));
 
-        return _generateDateRangeResult(startDate, endDate, availabilityMap, defaultLowestPrice);
+        return _generateDateRangeResult(startDate, endDate, availabilityMap, defaultLowestPrice, peakSeasons);
     },
 
     getCities: async () => {

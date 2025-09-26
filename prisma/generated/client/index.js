@@ -327,7 +327,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\CODING\\PURWADHIKA\\FINAL PROJECT\\BE-FINPRO-GRANDLONGE\\prisma\\generated\\client",
+      "value": "C:\\Dev 1\\grand-lodge\\GrandLodge\\BE-FINPRO-GRANDLOUNGE\\prisma\\generated\\client",
       "fromEnvVar": null
     },
     "config": {
@@ -341,7 +341,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "D:\\CODING\\PURWADHIKA\\FINAL PROJECT\\BE-FINPRO-GRANDLONGE\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Dev 1\\grand-lodge\\GrandLodge\\BE-FINPRO-GRANDLOUNGE\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

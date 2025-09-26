@@ -88,7 +88,8 @@ export const TenantPropertyService = {
     ): Promise<Property> => {
         await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
         
-        const { amenityIds, deletedImageIds, latitude, longitude, ...propertyData } = data;
+        const { amenityIds, deletedImageIds, latitude, longitude, address, ...propertyData } = data;
+        propertyData.address = address;
 
         if (files) {
             propertyData.mainImage = await _uploadMainImage(files) ?? propertyData.mainImage;
