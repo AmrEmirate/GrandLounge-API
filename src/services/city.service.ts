@@ -24,13 +24,11 @@ export const CityService = {
     return await CityRepository.findAll();
   },
 
-  // --- PERUBAHAN DI BAWAH INI ---
   updateCity: async (id: string, data: { name: string; provinsi: string }): Promise<City> => {
     const city = await CityRepository.findById(id);
     if (!city) {
       throw new Error('Kota tidak ditemukan.');
     }
-    // Opsional: Anda bisa menambahkan logika geocoding ulang di sini jika diperlukan
     return await CityRepository.update(id, data);
   },
 
@@ -41,5 +39,4 @@ export const CityService = {
     }
     return await CityRepository.delete(id);
   },
-  // --- AKHIR PERUBAHAN ---
 };

@@ -64,9 +64,6 @@ router.patch('/my-properties/:id',
 // Menghapus (soft delete) properti
 router.delete('/my-properties/:id', tenantOnly, PropertyController.delete);
 
-
-// --- Rute Tambahan untuk Upload Gambar (jika masih diperlukan) ---
-// Catatan: Rute ini mungkin menjadi redundan karena fungsi update sudah menangani upload.
 router.patch(
     '/my-properties/:id/upload-image',
     tenantOnly,

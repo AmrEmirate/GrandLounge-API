@@ -4,7 +4,7 @@ import ApiError from '../utils/apiError';
 
 export const uploadMemory = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 1 * 1024 * 1024 }, // 1 MB
+    limits: { fileSize: 1 * 1024 * 1024 },
     fileFilter: (req: Request, file: Express.Multer.File, callback) => {
         const allowedMimes = ["image/jpeg", "image/png"];
         if (allowedMimes.includes(file.mimetype)) {
