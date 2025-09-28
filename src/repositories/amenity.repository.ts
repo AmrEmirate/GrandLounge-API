@@ -1,37 +1,38 @@
 import { prisma } from '../config/prisma';
 import { Amenity } from '../../prisma/generated/client';
 
-export const AmenityRepository = {
-  create: async (name: string): Promise<Amenity> => {
-    return await prisma.amenity.create({
-      data: { name },
-    });
-  },
+class AmenityRepository {
+    public async create(name: string): Promise<Amenity> {
+        return await prisma.amenity.create({
+            data: { name },
+        });
+    }
 
-  findAll: async (): Promise<Amenity[]> => {
-    return await prisma.amenity.findMany({
-      where: { deletedAt: null }, // Filter data aktif
-    });
-  },
+    public async findAll(): Promise<Amenity[]> {
+        return await prisma.amenity.findMany({
+            where: { deletedAt: null }, 
+        });
+    }
 
-  findById: async (id: string): Promise<Amenity | null> => {
-    return await prisma.amenity.findFirst({
-      where: { id, deletedAt: null }, // Filter data aktif
-    });
-  },
+    public async findById(id: string): Promise<Amenity | null> {
+        return await prisma.amenity.findFirst({
+            where: { id, deletedAt: null }, 
+        });
+    }
 
-  update: async (id: string, name: string): Promise<Amenity> => {
-    return await prisma.amenity.update({
-      where: { id },
-      data: { name },
-    });
-  },
+    public async update(id: string, name: string): Promise<Amenity> {
+        return await prisma.amenity.update({
+            where: { id },
+            data: { name },
+        });
+    }
 
-  // Mengubah delete menjadi softDelete
-  delete: async (id: string): Promise<Amenity> => {
-    return await prisma.amenity.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
-  },
-};
+    public async delete(id: string): Promise<Amenity> {
+        return await prisma.amenity.update({
+            where: { id },
+            data: { deletedAt: new Date() },
+        });
+    }
+}
+
+export default new AmenityRepository();

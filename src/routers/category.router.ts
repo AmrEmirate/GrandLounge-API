@@ -1,6 +1,6 @@
 // src/routers/category.router.ts
 import { Router } from 'express';
-import { CategoryController } from '../controllers/category.controller';
+import CategoryController from '../controllers/category.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { UserRole } from '../../prisma/generated/client';
 

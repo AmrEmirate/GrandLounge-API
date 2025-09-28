@@ -10,39 +10,41 @@ interface RoomData {
   basePrice: number;
 }
 
-export const RoomRepository = {
-  create: async (propertyId: string, data: RoomData): Promise<Room> => {
+class RoomRepository {
+  public async create(propertyId: string, data: RoomData): Promise<Room> {
     return await prisma.room.create({
       data: {
         propertyId: propertyId,
         ...data,
       },
     });
-  },
+  }
 
-  findAllByPropertyId: async (propertyId: string): Promise<Room[]> => {
+  public async findAllByPropertyId(propertyId: string): Promise<Room[]> {
     return await prisma.room.findMany({
       where: { propertyId: propertyId, deletedAt: null },
     });
-  },
+  }
 
-  findById: async (roomId: string): Promise<Room | null> => {
+  public async findById(roomId: string): Promise<Room | null> {
     return await prisma.room.findFirst({
       where: { id: roomId, deletedAt: null },
     });
-  },
+  }
 
-  update: async (roomId: string, data: Partial<RoomData>): Promise<Room> => {
+  public async update(roomId: string, data: Partial<RoomData>): Promise<Room> {
     return await prisma.room.update({
       where: { id: roomId },
       data: data,
     });
-  },
+  }
 
-  delete: async (roomId: string): Promise<Room> => {
+  public async delete(roomId: string): Promise<Room> {
     return await prisma.room.update({
       where: { id: roomId },
       data: { deletedAt: new Date() },
     });
-  },
-};
+  }
+}
+
+export default new RoomRepository();

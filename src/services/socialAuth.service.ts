@@ -1,55 +1,71 @@
 import { prisma } from '../config/prisma';
+import { User } from '../../prisma/generated/client';
+import ApiError from '../utils/apiError';
 
-const _findOrCreateUser = async (provider: string, profile: any, emailExtractor: (p: any) => string, photoExtractor: (p: any) => string | null) => {
-    const existingUser = await prisma.user.findUnique({
-        where: { provider_providerId: { provider, providerId: profile.id } },
-    });
-    if (existingUser) return existingUser;
+class SocialAuthService {
+    private async findOrCreateUser(
+        provider: string,
+        profile: any,
+        emailExtractor: (p: any) => string | undefined,
+        photoExtractor: (p: any) => string | null
+    ): Promise<User> {
+        const existingUser = await prisma.user.findUnique({
+            where: { provider_providerId: { provider, providerId: profile.id } },
+        });
 
-    const email = emailExtractor(profile);
-    if (!email) throw new Error(`Email tidak ditemukan dari profil ${provider}.`);
-    
-    const userByEmail = await prisma.user.findUnique({ where: { email } });
-    if (userByEmail) throw new Error('Email sudah terdaftar dengan metode lain.');
+        if (existingUser) {
+            return existingUser;
+        }
 
-    return prisma.user.create({
-        data: {
-            email,
-            fullName: profile.displayName,
-            provider,
-            providerId: profile.id,
-            role: 'USER',
-            verified: true,
-            profilePicture: photoExtractor(profile),
-        },
-    });
-};
+        const email = emailExtractor(profile);
+        if (!email) {
+            throw new ApiError(400, `Email tidak dapat diambil dari profil ${provider}. Pastikan email Anda publik.`);
+        }
 
-export const SocialAuthService = {
-    findOrCreateGoogleUser: async (profile: any) => {
-        return _findOrCreateUser(
+        const userByEmail = await prisma.user.findUnique({ where: { email } });
+        if (userByEmail) {
+            throw new ApiError(409, 'Email sudah terdaftar dengan metode lain (misalnya, password). Silakan login dengan cara tersebut.');
+        }
+
+        return prisma.user.create({
+            data: {
+                email,
+                fullName: profile.displayName,
+                provider,
+                providerId: profile.id,
+                role: 'USER',
+                verified: true, // Akun dari social auth dianggap sudah terverifikasi
+                profilePicture: photoExtractor(profile),
+            },
+        });
+    }
+
+    public async findOrCreateGoogleUser(profile: any): Promise<User> {
+        return this.findOrCreateUser(
             'google',
             profile,
-            p => p.emails[0].value,
-            p => p.photos[0].value
+            p => p.emails?.[0]?.value,
+            p => p.photos?.[0]?.value
         );
-    },
+    }
 
-    findOrCreateFacebookUser: async (profile: any) => {
-        return _findOrCreateUser(
+    public async findOrCreateFacebookUser(profile: any): Promise<User> {
+        return this.findOrCreateUser(
             'facebook',
             profile,
             p => p.emails?.[0]?.value,
             p => p.photos?.[0]?.value ?? null
         );
-    },
+    }
 
-    findOrCreateTwitterUser: async (profile: any) => {
-        return _findOrCreateUser(
+    public async findOrCreateTwitterUser(profile: any): Promise<User> {
+        return this.findOrCreateUser(
             'twitter',
             profile,
             p => p.emails?.[0]?.value,
             p => p.photos?.[0]?.value.replace('_normal', '') ?? null
         );
-    },
-};
+    }
+}
+
+export default new SocialAuthService();

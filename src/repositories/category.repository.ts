@@ -1,37 +1,38 @@
 import { prisma } from '../config/prisma';
 import { Category } from "../../prisma/generated/client";
 
-export const CategoryRepository = {
-  create: async (name: string): Promise<Category> => {
-    return await prisma.category.create({
-      data: { name },
-    });
-  },
+class CategoryRepository {
+    public async create(name: string): Promise<Category> {
+        return await prisma.category.create({
+            data: { name },
+        });
+    }
 
-  findAll: async (): Promise<Category[]> => {
-    return await prisma.category.findMany({
-      where: { deletedAt: null }, // Filter data aktif
-    });
-  },
+    public async findAll(): Promise<Category[]> {
+        return await prisma.category.findMany({
+            where: { deletedAt: null }, // Filter data aktif
+        });
+    }
 
-  findById: async (id: string): Promise<Category | null> => {
-    return await prisma.category.findFirst({
-      where: { id, deletedAt: null }, // Filter data aktif
-    });
-  },
+    public async findById(id: string): Promise<Category | null> {
+        return await prisma.category.findFirst({
+            where: { id, deletedAt: null }, // Filter data aktif
+        });
+    }
 
-  update: async (id: string, name: string): Promise<Category> => {
-    return await prisma.category.update({
-      where: { id },
-      data: { name },
-    });
-  },
+    public async update(id: string, name: string): Promise<Category> {
+        return await prisma.category.update({
+            where: { id },
+            data: { name },
+        });
+    }
 
-  // Mengubah delete menjadi softDelete
-  delete: async (id: string): Promise<Category> => {
-    return await prisma.category.update({
-      where: { id },
-      data: { deletedAt: new Date() },
-    });
-  },
-};
+    public async delete(id: string): Promise<Category> {
+        return await prisma.category.update({
+            where: { id },
+            data: { deletedAt: new Date() },
+        });
+    }
+}
+
+export default new CategoryRepository();

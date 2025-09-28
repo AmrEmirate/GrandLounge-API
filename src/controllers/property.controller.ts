@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PublicPropertyService } from '../services/publicProperty.service';
+import  PublicPropertyService from '../services/publicProperty.service';
 import { TenantPropertyService } from '../services/tenantProperty.service';
 import { AuthRequest } from '../middleware/auth.middleware';
 

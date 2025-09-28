@@ -1,42 +1,52 @@
-import { Request, Response } from 'express';
-import { AmenityService } from '../services/amenity.service';
+import { Request, Response, NextFunction } from 'express';
+import AmenityService from '../services/amenity.service';
 
-export const AmenityController = {
-  create: async (req: Request, res: Response) => {
-    try {
-      const amenity = await AmenityService.createAmenity(req.body.name);
-      res.status(201).json({ message: 'Fasilitas berhasil dibuat.', data: amenity });
-    } catch (error: any) {
-      res.status(400).json({ message: error.message });
+class AmenityController {
+    public async create(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { name } = req.body;
+            if (!name) {
+                return res.status(400).json({ message: 'Amenity name is required.' });
+            }
+            const amenity = await AmenityService.createAmenity(name);
+            res.status(201).json({ message: 'Fasilitas berhasil dibuat.', data: amenity });
+        } catch (error: any) {
+            next(error);
+        }
     }
-  },
 
-  getAll: async (_req: Request, res: Response) => {
-    try {
-      const amenities = await AmenityService.getAllAmenities();
-      res.status(200).json({ data: amenities });
-    } catch (error: any) {
-      res.status(500).json({ message: 'Gagal mengambil data fasilitas.' });
+    public async getAll(_req: Request, res: Response, next: NextFunction) {
+        try {
+            const amenities = await AmenityService.getAllAmenities();
+            res.status(200).json({ data: amenities });
+        } catch (error: any) {
+            next(error);
+        }
     }
-  },
 
-  update: async (req: Request, res: Response) => {
-    try {
-      // ID sekarang adalah string (UUID), tidak perlu diubah ke Number
-      const amenity = await AmenityService.updateAmenity(req.params.id, req.body.name);
-      res.status(200).json({ message: 'Fasilitas berhasil diperbarui.', data: amenity });
-    } catch (error: any) {
-      res.status(404).json({ message: error.message });
+    public async update(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            const { name } = req.body;
+            if (!name) {
+                return res.status(400).json({ message: 'Amenity name is required for update.' });
+            }
+            const amenity = await AmenityService.updateAmenity(id, name);
+            res.status(200).json({ message: 'Fasilitas berhasil diperbarui.', data: amenity });
+        } catch (error: any) {
+            next(error);
+        }
     }
-  },
 
-  delete: async (req: Request, res: Response) => {
-    try {
-      // ID sekarang adalah string (UUID), tidak perlu diubah ke Number
-      await AmenityService.deleteAmenity(req.params.id);
-      res.status(200).json({ message: 'Fasilitas berhasil dihapus.' });
-    } catch (error: any) {
-      res.status(404).json({ message: error.message });
+    public async delete(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { id } = req.params;
+            await AmenityService.deleteAmenity(id);
+            res.status(200).json({ message: 'Fasilitas berhasil dihapus.' });
+        } catch (error: any) {
+            next(error);
+        }
     }
-  },
-};
+}
+
+export default new AmenityController();

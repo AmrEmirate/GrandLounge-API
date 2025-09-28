@@ -1,6 +1,6 @@
 // src/routers/city.router.ts
 import { Router } from 'express';
-import { CityController } from '../controllers/city.controller';
+import CityController from '../controllers/city.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { UserRole } from '../../prisma/generated/client';
 

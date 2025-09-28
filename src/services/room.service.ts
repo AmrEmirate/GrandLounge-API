@@ -1,63 +1,57 @@
-import { RoomRepository } from '../repositories/room.repository';
+import RoomRepository from '../repositories/room.repository';
 import { PropertyRepository } from '../repositories/property.repository';
 import { Room } from '../../prisma/generated/client';
+import ApiError from '../utils/apiError';
 
-export const RoomService = {
-  createRoom: async (tenantId: string, propertyId: string, data: any): Promise<Room> => {
-    const property = await PropertyRepository.findByIdAndTenantId(propertyId, tenantId);
-    if (!property) {
-      throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
-    }
-    return await RoomRepository.create(propertyId, data);
-  },
-
-  getRoomsByProperty: async (tenantId: string, propertyId: string): Promise<Room[]> => {
-    const property = await PropertyRepository.findByIdAndTenantId(propertyId, tenantId);
-    if (!property) {
-      throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
-    }
-    return await RoomRepository.findAllByPropertyId(propertyId);
-  },
-
-  getRoomById: async (tenantId: string, propertyId: string, roomId: string): Promise<Room | null> => {
-    const property = await PropertyRepository.findByIdAndTenantId(propertyId, tenantId);
-    if (!property) {
-      throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
+class RoomService {
+    private async verifyPropertyAccess(propertyId: string, tenantId: string): Promise<void> {
+        const property = await PropertyRepository.findByIdAndTenantId(propertyId, tenantId);
+        if (!property) {
+            throw new ApiError(404, 'Properti tidak ditemukan atau Anda tidak memiliki akses.');
+        }
     }
 
-    const room = await RoomRepository.findById(roomId);
-    if (!room || room.propertyId !== propertyId) {
-        return null;
+    private async verifyRoomOwnership(roomId: string, propertyId: string): Promise<Room> {
+        const room = await RoomRepository.findById(roomId);
+        if (!room || room.propertyId !== propertyId) {
+            throw new ApiError(404, 'Kamar tidak ditemukan di properti ini.');
+        }
+        return room;
     }
 
-    return room;
-  },
-
-  updateRoom: async (tenantId: string, propertyId: string, roomId: string, data: any): Promise<Room> => {
-    const property = await PropertyRepository.findByIdAndTenantId(propertyId, tenantId);
-    if (!property) {
-      throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
+    public async createRoom(tenantId: string, propertyId: string, data: any): Promise<Room> {
+        await this.verifyPropertyAccess(propertyId, tenantId);
+        return await RoomRepository.create(propertyId, data);
     }
 
-    const room = await RoomRepository.findById(roomId);
-    if (!room || room.propertyId !== propertyId) {
-        throw new Error('Kamar tidak ditemukan di properti ini.');
+    public async getRoomsByProperty(tenantId: string, propertyId: string): Promise<Room[]> {
+        await this.verifyPropertyAccess(propertyId, tenantId);
+        return await RoomRepository.findAllByPropertyId(propertyId);
     }
 
-    return await RoomRepository.update(roomId, data);
-  },
+    public async getRoomById(tenantId: string, propertyId: string, roomId: string): Promise<Room | null> {
+        await this.verifyPropertyAccess(propertyId, tenantId);
+        const room = await RoomRepository.findById(roomId);
+        
+        // Mengembalikan null jika kamar bukan milik properti tersebut, tanpa melempar error
+        if (!room || room.propertyId !== propertyId) {
+            return null;
+        }
 
-  deleteRoom: async (tenantId: string, propertyId: string, roomId: string): Promise<Room> => {
-    const property = await PropertyRepository.findByIdAndTenantId(propertyId, tenantId);
-    if (!property) {
-        throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
+        return room;
     }
 
-    const room = await RoomRepository.findById(roomId);
-    if (!room || room.propertyId !== propertyId) {
-        throw new Error('Kamar tidak ditemukan di properti ini.');
+    public async updateRoom(tenantId: string, propertyId: string, roomId: string, data: any): Promise<Room> {
+        await this.verifyPropertyAccess(propertyId, tenantId);
+        await this.verifyRoomOwnership(roomId, propertyId);
+        return await RoomRepository.update(roomId, data);
     }
-    
-    return await RoomRepository.delete(roomId);
-  },
-};
+
+    public async deleteRoom(tenantId: string, propertyId: string, roomId: string): Promise<Room> {
+        await this.verifyPropertyAccess(propertyId, tenantId);
+        await this.verifyRoomOwnership(roomId, propertyId);
+        return await RoomRepository.delete(roomId);
+    }
+}
+
+export default new RoomService();

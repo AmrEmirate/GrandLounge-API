@@ -1,14 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import { PeakSeasonService } from '../services/peakSeason.service';
-import { AuthRequest } from '../middleware/auth.middleware';
-import ApiError from '../utils/apiError'; // Pastikan untuk import ApiError
+import PeakSeasonService from '../services/peakSeason.service';
+import ApiError from '../utils/apiError';
 
-export const PeakSeasonController = {
-  create: async (req: AuthRequest, res: Response, next: NextFunction) => {
+class PeakSeasonController {
+  public async create(req: Request, res: Response, next: NextFunction) {
     try {
       const { name, startDate, endDate, adjustmentType, adjustmentValue, roomId } = req.body;
 
-      // VALIDASI BARU: Tambahkan pengecekan roomId di sini
       if (!roomId) {
         throw new ApiError(400, 'Request body harus menyertakan roomId.');
       }
@@ -23,13 +21,13 @@ export const PeakSeasonController = {
       };
 
       const season = await PeakSeasonService.createSeason(payload);
-      res.status(201).json({ message: 'Peak season created', data: season });
+      res.status(201).json({ message: 'Peak season berhasil dibuat.', data: season });
     } catch (error) {
       next(error);
     }
-  },
+  }
 
-  getByRoom: async (req: Request, res: Response, next: NextFunction) => {
+  public async getByRoom(req: Request, res: Response, next: NextFunction) {
     try {
         const { roomId } = req.params;
         const seasons = await PeakSeasonService.getSeasonsByRoom(roomId);
@@ -37,9 +35,9 @@ export const PeakSeasonController = {
     } catch (error) {
         next(error);
     }
-  },
+  }
 
-  update: async (req: Request, res: Response, next: NextFunction) => {
+  public async update(req: Request, res: Response, next: NextFunction) {
       try {
           const { id } = req.params;
           const { startDate, endDate, adjustmentValue, ...otherData } = req.body;
@@ -58,18 +56,20 @@ export const PeakSeasonController = {
           }
 
           const season = await PeakSeasonService.updateSeason(id, updateData);
-          res.status(200).json({ message: 'Peak season updated', data: season });
-      } catch (error) {
-          next(error);
-      }
-  },
-
-  delete: async (req: Request, res: Response, next: NextFunction) => {
-      try {
-          await PeakSeasonService.deleteSeason(req.params.id);
-          res.status(204).send();
+          res.status(200).json({ message: 'Peak season berhasil diperbarui.', data: season });
       } catch (error) {
           next(error);
       }
   }
-};
+
+  public async delete(req: Request, res: Response, next: NextFunction) {
+      try {
+          await PeakSeasonService.deleteSeason(req.params.id);
+          res.status(200).json({ message: 'Peak season berhasil dihapus.' }); // Mengubah dari 204 menjadi 200 dengan pesan
+      } catch (error) {
+          next(error);
+      }
+  }
+}
+
+export default new PeakSeasonController();

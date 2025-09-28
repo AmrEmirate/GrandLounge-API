@@ -1,35 +1,44 @@
-import { CategoryRepository } from '../repositories/category.repository';
 import { Category } from '../../prisma/generated/client';
+import CategoryRepository from '../repositories/category.repository';
 import { prisma } from '../config/prisma';
+import ApiError from '../utils/apiError';
 
-export const CategoryService = {
-  createCategory: async (name: string): Promise<Category> => {
-    const existingCategory = await prisma.category.findUnique({ where: { name } });
-    if (existingCategory) {
-      throw new Error('Nama kategori sudah ada.');
+class CategoryService {
+    public async createCategory(name: string): Promise<Category> {
+        const existingCategory = await prisma.category.findFirst({
+            where: {
+                name,
+                deletedAt: null,
+            },
+        });
+
+        if (existingCategory) {
+            throw new ApiError(409, 'Nama kategori sudah ada.'); 
+        }
+        return await CategoryRepository.create(name);
     }
-    return await CategoryRepository.create(name);
-  },
 
-  getAllCategories: async (): Promise<Category[]> => {
-    return await CategoryRepository.findAll();
-  },
-
-  getCategoryById: async (id: string): Promise<Category | null> => {
-    const category = await CategoryRepository.findById(id);
-    if (!category) {
-      throw new Error('Kategori tidak ditemukan.');
+    public async getAllCategories(): Promise<Category[]> {
+        return await CategoryRepository.findAll();
     }
-    return category;
-  },
 
-  updateCategory: async (id: string, name: string): Promise<Category> => {
-    await CategoryService.getCategoryById(id); // Memastikan kategori ada sebelum update
-    return await CategoryRepository.update(id, name);
-  },
+    public async getCategoryById(id: string): Promise<Category | null> {
+        const category = await CategoryRepository.findById(id);
+        if (!category) {
+              throw new ApiError(404, 'Kategori tidak ditemukan.');
+          }
+        return category;
+    } 
 
-  deleteCategory: async (id: string): Promise<Category> => {
-    await CategoryService.getCategoryById(id); // Memastikan kategori ada sebelum dihapus
-    return await CategoryRepository.delete(id);
-  },
-};
+    public async updateCategory(id: string, name: string): Promise<Category> {
+        await this.getCategoryById(id);
+        return await CategoryRepository.update(id, name);
+    }
+
+    public async deleteCategory(id: string): Promise<Category> {
+        await this.getCategoryById(id);
+        return await CategoryRepository.delete(id);
+    }
+}
+
+export default new CategoryService();

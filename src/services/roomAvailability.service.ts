@@ -1,4 +1,4 @@
-import { RoomRepository } from '../repositories/room.repository';
+import RoomRepository from '../repositories/room.repository';
 import { PropertyRepository } from '../repositories/property.repository';
 import { RoomAvailabilityRepository } from '../repositories/roomAvailability.repository';
 import { eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';

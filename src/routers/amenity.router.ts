@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AmenityController } from '../controllers/amenity.controller';
+import AmenityController from '../controllers/amenity.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { UserRole } from '../../prisma/generated/client';
 

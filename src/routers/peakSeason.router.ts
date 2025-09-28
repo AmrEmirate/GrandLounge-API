@@ -1,6 +1,6 @@
 // src/routers/peakSeason.router.ts
 import { Router } from 'express';
-import { PeakSeasonController } from '../controllers/peakSeason.controller'; 
+import PeakSeasonController from '../controllers/peakSeason.controller'; 
 import { authMiddleware } from '../middleware/auth.middleware';
 import { UserRole } from '../../prisma/generated/client';
 
