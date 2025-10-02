@@ -41,7 +41,7 @@ class App {
     }
     configure() {
         const corsOptions = {
-            origin: 'https://fe-finpro-grandlounge.vercel.app',
+            origin: 'http://localhost:3000',
             credentials: true,
         };
         this.app.use((0, cors_1.default)(corsOptions));
