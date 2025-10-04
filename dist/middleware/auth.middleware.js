@@ -37,18 +37,14 @@ const authMiddleware = (roles = []) => {
             if (!user) {
                 return res.status(401).json({ message: 'User tidak ditemukan.' });
             }
-            // Cek apakah akun user sudah terverifikasi
             if (!user.verified) {
                 return res.status(403).json({ message: 'Akun Anda belum terverifikasi.' });
             }
             req.user = user;
-            // Logika otorisasi berdasarkan peran (role)
             if (roles.length > 0) {
-                // 1. Cek apakah peran user sesuai dengan yang diizinkan
                 if (!roles.includes(user.role)) {
                     return res.status(403).json({ message: 'Anda tidak memiliki hak akses untuk sumber daya ini.' });
                 }
-                // 2. Jika peran TENANT dibutuhkan, pastikan data tenant ada
                 if (roles.includes(client_1.UserRole.TENANT) && !user.tenant) {
                     return res.status(403).json({ message: 'Akses ditolak. Data tenant tidak ditemukan untuk akun ini.' });
                 }

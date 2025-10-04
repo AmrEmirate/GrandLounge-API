@@ -9,34 +9,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RoomRepository = void 0;
 const prisma_1 = require("../config/prisma");
-exports.RoomRepository = {
-    create: (propertyId, data) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.room.create({
-            data: Object.assign({ propertyId: propertyId }, data),
+class RoomRepository {
+    create(propertyId, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.room.create({
+                data: Object.assign({ propertyId: propertyId }, data),
+            });
         });
-    }),
-    findAllByPropertyId: (propertyId) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.room.findMany({
-            where: { propertyId: propertyId, deletedAt: null },
+    }
+    findAllByPropertyId(propertyId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.room.findMany({
+                where: { propertyId: propertyId, deletedAt: null },
+            });
         });
-    }),
-    findById: (roomId) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.room.findFirst({
-            where: { id: roomId, deletedAt: null },
+    }
+    findById(roomId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.room.findFirst({
+                where: { id: roomId, deletedAt: null },
+            });
         });
-    }),
-    update: (roomId, data) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.room.update({
-            where: { id: roomId },
-            data: data,
+    }
+    update(roomId, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.room.update({
+                where: { id: roomId },
+                data: data,
+            });
         });
-    }),
-    delete: (roomId) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.room.update({
-            where: { id: roomId },
-            data: { deletedAt: new Date() },
+    }
+    delete(roomId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.room.update({
+                where: { id: roomId },
+                data: { deletedAt: new Date() },
+            });
         });
-    }),
-};
+    }
+}
+exports.default = new RoomRepository();

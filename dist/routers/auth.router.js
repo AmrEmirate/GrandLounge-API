@@ -4,26 +4,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const auth_controller_1 = require("../controllers/auth.controller");
+const auth_controller_1 = __importDefault(require("../controllers/auth.controller"));
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const passport_1 = __importDefault(require("passport"));
 const jwt_1 = require("../utils/jwt");
 const router = (0, express_1.Router)();
 // Rute Registrasi
-router.post('/register/user', auth_controller_1.AuthController.register);
-router.post('/register/tenant', auth_controller_1.AuthController.registerTenant);
+router.post('/register/user', auth_controller_1.default.register);
+router.post('/register/tenant', auth_controller_1.default.registerTenant);
 // Rute Verifikasi Email
-router.post('/verify', auth_controller_1.AuthController.verifyAndSetPassword);
-router.post('/resend-verification', auth_controller_1.AuthController.resendVerification);
+router.post('/verify', auth_controller_1.default.verifyAndSetPassword);
+router.post('/resend-verification', auth_controller_1.default.resendVerification);
 // Rute Login
-router.post('/login', auth_controller_1.AuthController.login);
+router.post('/login', auth_controller_1.default.login);
 // Rute Reset Password
-router.post('/password-reset/request', auth_controller_1.AuthController.requestPasswordReset);
-router.post('/password-reset/confirm', auth_controller_1.AuthController.resetPassword);
+router.post('/password-reset/request', auth_controller_1.default.requestPasswordReset);
+router.post('/password-reset/confirm', auth_controller_1.default.resetPassword);
 // Rute Konfirmasi Perubahan Email
-router.post('/confirm-email-change', auth_controller_1.AuthController.confirmEmailChange);
+router.post('/confirm-email-change', auth_controller_1.default.confirmEmailChange);
 // Rute Profil
-router.get('/profile', (0, auth_middleware_1.authMiddleware)(), auth_controller_1.AuthController.getProfile);
+router.get('/profile', (0, auth_middleware_1.authMiddleware)(), auth_controller_1.default.getProfile);
 // --- Rute Social Login ---
 // Google
 router.get('/google', passport_1.default.authenticate('google', { scope: ['profile', 'email'] }));

@@ -8,34 +8,53 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.CategoryService = void 0;
-const category_repository_1 = require("../repositories/category.repository");
-const prisma_1 = require("../config/prisma");
-exports.CategoryService = {
-    createCategory: (name) => __awaiter(void 0, void 0, void 0, function* () {
-        const existingCategory = yield prisma_1.prisma.category.findUnique({ where: { name } });
-        if (existingCategory) {
-            throw new Error('Nama kategori sudah ada.');
-        }
-        return yield category_repository_1.CategoryRepository.create(name);
-    }),
-    getAllCategories: () => __awaiter(void 0, void 0, void 0, function* () {
-        return yield category_repository_1.CategoryRepository.findAll();
-    }),
-    getCategoryById: (id) => __awaiter(void 0, void 0, void 0, function* () {
-        const category = yield category_repository_1.CategoryRepository.findById(id);
-        if (!category) {
-            throw new Error('Kategori tidak ditemukan.');
-        }
-        return category;
-    }),
-    updateCategory: (id, name) => __awaiter(void 0, void 0, void 0, function* () {
-        yield exports.CategoryService.getCategoryById(id); // Memastikan kategori ada sebelum update
-        return yield category_repository_1.CategoryRepository.update(id, name);
-    }),
-    deleteCategory: (id) => __awaiter(void 0, void 0, void 0, function* () {
-        yield exports.CategoryService.getCategoryById(id); // Memastikan kategori ada sebelum dihapus
-        return yield category_repository_1.CategoryRepository.delete(id);
-    }),
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+Object.defineProperty(exports, "__esModule", { value: true });
+const category_repository_1 = __importDefault(require("../repositories/category.repository"));
+const prisma_1 = require("../config/prisma");
+const apiError_1 = __importDefault(require("../utils/apiError"));
+class CategoryService {
+    createCategory(name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const existingCategory = yield prisma_1.prisma.category.findFirst({
+                where: {
+                    name,
+                    deletedAt: null,
+                },
+            });
+            if (existingCategory) {
+                throw new apiError_1.default(409, 'Nama kategori sudah ada.');
+            }
+            return yield category_repository_1.default.create(name);
+        });
+    }
+    getAllCategories() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield category_repository_1.default.findAll();
+        });
+    }
+    getCategoryById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const category = yield category_repository_1.default.findById(id);
+            if (!category) {
+                throw new apiError_1.default(404, 'Kategori tidak ditemukan.');
+            }
+            return category;
+        });
+    }
+    updateCategory(id, name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getCategoryById(id);
+            return yield category_repository_1.default.update(id, name);
+        });
+    }
+    deleteCategory(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.getCategoryById(id);
+            return yield category_repository_1.default.delete(id);
+        });
+    }
+}
+exports.default = new CategoryService();

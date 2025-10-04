@@ -8,9 +8,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RoomAvailabilityService = void 0;
-const room_repository_1 = require("../repositories/room.repository");
+const room_repository_1 = __importDefault(require("../repositories/room.repository"));
 const property_repository_1 = require("../repositories/property.repository");
 const roomAvailability_repository_1 = require("../repositories/roomAvailability.repository");
 const date_fns_1 = require("date-fns");
@@ -21,7 +24,7 @@ exports.RoomAvailabilityService = {
         if (!property) {
             throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
         }
-        const room = yield room_repository_1.RoomRepository.findById(roomId);
+        const room = yield room_repository_1.default.findById(roomId);
         if (!room || room.propertyId !== propertyId) {
             throw new Error('Kamar tidak ditemukan di properti ini.');
         }
@@ -42,7 +45,7 @@ exports.RoomAvailabilityService = {
         if (!property) {
             throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
         }
-        const room = yield room_repository_1.RoomRepository.findById(roomId);
+        const room = yield room_repository_1.default.findById(roomId);
         if (!room || room.propertyId !== propertyId) {
             throw new Error('Kamar tidak ditemukan di properti ini.');
         }

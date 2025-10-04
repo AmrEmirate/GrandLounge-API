@@ -12,51 +12,57 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PeakSeasonService = void 0;
-const peakSeason_repository_1 = require("../repositories/peakSeason.repository");
+const peakSeason_repository_1 = __importDefault(require("../repositories/peakSeason.repository"));
 const apiError_1 = __importDefault(require("../utils/apiError"));
-// Fungsi helper untuk menambahkan 1 hari (menggunakan UTC untuk konsistensi)
-const addOneDayUTC = (date) => {
-    const newDate = new Date(date);
-    newDate.setUTCDate(newDate.getUTCDate() + 1);
-    newDate.setUTCHours(0, 0, 0, 0); // Pastikan waktunya adalah awal hari
-    return newDate;
-};
-exports.PeakSeasonService = {
-    createSeason: (data) => __awaiter(void 0, void 0, void 0, function* () {
-        // Validasi 1: Tanggal mulai harus sebelum tanggal selesai
-        if (new Date(data.startDate) >= new Date(data.endDate)) {
-            throw new apiError_1.default(400, 'Start date must be before end date.');
-        }
-        // Validasi 2: Nilai penyesuaian harga harus ada dan lebih besar dari 0
-        if (data.adjustmentValue === undefined || data.adjustmentValue <= 0) {
-            throw new apiError_1.default(400, 'Adjustment value must be a positive number.');
-        }
-        const adjustedData = Object.assign(Object.assign({}, data), { 
-            // endDate sekarang adalah hari berikutnya dari yang dipilih
-            endDate: addOneDayUTC(new Date(data.endDate)) });
-        return peakSeason_repository_1.PeakSeasonRepository.create(adjustedData);
-    }),
-    getSeasonsByRoom: (roomId) => __awaiter(void 0, void 0, void 0, function* () {
-        return peakSeason_repository_1.PeakSeasonRepository.findByRoomId(roomId);
-    }),
-    updateSeason: (id, data) => __awaiter(void 0, void 0, void 0, function* () {
-        const existing = yield peakSeason_repository_1.PeakSeasonRepository.findById(id);
-        if (!existing) {
-            throw new apiError_1.default(404, "Peak season not found.");
-        }
-        const adjustedUpdateData = Object.assign({}, data);
-        if (data.endDate) {
-            // Terapkan logika yang sama untuk update
-            adjustedUpdateData.endDate = addOneDayUTC(new Date(data.endDate));
-        }
-        return peakSeason_repository_1.PeakSeasonRepository.update(id, adjustedUpdateData);
-    }),
-    deleteSeason: (id) => __awaiter(void 0, void 0, void 0, function* () {
-        const existing = yield peakSeason_repository_1.PeakSeasonRepository.findById(id);
-        if (!existing) {
-            throw new apiError_1.default(404, "Peak season not found.");
-        }
-        return peakSeason_repository_1.PeakSeasonRepository.delete(id);
-    }),
-};
+const date_fns_1 = require("date-fns");
+class PeakSeasonService {
+    createSeason(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const startDate = (0, date_fns_1.startOfDay)(new Date(data.startDate));
+            const endDate = (0, date_fns_1.endOfDay)(new Date(data.endDate));
+            if ((0, date_fns_1.isBefore)(endDate, startDate)) {
+                throw new apiError_1.default(400, 'End date must be after start date.');
+            }
+            if (data.adjustmentValue === undefined || data.adjustmentValue <= 0) {
+                throw new apiError_1.default(400, 'Adjustment value must be a positive number.');
+            }
+            const adjustedData = Object.assign(Object.assign({}, data), { startDate,
+                endDate });
+            return peakSeason_repository_1.default.create(adjustedData);
+        });
+    }
+    getSeasonsByRoom(roomId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return peakSeason_repository_1.default.findByRoomId(roomId);
+        });
+    }
+    updateSeason(id, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const existing = yield peakSeason_repository_1.default.findById(id);
+            if (!existing) {
+                throw new apiError_1.default(404, "Peak season not found.");
+            }
+            const adjustedUpdateData = Object.assign({}, data);
+            if (data.startDate) {
+                adjustedUpdateData.startDate = (0, date_fns_1.startOfDay)(new Date(data.startDate));
+            }
+            if (data.endDate) {
+                adjustedUpdateData.endDate = (0, date_fns_1.endOfDay)(new Date(data.endDate));
+            }
+            if (adjustedUpdateData.startDate && adjustedUpdateData.endDate && (0, date_fns_1.isBefore)(new Date(adjustedUpdateData.endDate), new Date(adjustedUpdateData.startDate))) {
+                throw new apiError_1.default(400, 'Start date must be before end date.');
+            }
+            return peakSeason_repository_1.default.update(id, adjustedUpdateData);
+        });
+    }
+    deleteSeason(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const existing = yield peakSeason_repository_1.default.findById(id);
+            if (!existing) {
+                throw new apiError_1.default(404, "Peak season not found.");
+            }
+            return peakSeason_repository_1.default.delete(id);
+        });
+    }
+}
+exports.default = new PeakSeasonService();

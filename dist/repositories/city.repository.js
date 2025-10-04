@@ -9,35 +9,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CityRepository = void 0;
 const prisma_1 = require("../config/prisma");
-exports.CityRepository = {
-    create: (data) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.city.create({
-            data: data,
+class CityRepository {
+    create(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.city.create({
+                data: data,
+            });
         });
-    }),
-    findAll: () => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.city.findMany({
-            where: { deletedAt: null }, // Filter data aktif
+    }
+    findAll() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.city.findMany({
+                where: { deletedAt: null },
+            });
         });
-    }),
-    findById: (id) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.city.findFirst({
-            where: { id, deletedAt: null }, // Filter data aktif
+    }
+    findById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.city.findFirst({
+                where: { id, deletedAt: null },
+            });
         });
-    }),
-    update: (id, data) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.city.update({
-            where: { id },
-            data: data,
+    }
+    update(id, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.city.update({
+                where: { id },
+                data: data,
+            });
         });
-    }),
-    // Mengubah delete menjadi softDelete
-    delete: (id) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.city.update({
-            where: { id },
-            data: { deletedAt: new Date() },
+    }
+    delete(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.city.update({
+                where: { id },
+                data: { deletedAt: new Date() },
+            });
         });
-    }),
-};
+    }
+}
+exports.default = new CityRepository();

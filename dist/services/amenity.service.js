@@ -8,33 +8,50 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AmenityService = void 0;
-const amenity_repository_1 = require("../repositories/amenity.repository");
-const prisma_1 = require("../config/prisma");
-exports.AmenityService = {
-    createAmenity: (name) => __awaiter(void 0, void 0, void 0, function* () {
-        const existingAmenity = yield prisma_1.prisma.amenity.findUnique({ where: { name } });
-        if (existingAmenity) {
-            throw new Error('Nama fasilitas sudah ada.');
-        }
-        return yield amenity_repository_1.AmenityRepository.create(name);
-    }),
-    getAllAmenities: () => __awaiter(void 0, void 0, void 0, function* () {
-        return yield amenity_repository_1.AmenityRepository.findAll();
-    }),
-    updateAmenity: (id, name) => __awaiter(void 0, void 0, void 0, function* () {
-        const amenity = yield amenity_repository_1.AmenityRepository.findById(id);
-        if (!amenity) {
-            throw new Error('Fasilitas tidak ditemukan.');
-        }
-        return yield amenity_repository_1.AmenityRepository.update(id, name);
-    }),
-    deleteAmenity: (id) => __awaiter(void 0, void 0, void 0, function* () {
-        const amenity = yield amenity_repository_1.AmenityRepository.findById(id);
-        if (!amenity) {
-            throw new Error('Fasilitas tidak ditemukan.');
-        }
-        return yield amenity_repository_1.AmenityRepository.delete(id);
-    }),
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+Object.defineProperty(exports, "__esModule", { value: true });
+const amenity_repository_1 = __importDefault(require("../repositories/amenity.repository"));
+const prisma_1 = require("../config/prisma");
+const apiError_1 = __importDefault(require("../utils/apiError"));
+class AmenityService {
+    createAmenity(name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const existingAmenity = yield prisma_1.prisma.amenity.findFirst({
+                where: {
+                    name,
+                    deletedAt: null
+                }
+            });
+            if (existingAmenity) {
+                throw new apiError_1.default(409, 'Nama fasilitas sudah ada.'); // 409 Conflict
+            }
+            return yield amenity_repository_1.default.create(name);
+        });
+    }
+    getAllAmenities() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield amenity_repository_1.default.findAll();
+        });
+    }
+    updateAmenity(id, name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const amenity = yield amenity_repository_1.default.findById(id);
+            if (!amenity) {
+                throw new apiError_1.default(404, 'Fasilitas tidak ditemukan.'); // 404 Not Found
+            }
+            return yield amenity_repository_1.default.update(id, name);
+        });
+    }
+    deleteAmenity(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const amenity = yield amenity_repository_1.default.findById(id);
+            if (!amenity) {
+                throw new apiError_1.default(404, 'Fasilitas tidak ditemukan.'); // 404 Not Found
+            }
+            return yield amenity_repository_1.default.delete(id);
+        });
+    }
+}
+exports.default = new AmenityService();

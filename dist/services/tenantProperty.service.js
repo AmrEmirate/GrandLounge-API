@@ -83,7 +83,8 @@ exports.TenantPropertyService = {
     updateProperty: (id, tenantId, data, files) => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
         yield exports.TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
-        const { amenityIds, deletedImageIds, latitude, longitude } = data, propertyData = __rest(data, ["amenityIds", "deletedImageIds", "latitude", "longitude"]);
+        const { amenityIds, deletedImageIds, latitude, longitude, address } = data, propertyData = __rest(data, ["amenityIds", "deletedImageIds", "latitude", "longitude", "address"]);
+        propertyData.address = address;
         if (files) {
             propertyData.mainImage = (_a = yield _uploadMainImage(files)) !== null && _a !== void 0 ? _a : propertyData.mainImage;
             const newImageUrls = yield _uploadGalleryImages(files);

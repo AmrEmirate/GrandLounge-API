@@ -12,26 +12,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GeocodingService = void 0;
 const axios_1 = __importDefault(require("axios"));
-exports.GeocodingService = {
-    getFromAddress: (address) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const response = yield axios_1.default.get('https://api.opencagedata.com/geocode/v1/json', {
-                params: {
-                    q: address,
-                    key: process.env.OPENCAGE_API_KEY,
-                    limit: 1,
-                },
-            });
-            if (response.data && response.data.results.length > 0) {
-                const coords = response.data.results[0].geometry;
-                return { latitude: coords.lat, longitude: coords.lng };
+const apiError_1 = __importDefault(require("../utils/apiError"));
+class GeocodingService {
+    getFromAddress(address) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const apiKey = process.env.OPENCAGE_API_KEY;
+                if (!apiKey) {
+                    console.error("OPENCAGE_API_KEY is not set in environment variables.");
+                    throw new apiError_1.default(500, "Geocoding service is not configured.");
+                }
+                const response = yield axios_1.default.get('https://api.opencagedata.com/geocode/v1/json', {
+                    params: {
+                        q: address,
+                        key: apiKey,
+                        limit: 1,
+                    },
+                });
+                if (response.data && response.data.results.length > 0) {
+                    const coords = response.data.results[0].geometry;
+                    return { latitude: coords.lat, longitude: coords.lng };
+                }
+                return { latitude: null, longitude: null };
             }
-            return { latitude: null, longitude: null };
-        }
-        catch (error) {
-            return { latitude: null, longitude: null };
-        }
-    }),
-};
+            catch (error) {
+                console.error("Error fetching geocoding data:", error);
+                throw new apiError_1.default(500, 'Gagal mengambil data geolokasi.');
+            }
+        });
+    }
+}
+exports.default = new GeocodingService();

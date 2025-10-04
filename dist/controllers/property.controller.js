@@ -8,9 +8,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PropertyController = void 0;
-const publicProperty_service_1 = require("../services/publicProperty.service");
+const publicProperty_service_1 = __importDefault(require("../services/publicProperty.service"));
 const tenantProperty_service_1 = require("../services/tenantProperty.service");
 const getTenantId = (req, res) => {
     var _a, _b;
@@ -24,7 +27,7 @@ const getTenantId = (req, res) => {
 exports.PropertyController = {
     getAll: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const result = yield publicProperty_service_1.PublicPropertyService.getProperties(req.query);
+            const result = yield publicProperty_service_1.default.getProperties(req.query);
             res.status(200).json(result);
         }
         catch (error) {
@@ -33,7 +36,7 @@ exports.PropertyController = {
     }),
     getOne: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const property = yield publicProperty_service_1.PublicPropertyService.getPropertyById(req.params.id);
+            const property = yield publicProperty_service_1.default.getPropertyById(req.params.id);
             if (!property) {
                 return res.status(404).json({ message: 'Properti tidak ditemukan.' });
             }
@@ -50,7 +53,7 @@ exports.PropertyController = {
             if (!checkIn || !checkOut || typeof checkIn !== 'string' || typeof checkOut !== 'string') {
                 return res.status(400).json({ message: 'Parameter checkIn dan checkOut dibutuhkan.' });
             }
-            const rooms = yield publicProperty_service_1.PublicPropertyService.getAvailableRooms(id, new Date(checkIn), new Date(checkOut));
+            const rooms = yield publicProperty_service_1.default.getAvailableRooms(id, new Date(checkIn), new Date(checkOut));
             res.status(200).json({ data: rooms });
         }
         catch (error) {
@@ -64,7 +67,7 @@ exports.PropertyController = {
             if (!month || !year) {
                 return res.status(400).json({ message: 'Parameter bulan dan tahun dibutuhkan.' });
             }
-            const availability = yield publicProperty_service_1.PublicPropertyService.getMonthlyAvailability(id, Number(month), Number(year));
+            const availability = yield publicProperty_service_1.default.getMonthlyAvailability(id, Number(month), Number(year));
             res.status(200).json({ data: availability });
         }
         catch (error) {
@@ -73,7 +76,7 @@ exports.PropertyController = {
     }),
     getCities: (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const cities = yield publicProperty_service_1.PublicPropertyService.getCities();
+            const cities = yield publicProperty_service_1.default.getCities();
             res.status(200).json({ data: cities });
         }
         catch (error) {
@@ -175,7 +178,7 @@ exports.PropertyController = {
             if (!lat || !lon) {
                 return res.status(400).json({ message: 'Latitude dan Longitude dibutuhkan.' });
             }
-            const properties = yield publicProperty_service_1.PublicPropertyService.findNearby(parseFloat(lat), parseFloat(lon), radius ? parseInt(radius) : undefined);
+            const properties = yield publicProperty_service_1.default.findNearby(parseFloat(lat), parseFloat(lon), radius ? parseInt(radius) : undefined);
             res.status(200).json({
                 message: 'Properti terdekat berhasil ditemukan',
                 data: properties

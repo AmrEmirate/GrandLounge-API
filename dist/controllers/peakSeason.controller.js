@@ -23,70 +23,77 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PeakSeasonController = void 0;
-const peakSeason_service_1 = require("../services/peakSeason.service");
-const apiError_1 = __importDefault(require("../utils/apiError")); // Pastikan untuk import ApiError
-exports.PeakSeasonController = {
-    create: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const { name, startDate, endDate, adjustmentType, adjustmentValue, roomId } = req.body;
-            // VALIDASI BARU: Tambahkan pengecekan roomId di sini
-            if (!roomId) {
-                throw new apiError_1.default(400, 'Request body harus menyertakan roomId.');
+const peakSeason_service_1 = __importDefault(require("../services/peakSeason.service"));
+const apiError_1 = __importDefault(require("../utils/apiError"));
+class PeakSeasonController {
+    create(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { name, startDate, endDate, adjustmentType, adjustmentValue, roomId } = req.body;
+                if (!roomId) {
+                    throw new apiError_1.default(400, 'Request body harus menyertakan roomId.');
+                }
+                const payload = {
+                    name,
+                    startDate: new Date(startDate),
+                    endDate: new Date(endDate),
+                    adjustmentType,
+                    adjustmentValue: parseFloat(adjustmentValue),
+                    roomId
+                };
+                const season = yield peakSeason_service_1.default.createSeason(payload);
+                res.status(201).json({ message: 'Peak season berhasil dibuat.', data: season });
             }
-            const payload = {
-                name,
-                startDate: new Date(startDate),
-                endDate: new Date(endDate),
-                adjustmentType,
-                adjustmentValue: parseFloat(adjustmentValue),
-                roomId
-            };
-            const season = yield peakSeason_service_1.PeakSeasonService.createSeason(payload);
-            res.status(201).json({ message: 'Peak season created', data: season });
-        }
-        catch (error) {
-            next(error);
-        }
-    }),
-    getByRoom: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const { roomId } = req.params;
-            const seasons = yield peakSeason_service_1.PeakSeasonService.getSeasonsByRoom(roomId);
-            res.status(200).json({ data: seasons });
-        }
-        catch (error) {
-            next(error);
-        }
-    }),
-    update: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            const { id } = req.params;
-            const _a = req.body, { startDate, endDate, adjustmentValue } = _a, otherData = __rest(_a, ["startDate", "endDate", "adjustmentValue"]);
-            const updateData = Object.assign({}, otherData);
-            if (startDate) {
-                updateData.startDate = new Date(startDate);
+            catch (error) {
+                next(error);
             }
-            if (endDate) {
-                updateData.endDate = new Date(endDate);
+        });
+    }
+    getByRoom(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { roomId } = req.params;
+                const seasons = yield peakSeason_service_1.default.getSeasonsByRoom(roomId);
+                res.status(200).json({ data: seasons });
             }
-            if (adjustmentValue !== undefined) {
-                updateData.adjustmentValue = parseFloat(adjustmentValue);
+            catch (error) {
+                next(error);
             }
-            const season = yield peakSeason_service_1.PeakSeasonService.updateSeason(id, updateData);
-            res.status(200).json({ message: 'Peak season updated', data: season });
-        }
-        catch (error) {
-            next(error);
-        }
-    }),
-    delete: (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-        try {
-            yield peakSeason_service_1.PeakSeasonService.deleteSeason(req.params.id);
-            res.status(204).send();
-        }
-        catch (error) {
-            next(error);
-        }
-    })
-};
+        });
+    }
+    update(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { id } = req.params;
+                const _a = req.body, { startDate, endDate, adjustmentValue } = _a, otherData = __rest(_a, ["startDate", "endDate", "adjustmentValue"]);
+                const updateData = Object.assign({}, otherData);
+                if (startDate) {
+                    updateData.startDate = new Date(startDate);
+                }
+                if (endDate) {
+                    updateData.endDate = new Date(endDate);
+                }
+                if (adjustmentValue !== undefined) {
+                    updateData.adjustmentValue = parseFloat(adjustmentValue);
+                }
+                const season = yield peakSeason_service_1.default.updateSeason(id, updateData);
+                res.status(200).json({ message: 'Peak season berhasil diperbarui.', data: season });
+            }
+            catch (error) {
+                next(error);
+            }
+        });
+    }
+    delete(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield peakSeason_service_1.default.deleteSeason(req.params.id);
+                res.status(200).json({ message: 'Peak season berhasil dihapus.' }); // Mengubah dari 204 menjadi 200 dengan pesan
+            }
+            catch (error) {
+                next(error);
+            }
+        });
+    }
+}
+exports.default = new PeakSeasonController();

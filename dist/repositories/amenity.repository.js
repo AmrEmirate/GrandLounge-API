@@ -9,35 +9,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AmenityRepository = void 0;
 const prisma_1 = require("../config/prisma");
-exports.AmenityRepository = {
-    create: (name) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.amenity.create({
-            data: { name },
+class AmenityRepository {
+    create(name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.amenity.create({
+                data: { name },
+            });
         });
-    }),
-    findAll: () => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.amenity.findMany({
-            where: { deletedAt: null }, // Filter data aktif
+    }
+    findAll() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.amenity.findMany({
+                where: { deletedAt: null },
+            });
         });
-    }),
-    findById: (id) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.amenity.findFirst({
-            where: { id, deletedAt: null }, // Filter data aktif
+    }
+    findById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.amenity.findFirst({
+                where: { id, deletedAt: null },
+            });
         });
-    }),
-    update: (id, name) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.amenity.update({
-            where: { id },
-            data: { name },
+    }
+    update(id, name) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.amenity.update({
+                where: { id },
+                data: { name },
+            });
         });
-    }),
-    // Mengubah delete menjadi softDelete
-    delete: (id) => __awaiter(void 0, void 0, void 0, function* () {
-        return yield prisma_1.prisma.amenity.update({
-            where: { id },
-            data: { deletedAt: new Date() },
+    }
+    delete(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield prisma_1.prisma.amenity.update({
+                where: { id },
+                data: { deletedAt: new Date() },
+            });
         });
-    }),
-};
+    }
+}
+exports.default = new AmenityRepository();

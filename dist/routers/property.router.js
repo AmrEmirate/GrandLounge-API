@@ -45,8 +45,6 @@ router.patch('/my-properties/:id', tenantOnly, upload_middleware_1.default.field
 ]), property_controller_1.PropertyController.update);
 // Menghapus (soft delete) properti
 router.delete('/my-properties/:id', tenantOnly, property_controller_1.PropertyController.delete);
-// --- Rute Tambahan untuk Upload Gambar (jika masih diperlukan) ---
-// Catatan: Rute ini mungkin menjadi redundan karena fungsi update sudah menangani upload.
 router.patch('/my-properties/:id/upload-image', tenantOnly, upload_middleware_1.default.single('propertyImage'), property_controller_1.PropertyController.uploadImage);
 router.post('/my-properties/:id/gallery', tenantOnly, upload_middleware_1.default.array('galleryImages', 10), property_controller_1.PropertyController.uploadGallery);
 router.get('/nearby', property_controller_1.PropertyController.getNearbyProperties);
