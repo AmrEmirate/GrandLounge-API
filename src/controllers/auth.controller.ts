@@ -12,7 +12,7 @@ class AuthController {
             next(error);
         }
     }
-
+//
     public async registerTenant(req: Request, res: Response, next: NextFunction) {
         try {
             const tenant = await AuthService.registerTenant(req.body);
