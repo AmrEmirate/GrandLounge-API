@@ -14,7 +14,7 @@ class AmenityController {
             next(error);
         }
     }
-//
+    
     public async getAll(_req: Request, res: Response, next: NextFunction) {
         try {
             const amenities = await AmenityService.getAllAmenities();
