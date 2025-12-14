@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import CancelOrderService from "../services/cancelOrder.service";
 
-export class CancelOrderControllers {
+class CancelOrderController {
   public async cancelOrder(
     req: Request,
     res: Response,
@@ -29,3 +29,5 @@ export class CancelOrderControllers {
     }
   }
 }
+
+export default new CancelOrderController();

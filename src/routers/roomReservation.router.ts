@@ -4,12 +4,10 @@ import { verifyToken, isUser, isTenant } from "../middleware/auth.middleware";
 import { validate, ReservationValidator } from "../middleware/validators";
 
 class RoomReservationRouter {
-  private router: Router;
-  private reservationController: RoomReversationController;
+  public router: Router;
 
   constructor() {
     this.router = Router();
-    this.reservationController = new RoomReversationController();
     this.initializeRoutes();
   }
 
@@ -18,38 +16,44 @@ class RoomReservationRouter {
       "/check-available",
       verifyToken,
       isUser,
-      this.reservationController.checkAvailableRoomsController
+      RoomReversationController.checkAvailableRoomsController.bind(
+        RoomReversationController
+      )
     );
     this.router.post(
       "/by-room-name",
       verifyToken,
       isUser,
       validate(ReservationValidator.create),
-      this.reservationController.createReservationByRoomNameController
+      RoomReversationController.createReservationByRoomNameController.bind(
+        RoomReversationController
+      )
     );
     this.router.get(
       "/reservations",
       verifyToken,
       isUser,
-      this.reservationController.getUserReservationController
+      RoomReversationController.getUserReservationController.bind(
+        RoomReversationController
+      )
     );
     this.router.get(
       "/by-room-name/:name",
       verifyToken,
       isUser,
-      this.reservationController.getReservationByRoomNameController
+      RoomReversationController.getReservationByRoomNameController.bind(
+        RoomReversationController
+      )
     );
     this.router.patch(
       "/:id/status",
       verifyToken,
       isTenant,
-      this.reservationController.updateReservationStatusController
+      RoomReversationController.updateReservationStatusController.bind(
+        RoomReversationController
+      )
     );
-  }
-
-  public getRouter(): Router {
-    return this.router;
   }
 }
 
-export default RoomReservationRouter;
+export default new RoomReservationRouter().router;

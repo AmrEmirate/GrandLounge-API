@@ -1,14 +1,12 @@
 import { Router } from "express";
-import { OrderReminderController } from "../controllers/orderReminder.controller";
+import OrderReminderController from "../controllers/orderReminder.controller";
 import { verifyToken, isTenant } from "../middleware/auth.middleware";
 
-export default class OrderReminderRouter {
-  private router: Router;
-  private orderRemind: OrderReminderController;
+class OrderReminderRouter {
+  public router: Router;
 
   constructor() {
     this.router = Router();
-    this.orderRemind = new OrderReminderController();
     this.initializeRoutes();
   }
 
@@ -17,11 +15,9 @@ export default class OrderReminderRouter {
       "/send-confirm-invoice",
       verifyToken,
       isTenant,
-      this.orderRemind.sendConfirm
+      OrderReminderController.sendConfirm.bind(OrderReminderController)
     );
   }
-
-  public getRouter(): Router {
-    return this.router;
-  }
 }
+
+export default new OrderReminderRouter().router;

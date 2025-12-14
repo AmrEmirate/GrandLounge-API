@@ -4,9 +4,9 @@ import ApiError from "../utils/apiError";
 import { prisma } from "../config/prisma";
 import ReportRepositori from "../repositories/report.repository";
 
-const reportRepo = new ReportRepositori();
+// Repository is imported as instance
 
-export default class ReportController {
+class ReportController {
   public async getDashboardWidgetData(
     req: Request,
     res: Response,
@@ -80,7 +80,7 @@ export default class ReportController {
         throw new ApiError(403, "Tenant account not found.");
       }
 
-      const statsData = await reportRepo.getTenantStats(tenant.id);
+      const statsData = await ReportRepositori.getTenantStats(tenant.id);
 
       res.status(200).json({
         success: true,
@@ -92,3 +92,5 @@ export default class ReportController {
     }
   }
 }
+
+export default new ReportController();

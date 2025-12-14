@@ -11,9 +11,10 @@ class ConfirmPaymentService {
     isAccepted: boolean
   ) {
     const updatedBooking = await prisma.$transaction(async (tx) => {
-      const transactionalRepo = new ConfirmPaymentRepository(tx);
-      const booking = await transactionalRepo.findBookingByInvoice(
-        invoiceNumber
+      // Use the imported singleton instance and pass the transaction client
+      const booking = await ConfirmPaymentRepository.findBookingByInvoice(
+        invoiceNumber,
+        tx
       );
 
       if (!booking) {
@@ -44,13 +45,14 @@ class ConfirmPaymentService {
         newStatus = BookingStatus.MENUNGGU_PEMBAYARAN;
       }
 
-      const result = await transactionalRepo.updateBookingStatus(
+      const result = await ConfirmPaymentRepository.updateBookingStatus(
         booking.id,
-        newStatus
+        newStatus,
+        tx
       );
 
       if (!isAccepted) {
-        await transactionalRepo.clearPaymentProof(booking.id);
+        await ConfirmPaymentRepository.clearPaymentProof(booking.id, tx);
       }
 
       return result;

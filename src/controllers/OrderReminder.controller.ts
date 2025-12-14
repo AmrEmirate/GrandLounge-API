@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import ApiError from "../utils/apiError";
 import OrderReminderService from "../services/orderReminder.service";
 
-export class OrderReminderController {
+class OrderReminderController {
   public async sendConfirm(
     req: Request,
     res: Response,
@@ -28,3 +28,5 @@ export class OrderReminderController {
     }
   }
 }
+
+export default new OrderReminderController();

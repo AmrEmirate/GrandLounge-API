@@ -3,7 +3,7 @@ import RoomReservationRepository from "../repositories/roomReservation.repositor
 import ApiError from "../utils/apiError";
 import RoomReservationService from "../services/roomReservation.service";
 
-const repo = new RoomReservationRepository();
+// Repository is imported as instance
 
 class RoomReservationController {
   public async createReservationController(
@@ -38,7 +38,8 @@ class RoomReservationController {
   ) {
     try {
       const userId = (req.user as any).id;
-      const myReservations = await repo.findTransactionByAccountId(userId);
+      const myReservations =
+        await RoomReservationRepository.findTransactionByAccountId(userId);
 
       res.status(200).json({
         success: true,
@@ -90,7 +91,8 @@ class RoomReservationController {
       const { id } = req.params;
       const { status } = req.body;
 
-      const updatedReservation = await repo.updateTransaction(id, { status });
+      const updatedReservation =
+        await RoomReservationRepository.updateTransaction(id, { status });
 
       res.status(200).json({
         success: true,
@@ -114,7 +116,7 @@ class RoomReservationController {
         throw new ApiError(400, "Missing required data");
       }
 
-      const availableRooms = await repo.getAvailableRooms(
+      const availableRooms = await RoomReservationRepository.getAvailableRooms(
         propertyId,
         new Date(checkIn),
         new Date(checkOut)
@@ -175,4 +177,4 @@ class RoomReservationController {
   }
 }
 
-export default RoomReservationController;
+export default new RoomReservationController();

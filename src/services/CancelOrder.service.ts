@@ -3,18 +3,14 @@ import CancelOrderRepository from "../repositories/cancelOrder.repository";
 import ApiError from "../utils/apiError";
 
 class CancelOrderService {
-  private cancelOrderRepo: CancelOrderRepository;
-
-  constructor() {
-    this.cancelOrderRepo = new CancelOrderRepository();
-  }
+  // private cancelOrderRepo: CancelOrderRepository;
 
   public async cancelOrder(
     invoiceNumber: string,
     userId: string,
     isTenant: boolean
   ) {
-    const booking = await this.cancelOrderRepo.findBookingById(invoiceNumber);
+    const booking = await CancelOrderRepository.findBookingById(invoiceNumber);
 
     if (!booking) {
       throw new ApiError(404, "Pesanan tidak di temukan");
@@ -50,7 +46,7 @@ class CancelOrderService {
       throw new ApiError(400, "Pesanan ini tidak dapat dibatalkan.");
     }
 
-    const cancelOrder = await this.cancelOrderRepo.updateBookingStatus(
+    const cancelOrder = await CancelOrderRepository.updateBookingStatus(
       invoiceNumber,
       "DIBATALKAN"
     );

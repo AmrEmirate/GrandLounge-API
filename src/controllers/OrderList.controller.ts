@@ -105,4 +105,4 @@ class OrderListController {
   }
 }
 
-export default OrderListController;
+export default new OrderListController();

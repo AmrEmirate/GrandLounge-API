@@ -4,8 +4,7 @@ import { verifyToken, isUser } from "../middleware/auth.middleware";
 import { uploadPaymentProof } from "../middleware/upload.middleware";
 
 class UploadPaymentRouter {
-  private router: Router;
-  private uploadPaymentController = new uploadPaymentController();
+  public router: Router;
 
   constructor() {
     this.router = Router();
@@ -18,13 +17,9 @@ class UploadPaymentRouter {
       verifyToken,
       isUser,
       uploadPaymentProof,
-      this.uploadPaymentController.uploadPaymentProof
+      uploadPaymentController.uploadPaymentProof.bind(uploadPaymentController)
     );
-  }
-
-  public getRouter(): Router {
-    return this.router;
   }
 }
 
-export default UploadPaymentRouter;
+export default new UploadPaymentRouter().router;

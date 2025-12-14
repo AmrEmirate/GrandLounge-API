@@ -1,14 +1,12 @@
 import { Router } from "express";
-import { CalenderReportController } from "../controllers/calenderReport.controller";
+import CalenderReportController from "../controllers/calenderReport.controller";
 import { verifyToken, isTenant } from "../middleware/auth.middleware";
 
-export default class CalenderReportRouter {
-  private router: Router;
-  private calenderReport: CalenderReportController;
+class CalenderReportRouter {
+  public router: Router;
 
   constructor() {
     this.router = Router();
-    this.calenderReport = new CalenderReportController();
     this.initializeRoutes();
   }
 
@@ -17,17 +15,17 @@ export default class CalenderReportRouter {
       "/:propertyId/:roomId",
       verifyToken,
       isTenant,
-      this.calenderReport.getAvailabilityReport
+      CalenderReportController.getAvailabilityReport.bind(
+        CalenderReportController
+      )
     );
     this.router.get(
       "/property/:propertyId",
       verifyToken,
       isTenant,
-      this.calenderReport.getPropertyReport
+      CalenderReportController.getPropertyReport.bind(CalenderReportController)
     );
   }
-
-  public getRouter(): Router {
-    return this.router;
-  }
 }
+
+export default new CalenderReportRouter().router;

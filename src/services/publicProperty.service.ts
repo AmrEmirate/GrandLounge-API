@@ -11,7 +11,7 @@ import {
 import PropertyRepository from "../repositories/property.repository";
 
 class PublicPropertyService {
-  private roomReservationRepo = new RoomReservationRepository();
+  // private roomReservationRepo = new RoomReservationRepository();
 
   private buildPropertyWhereClause(filters: any): Prisma.PropertyWhereInput {
     const where: Prisma.PropertyWhereInput = {
@@ -206,7 +206,7 @@ class PublicPropertyService {
     checkIn: Date,
     checkOut: Date
   ) {
-    const availableRoomIds = await this.roomReservationRepo.getAvailableRooms(
+    const availableRoomIds = await RoomReservationRepository.getAvailableRooms(
       propertyId,
       checkIn,
       checkOut

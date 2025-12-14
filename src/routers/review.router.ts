@@ -1,15 +1,13 @@
 import { Router } from "express";
-import { ReviewController } from "../controllers/review.controller";
+import ReviewController from "../controllers/review.controller";
 import { verifyToken, isTenant, isUser } from "../middleware/auth.middleware";
 import { validate, ReviewValidator } from "../middleware/validators";
 
-export default class ReviewRouter {
-  private router: Router;
-  private reviewController: ReviewController;
+class ReviewRouter {
+  public router: Router;
 
   constructor() {
     this.router = Router();
-    this.reviewController = new ReviewController();
     this.initializeRoutes();
   }
 
@@ -19,35 +17,33 @@ export default class ReviewRouter {
       verifyToken,
       isUser,
       validate(ReviewValidator.create),
-      this.reviewController.createReview
+      ReviewController.createReview.bind(ReviewController)
     );
 
     this.router.post(
       "/:reviewId/reply",
       verifyToken,
       isTenant,
-      this.reviewController.replyReview
+      ReviewController.replyReview.bind(ReviewController)
     );
 
     this.router.get(
       "/property/:propertyId",
-      this.reviewController.getReviewByProperty
+      ReviewController.getReviewByProperty.bind(ReviewController)
     );
 
     this.router.get(
       "/property/name/:propertyName",
-      this.reviewController.getReviewByPropertyName
+      ReviewController.getReviewByPropertyName.bind(ReviewController)
     );
 
     this.router.get(
       "/tenant",
       verifyToken,
       isTenant,
-      this.reviewController.getTenantReviews
+      ReviewController.getTenantReviews.bind(ReviewController)
     );
   }
-
-  public getRouter(): Router {
-    return this.router;
-  }
 }
+
+export default new ReviewRouter().router;

@@ -6,11 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../config/prisma";
 
 class RoomReservationService {
-  private reservationRepo: ReservationRepositori;
-
-  constructor() {
-    this.reservationRepo = new ReservationRepositori();
-  }
+  // private reservationRepo: ReservationRepositori;
 
   public async createReservation(
     propertyId: string,
@@ -23,7 +19,7 @@ class RoomReservationService {
       throw new ApiError(400, "End date must be after start date");
     }
 
-    const room = await this.reservationRepo.findRoomByName(
+    const room = await ReservationRepositori.findRoomByName(
       propertyId,
       roomName
     );
@@ -34,7 +30,7 @@ class RoomReservationService {
       );
     }
 
-    const user = await this.reservationRepo.findOrCreateAccount(guestInfo);
+    const user = await ReservationRepositori.findOrCreateAccount(guestInfo);
 
     const durationDays = Math.ceil(
       (checkOut.getTime() - checkIn.getTime()) / 86_400_000
@@ -46,7 +42,7 @@ class RoomReservationService {
       .toString("hex")}`;
 
     const newBooking = await prisma.$transaction(async (tx) => {
-      const isAvailable = await this.reservationRepo.checkRoomAvailability(
+      const isAvailable = await ReservationRepositori.checkRoomAvailability(
         room.id,
         checkIn,
         checkOut,
@@ -91,11 +87,11 @@ class RoomReservationService {
   }
 
   public async getUserReservations(userId: string) {
-    return await this.reservationRepo.findTransactionByAccountId(userId);
+    return await ReservationRepositori.findTransactionByAccountId(userId);
   }
 
   public async getReservationByName(roomName: string, userId: string) {
-    const reservation = await this.reservationRepo.findTransactionByRoomName(
+    const reservation = await ReservationRepositori.findTransactionByRoomName(
       roomName,
       userId
     );
@@ -112,7 +108,7 @@ class RoomReservationService {
     bookingId: string,
     newStatus: BookingStatus
   ) {
-    return this.reservationRepo.updateTransaction(bookingId, {
+    return ReservationRepositori.updateTransaction(bookingId, {
       status: newStatus,
     });
   }

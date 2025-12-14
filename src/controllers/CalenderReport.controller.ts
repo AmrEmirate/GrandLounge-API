@@ -3,7 +3,7 @@ import CalenderReportService from "../services/calenderReport.service";
 import ApiError from "../utils/apiError";
 import { prisma } from "../config/prisma";
 
-export class CalenderReportController {
+class CalenderReportController {
   public async getAvailabilityReport(
     req: Request,
     res: Response,
@@ -95,3 +95,5 @@ export class CalenderReportController {
     }
   }
 }
+
+export default new CalenderReportController();

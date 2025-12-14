@@ -1,10 +1,8 @@
-import { ReviewRepository } from "../repositories/review.repository";
+import ReviewRepository from "../repositories/review.repository";
 import { prisma } from "../config/prisma";
 import ApiError from "../utils/apiError";
 
-export class ReviewService {
-  private reviewRepo = new ReviewRepository();
-
+class ReviewService {
   async createReview(
     userId: string,
     bookingId: string,
@@ -33,10 +31,10 @@ export class ReviewService {
       );
     }
 
-    const existing = await this.reviewRepo.findBookingBy(bookingId);
+    const existing = await ReviewRepository.findBookingBy(bookingId);
     if (existing) throw new ApiError(400, "Review sudah pernah diberikan");
 
-    return this.reviewRepo.createReview({
+    return ReviewRepository.createReview({
       userId,
       propertyId: booking.propertyId,
       bookingId,
@@ -47,7 +45,7 @@ export class ReviewService {
 
   async replyReview(reviewId: string, reply: string) {
     try {
-      return await this.reviewRepo.replyReview(reviewId, reply);
+      return await ReviewRepository.replyReview(reviewId, reply);
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new ApiError(404, "Review tidak ditemukan.");
@@ -61,7 +59,7 @@ export class ReviewService {
   }
 
   async getReviewsByPropertyName(propertyName: string) {
-    return this.reviewRepo.getReviewsByPropertyName(propertyName);
+    return ReviewRepository.getReviewsByPropertyName(propertyName);
   }
 
   async getReviewsByPropertyId(propertyId: string) {
@@ -72,6 +70,8 @@ export class ReviewService {
   }
 
   async getReviewsByTenant(tenantId: string, limit: number) {
-    return this.reviewRepo.findReviewsByTenant(tenantId, limit);
+    return ReviewRepository.findReviewsByTenant(tenantId, limit);
   }
 }
+
+export default new ReviewService();

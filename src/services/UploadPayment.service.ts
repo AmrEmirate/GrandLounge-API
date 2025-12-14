@@ -1,16 +1,10 @@
 import { prisma } from "../config/prisma";
 import cloudinaryUpload from "../config/cloudinary";
-import { UploadPaymentRepository } from "../repositories/uploadPayment.repository";
+import UploadPaymentRepository from "../repositories/uploadPayment.repository";
 import streamifier from "streamifier";
 import ApiError from "../utils/apiError";
 
 class UploadPaymentService {
-  private uploadRepo: UploadPaymentRepository;
-
-  constructor() {
-    this.uploadRepo = new UploadPaymentRepository();
-  }
-
   public async uploadPayment(invoiceNumber: string, file: Express.Multer.File) {
     if (!file) {
       throw new Error("File is required");
@@ -60,7 +54,7 @@ class UploadPaymentService {
       streamifier.createReadStream(file.buffer).pipe(stream);
     });
 
-    return this.uploadRepo.updatePaymentProof(
+    return UploadPaymentRepository.updatePaymentProof(
       invoiceNumber,
       (uploadResult as any).secure_url
     );

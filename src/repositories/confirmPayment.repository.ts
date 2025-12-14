@@ -6,32 +6,38 @@ type PrismaTransactionClient = Omit<
   "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
 >;
 
-export default class ConfirmPaymentRepository {
-  private prismaClient: PrismaTransactionClient;
-
-  constructor(prismaClient: PrismaTransactionClient = prisma) {
-    this.prismaClient = prismaClient;
-  }
-
-  async findBookingByInvoice(invoiceNumber: string) {
-    return this.prismaClient.booking.findFirst({
+class ConfirmPaymentRepository {
+  async findBookingByInvoice(
+    invoiceNumber: string,
+    tx: PrismaTransactionClient = prisma
+  ) {
+    return tx.booking.findFirst({
       where: { invoiceNumber },
       include: { property: true },
     });
   }
 
-  async updateBookingStatus(bookingId: string, newStatus: BookingStatus) {
-    return this.prismaClient.booking.update({
+  async updateBookingStatus(
+    bookingId: string,
+    newStatus: BookingStatus,
+    tx: PrismaTransactionClient = prisma
+  ) {
+    return tx.booking.update({
       where: { id: bookingId },
       data: { status: newStatus },
       include: { property: true, user: true },
     });
   }
 
-  async clearPaymentProof(bookingId: string) {
-    return this.prismaClient.booking.update({
+  async clearPaymentProof(
+    bookingId: string,
+    tx: PrismaTransactionClient = prisma
+  ) {
+    return tx.booking.update({
       where: { id: bookingId },
       data: { paymentProof: null },
     });
   }
 }
+
+export default new ConfirmPaymentRepository();

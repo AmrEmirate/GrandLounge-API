@@ -1,7 +1,7 @@
 import { prisma } from "../config/prisma";
 import { Prisma, BookingStatus } from "@prisma/client";
 
-export default class OrderListRepositroy {
+class OrderListRepositroy {
   async updateBookingStatus(bookingId: string, newStatus: string) {
     return prisma.booking.update({
       where: { id: bookingId },
@@ -233,3 +233,5 @@ export default class OrderListRepositroy {
     });
   }
 }
+
+export default new OrderListRepositroy();

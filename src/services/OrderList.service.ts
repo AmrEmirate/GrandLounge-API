@@ -3,11 +3,7 @@ import OrderListRepositroy from "../repositories/orderList.repository";
 import ApiError from "../utils/apiError";
 
 class OrderListService {
-  private orderRepo: OrderListRepositroy;
-
-  constructor() {
-    this.orderRepo = new OrderListRepositroy();
-  }
+  // private orderRepo: OrderListRepositroy;
 
   public async getOrderList(
     userId: string,
@@ -17,7 +13,7 @@ class OrderListService {
       checkIn?: Date;
     }
   ) {
-    const orderList = await this.orderRepo.findReservationByFilter(
+    const orderList = await OrderListRepositroy.findReservationByFilter(
       userId,
       filter
     );
@@ -33,10 +29,11 @@ class OrderListService {
       propertyId?: string;
     }
   ) {
-    const transactions = await this.orderRepo.findTransactionsByFilterForTenant(
-      tenantId,
-      filter
-    );
+    const transactions =
+      await OrderListRepositroy.findTransactionsByFilterForTenant(
+        tenantId,
+        filter
+      );
     return transactions;
   }
 
@@ -50,7 +47,7 @@ class OrderListService {
     if (booking.status !== "DIPROSES")
       throw new ApiError(400, "Only in-process bookings can be completed.");
 
-    const updatedBooking = await this.orderRepo.updateBookingStatus(
+    const updatedBooking = await OrderListRepositroy.updateBookingStatus(
       bookingId,
       "SELESAI"
     );
@@ -58,9 +55,8 @@ class OrderListService {
   }
 
   public async getPendingConfirmation(tenantId: string) {
-    const transactions = await this.orderRepo.findPendingConfirmationForTenant(
-      tenantId
-    );
+    const transactions =
+      await OrderListRepositroy.findPendingConfirmationForTenant(tenantId);
     return transactions;
   }
 }

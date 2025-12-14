@@ -3,18 +3,14 @@ import ReportRepositori from "../repositories/report.repository";
 import { startOfDay, endOfDay } from "date-fns";
 
 class ReportService {
-  private reportRepo: ReportRepositori;
-
-  constructor() {
-    this.reportRepo = new ReportRepositori();
-  }
+  // private reportRepo: ReportRepositori;
 
   public async getDashboardWidgets(tenantId: string) {
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - 6);
 
-    const dailySales = await this.reportRepo.getSalesByDay(
+    const dailySales = await ReportRepositori.getSalesByDay(
       tenantId,
       startDate,
       endDate
@@ -66,7 +62,7 @@ class ReportService {
     let salesReport;
     switch (groupBy) {
       case "property":
-        salesReport = await this.reportRepo.getSalesByProperty(
+        salesReport = await ReportRepositori.getSalesByProperty(
           tenantId,
           startDate,
           endDate,
@@ -74,7 +70,7 @@ class ReportService {
         );
         break;
       case "user":
-        salesReport = await this.reportRepo.getSalesByUser(
+        salesReport = await ReportRepositori.getSalesByUser(
           tenantId,
           startDate,
           endDate,
@@ -82,14 +78,14 @@ class ReportService {
         );
         break;
       case "day":
-        salesReport = await this.reportRepo.getSalesByDay(
+        salesReport = await ReportRepositori.getSalesByDay(
           tenantId,
           startDate,
           endDate
         );
         break;
       default:
-        salesReport = await this.reportRepo.getAggregateSales(
+        salesReport = await ReportRepositori.getAggregateSales(
           tenantId,
           startDate,
           endDate

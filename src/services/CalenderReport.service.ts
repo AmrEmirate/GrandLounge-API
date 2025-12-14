@@ -1,15 +1,11 @@
-import { eachDayOfInterval, isWithinInterval } from "date-fns";
+import { eachDayOfInterval } from "date-fns";
 import { prisma } from "../config/prisma";
 import CalenderReportRepositori from "../repositories/calenderReport.repository";
 import ApiError from "../utils/apiError";
 import { BookingStatus } from "@prisma/client";
 
 class CalenderReportService {
-  private calenderRepo: CalenderReportRepositori;
-
-  constructor() {
-    this.calenderRepo = new CalenderReportRepositori();
-  }
+  // private calenderRepo: CalenderReportRepositori;
 
   public async getCalenderReport(
     tenantId: string,
@@ -50,13 +46,14 @@ class CalenderReportService {
       );
     }
 
-    const rawAvailabilityData = await this.calenderRepo.getRoomAvailibity(
-      tenantId,
-      propertyId,
-      roomId,
-      startDate,
-      endDate
-    );
+    const rawAvailabilityData =
+      await CalenderReportRepositori.getRoomAvailibity(
+        tenantId,
+        propertyId,
+        roomId,
+        startDate,
+        endDate
+      );
 
     const bookings = await prisma.booking.findMany({
       where: {
@@ -133,13 +130,14 @@ class CalenderReportService {
     startDate: Date,
     endDate: Date
   ) {
-    const rawAvailabilityData = await this.calenderRepo.getRoomAvailibity(
-      tenantId,
-      propertyId,
-      undefined,
-      startDate,
-      endDate
-    );
+    const rawAvailabilityData =
+      await CalenderReportRepositori.getRoomAvailibity(
+        tenantId,
+        propertyId,
+        undefined,
+        startDate,
+        endDate
+      );
 
     const totalRoomsInProperty = await prisma.room.count({
       where: { propertyId: propertyId, deletedAt: null },

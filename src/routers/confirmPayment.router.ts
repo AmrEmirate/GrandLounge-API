@@ -3,13 +3,11 @@ import ConfirmPaymentController from "../controllers/confirmPayment.controller";
 import { verifyToken, isTenant } from "../middleware/auth.middleware";
 import { validate, PaymentValidator } from "../middleware/validators";
 
-export default class ConfirmPaymentRouter {
-  private router: Router;
-  private confirmPayment: ConfirmPaymentController;
+class ConfirmPaymentRouter {
+  public router: Router;
 
   constructor() {
     this.router = Router();
-    this.confirmPayment = new ConfirmPaymentController();
     this.initializeRoutes();
   }
 
@@ -19,11 +17,9 @@ export default class ConfirmPaymentRouter {
       verifyToken,
       isTenant,
       validate(PaymentValidator.confirm),
-      this.confirmPayment.confirmPayment
+      ConfirmPaymentController.confirmPayment.bind(ConfirmPaymentController)
     );
   }
-
-  public getRouter(): Router {
-    return this.router;
-  }
 }
+
+export default new ConfirmPaymentRouter().router;

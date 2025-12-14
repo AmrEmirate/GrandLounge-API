@@ -1,14 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import { ReviewService } from "../services/review.service";
+import ReviewService from "../services/review.service";
 
-const reviewService = new ReviewService();
-
-export class ReviewController {
+class ReviewController {
   public async createReview(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req.user as { id: string }).id;
       const { bookingId, rating, comment } = req.body;
-      const review = await reviewService.createReview(
+      const review = await ReviewService.createReview(
         userId,
         bookingId,
         rating,
@@ -28,7 +26,7 @@ export class ReviewController {
     try {
       const { reviewId } = req.params;
       const { reply } = req.body;
-      const review = await reviewService.replyReview(reviewId, reply);
+      const review = await ReviewService.replyReview(reviewId, reply);
 
       res.status(200).json({
         success: true,
@@ -46,7 +44,7 @@ export class ReviewController {
   ) {
     try {
       const { propertyId } = req.params;
-      const reviews = await reviewService.getReviewsByProperty(propertyId);
+      const reviews = await ReviewService.getReviewsByProperty(propertyId);
 
       res.status(200).json({
         success: true,
@@ -64,7 +62,7 @@ export class ReviewController {
   ) {
     try {
       const { propertyName } = req.params;
-      const reviews = await reviewService.getReviewsByPropertyName(
+      const reviews = await ReviewService.getReviewsByPropertyName(
         propertyName
       );
 
@@ -86,7 +84,7 @@ export class ReviewController {
     try {
       const tenantId = (req.user as any).tenant.id;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 3;
-      const reviews = await reviewService.getReviewsByTenant(tenantId, limit);
+      const reviews = await ReviewService.getReviewsByTenant(tenantId, limit);
 
       res.status(200).json({
         success: true,
@@ -98,3 +96,5 @@ export class ReviewController {
     }
   }
 }
+
+export default new ReviewController();

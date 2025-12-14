@@ -1,7 +1,7 @@
 import { prisma } from "../config/prisma";
 import { BookingStatus, Prisma } from "@prisma/client";
 
-export default class ReportRepositori {
+class ReportRepositori {
   private createReportWhereClause(
     tenantId: string,
     startDate?: Date,
@@ -175,3 +175,5 @@ export default class ReportRepositori {
     }));
   }
 }
+
+export default new ReportRepositori();

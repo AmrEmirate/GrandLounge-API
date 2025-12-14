@@ -1,14 +1,12 @@
 import { Router } from "express";
-import { CancelOrderControllers } from "../controllers/cancelOrder.controller";
+import CancelOrderController from "../controllers/cancelOrder.controller";
 import { verifyToken, isUser, isTenant } from "../middleware/auth.middleware";
 
-export default class CancelOrderRouter {
-  private router: Router;
-  private cancelOrderControllers: CancelOrderControllers;
+class CancelOrderRouter {
+  public router: Router;
 
   constructor() {
     this.router = Router();
-    this.cancelOrderControllers = new CancelOrderControllers();
     this.initializeRoutes();
   }
 
@@ -17,18 +15,16 @@ export default class CancelOrderRouter {
       "/user/cancel/invoice/:invoice",
       verifyToken,
       isUser,
-      this.cancelOrderControllers.cancelOrder
+      CancelOrderController.cancelOrder.bind(CancelOrderController)
     );
 
     this.router.patch(
       "/tenant/cancel/invoice/:invoice",
       verifyToken,
       isTenant,
-      this.cancelOrderControllers.cancelOrder
+      CancelOrderController.cancelOrder.bind(CancelOrderController)
     );
   }
-
-  public getRouter(): Router {
-    return this.router;
-  }
 }
+
+export default new CancelOrderRouter().router;

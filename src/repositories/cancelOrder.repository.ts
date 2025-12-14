@@ -1,7 +1,7 @@
 import { prisma } from "../config/prisma";
 import { BookingStatus } from "@prisma/client";
 
-export default class CancelOrderRepository {
+class CancelOrderRepository {
   async findBookingById(invoiceNumber: string) {
     return prisma.booking.findUnique({
       where: { invoiceNumber },
@@ -25,3 +25,5 @@ export default class CancelOrderRepository {
     });
   }
 }
+
+export default new CancelOrderRepository();

@@ -1,33 +1,35 @@
 import { prisma } from "../config/prisma";
-import { startOfDay, addDays } from 'date-fns';
+import { startOfDay, addDays } from "date-fns";
 
-export default class OrderReminderRepository {
-    async findBookingById(invoiceNumber: string) {
-        return prisma.booking.findUnique({
-            where: { invoiceNumber },
-            include: { user: true, property: true },
-        });
-    }
+class OrderReminderRepository {
+  async findBookingById(invoiceNumber: string) {
+    return prisma.booking.findUnique({
+      where: { invoiceNumber },
+      include: { user: true, property: true },
+    });
+  }
 
-    async findUpcomingBookings() {
-        const tomorrowStart = startOfDay(addDays(new Date(), 1));
-        const dayAfterTomorrowStart = startOfDay(addDays(new Date(), 2));
+  async findUpcomingBookings() {
+    const tomorrowStart = startOfDay(addDays(new Date(), 1));
+    const dayAfterTomorrowStart = startOfDay(addDays(new Date(), 2));
 
-        return prisma.booking.findMany({
-            where: {
-                status: "DIPROSES",
-                checkIn: {
-                    gte: tomorrowStart,
-                    lt: dayAfterTomorrowStart,
-                },
-                user: {
-                    deletedAt: null
-                },
-                property: {
-                    deletedAt: null
-                }
-            },
-            include: { user: true, property: true },
-        });
-    }
+    return prisma.booking.findMany({
+      where: {
+        status: "DIPROSES",
+        checkIn: {
+          gte: tomorrowStart,
+          lt: dayAfterTomorrowStart,
+        },
+        user: {
+          deletedAt: null,
+        },
+        property: {
+          deletedAt: null,
+        },
+      },
+      include: { user: true, property: true },
+    });
+  }
 }
+
+export default new OrderReminderRepository();

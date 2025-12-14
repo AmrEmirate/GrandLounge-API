@@ -32,4 +32,4 @@ class UploadPaymentController {
   }
 }
 
-export default UploadPaymentController;
+export default new UploadPaymentController();

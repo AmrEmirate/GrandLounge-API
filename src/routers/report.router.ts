@@ -2,40 +2,36 @@ import { Router } from "express";
 import ReportController from "../controllers/report.controller";
 import { verifyToken, isTenant } from "../middleware/auth.middleware";
 
-export default class ReportRouter {
-  private router: Router;
-  private report: ReportController;
+class ReportRouter {
+  public router: Router;
 
   constructor() {
     this.router = Router();
-    this.report = new ReportController();
-    this.initializme();
+    this.initializeRoutes();
   }
 
-  private initializme(): void {
+  private initializeRoutes(): void {
     this.router.get(
       "/sales",
       verifyToken,
       isTenant,
-      this.report.getSalesReport
+      ReportController.getSalesReport.bind(ReportController)
     );
 
     this.router.get(
       "/stats",
       verifyToken,
       isTenant,
-      this.report.getStatsReport
+      ReportController.getStatsReport.bind(ReportController)
     );
 
     this.router.get(
       "/widgets",
       verifyToken,
       isTenant,
-      this.report.getDashboardWidgetData
+      ReportController.getDashboardWidgetData.bind(ReportController)
     );
   }
-
-  public getRouter(): Router {
-    return this.router;
-  }
 }
+
+export default new ReportRouter().router;

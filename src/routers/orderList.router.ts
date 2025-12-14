@@ -2,13 +2,11 @@ import { Router } from "express";
 import OrderListController from "../controllers/orderList.controller";
 import { verifyToken, isUser, isTenant } from "../middleware/auth.middleware";
 
-export default class OrderListRouter {
-  private router: Router;
-  private orderList: OrderListController;
+class OrderListRouter {
+  public router: Router;
 
   constructor() {
     this.router = Router();
-    this.orderList = new OrderListController();
     this.initializeRoutes();
   }
 
@@ -17,32 +15,30 @@ export default class OrderListRouter {
       "/order-list",
       verifyToken,
       isUser,
-      this.orderList.orderList
+      OrderListController.orderList.bind(OrderListController)
     );
 
     this.router.get(
       "/tenant-transactions/pending",
       verifyToken,
       isTenant,
-      this.orderList.pendingConfirmationList
+      OrderListController.pendingConfirmationList.bind(OrderListController)
     );
 
     this.router.patch(
       "/:bookingId/complete",
       verifyToken,
       isUser,
-      this.orderList.completeOrder
+      OrderListController.completeOrder.bind(OrderListController)
     );
 
     this.router.get(
       "/tenant-transactions",
       verifyToken,
       isTenant,
-      this.orderList.tenantTransactionList
+      OrderListController.tenantTransactionList.bind(OrderListController)
     );
   }
-
-  public getRouter(): Router {
-    return this.router;
-  }
 }
+
+export default new OrderListRouter().router;

@@ -50,4 +50,4 @@ class ConfirmPaymentController {
   }
 }
 
-export default ConfirmPaymentController;
+export default new ConfirmPaymentController();

@@ -5,7 +5,7 @@ import { prisma } from "../config/prisma";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 import { eachDayOfInterval } from "date-fns";
 
-export default class RoomReservationRepository {
+class RoomReservationRepository {
   async checkRoomAvailability(
     roomId: string,
     newStartDate: Date,
@@ -213,3 +213,5 @@ export default class RoomReservationRepository {
     return availableRooms;
   }
 }
+
+export default new RoomReservationRepository();
