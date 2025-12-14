@@ -68,7 +68,7 @@ class AuthRouter {
       "/google/callback",
       passport.authenticate("google", {
         session: false,
-        failureRedirect: `${process.env.FRONTEND_URL}/login`,
+        failureRedirect: `${process.env.FE_URL}/login`,
       }),
       (req, res) => {
         const user = req.user as any;
@@ -82,9 +82,7 @@ class AuthRouter {
           profilePicture: user.profilePicture,
         };
         const token = generateToken(tokenPayload);
-        res.redirect(
-          `${process.env.FRONTEND_URL}/auth/callback?token=${token}`
-        );
+        res.redirect(`${process.env.FE_URL}/auth/callback?token=${token}`);
       }
     );
   }

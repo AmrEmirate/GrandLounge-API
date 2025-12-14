@@ -11,7 +11,7 @@ type PrismaTransactionClient = Omit<
 
 class TokenServiceClass {
   private sendVerificationEmail(user: User, token: string) {
-    const verificationLink = `${process.env.FRONTEND_URL}/auth/verify-email?token=${token}`;
+    const verificationLink = `${process.env.FE_URL}/auth/verify-email?token=${token}`;
     return sendEmail({
       to: user.email,
       subject: "Verifikasi Akun Grand Lodge Anda",
@@ -25,7 +25,7 @@ class TokenServiceClass {
   }
 
   private sendPasswordResetEmail(user: User, token: string) {
-    const resetLink = `${process.env.FRONTEND_URL}/auth/reset-password?token=${token}`;
+    const resetLink = `${process.env.FE_URL}/auth/reset-password?token=${token}`;
     return sendEmail({
       to: user.email,
       subject: "Reset Password Akun Grand Lodge Anda",
@@ -44,7 +44,7 @@ class TokenServiceClass {
     newEmail: string
   ) {
     const encodedNewEmail = encodeURIComponent(newEmail);
-    const confirmationLink = `${process.env.FRONTEND_URL}/auth/confirm-email-change?token=${token}&newEmail=${encodedNewEmail}`;
+    const confirmationLink = `${process.env.FE_URL}/auth/confirm-email-change?token=${token}&newEmail=${encodedNewEmail}`;
     return sendEmail({
       to: user.email,
       subject: "Konfirmasi Perubahan Alamat Email",
