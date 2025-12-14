@@ -1,14 +1,14 @@
-import { prisma } from '../config/prisma';
-import { Property } from '../../prisma/generated/client';
+import { prisma } from "../config/prisma";
+import { Property } from "@prisma/client";
 
-export const PropertyRepository = {
-  create: async (
-    propertyData: any, 
-    tenantId: string, 
-    categoryId: string, 
-    cityId: string, 
+class PropertyRepository {
+  async create(
+    propertyData: any,
+    tenantId: string,
+    categoryId: string,
+    cityId: string,
     amenityIds?: string[]
-  ): Promise<Property> => {
+  ): Promise<Property> {
     return await prisma.property.create({
       data: {
         ...propertyData,
@@ -27,9 +27,9 @@ export const PropertyRepository = {
         },
       },
     });
-  },
+  }
 
-  findAllByTenantId: async (tenantId: string): Promise<Property[]> => {
+  async findAllByTenantId(tenantId: string): Promise<Property[]> {
     return await prisma.property.findMany({
       where: { tenantId: tenantId, deletedAt: null },
       include: {
@@ -39,9 +39,12 @@ export const PropertyRepository = {
         rooms: true,
       },
     });
-  },
+  }
 
-  findByIdAndTenantId: async (id: string, tenantId: string): Promise<Property | null> => {
+  async findByIdAndTenantId(
+    id: string,
+    tenantId: string
+  ): Promise<Property | null> {
     return await prisma.property.findFirst({
       where: { id: id, tenantId: tenantId, deletedAt: null },
       include: {
@@ -52,9 +55,9 @@ export const PropertyRepository = {
         images: true,
       },
     });
-  },
+  }
 
-  findPublicById: async (id: string): Promise<Property | null> => {
+  async findPublicById(id: string): Promise<Property | null> {
     return await prisma.property.findFirst({
       where: { id: id, deletedAt: null },
       include: {
@@ -67,7 +70,7 @@ export const PropertyRepository = {
         },
         tenant: {
           select: {
-            createdAt: true, // <-- TAMBAHKAN BARIS INI
+            createdAt: true,
             user: {
               select: {
                 fullName: true,
@@ -78,9 +81,13 @@ export const PropertyRepository = {
         },
       },
     });
-  },
+  }
 
-  update: async (id: string, data: any, amenityIds?: string[]): Promise<Property> => {
+  async update(
+    id: string,
+    data: any,
+    amenityIds?: string[]
+  ): Promise<Property> {
     const { cityId, categoryId, ...propertyData } = data;
 
     return await prisma.property.update({
@@ -89,22 +96,24 @@ export const PropertyRepository = {
         ...propertyData,
         city: cityId ? { connect: { id: cityId } } : undefined,
         category: categoryId ? { connect: { id: categoryId } } : undefined,
-        amenities: amenityIds ? { set: amenityIds.map((id) => ({ id })) } : undefined,
+        amenities: amenityIds
+          ? { set: amenityIds.map((id) => ({ id })) }
+          : undefined,
       },
     });
-  },
+  }
 
-  softDelete: async (id: string): Promise<Property> => {
+  async softDelete(id: string): Promise<Property> {
     return await prisma.property.update({
       where: { id: id },
       data: {
         deletedAt: new Date(),
       },
     });
-  },
+  }
 
-  addGalleryImages: async (propertyId: string, imageUrls: string[]) => {
-    const imageData = imageUrls.map(url => ({
+  async addGalleryImages(propertyId: string, imageUrls: string[]) {
+    const imageData = imageUrls.map((url) => ({
       propertyId: propertyId,
       imageUrl: url,
     }));
@@ -115,7 +124,9 @@ export const PropertyRepository = {
 
     return prisma.property.findUnique({
       where: { id: propertyId },
-      include: { images: true }
+      include: { images: true },
     });
-  },
-};
+  }
+}
+
+export default new PropertyRepository();

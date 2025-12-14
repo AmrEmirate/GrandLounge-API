@@ -1,82 +1,93 @@
-import { Router } from 'express';
-import { PropertyController } from '../controllers/property.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '../../prisma/generated/client';
-import roomRouter from './room.router';
-import upload from '../middleware/upload.middleware';
+import { Router } from "express";
+import PropertyController from "../controllers/property.controller";
+import { authMiddleware } from "../middleware/auth.middleware";
+import { UserRole } from "@prisma/client";
+import roomRouter from "./room.router";
+import upload from "../middleware/upload.middleware";
+import { validate, PropertyValidator } from "../middleware/validators";
 
-const router = Router();
-const tenantOnly = authMiddleware([UserRole.TENANT]);
+class PropertyRouter {
+  public router: Router;
 
-// =================================================================
-//                      ENDPOINT PUBLIK
-// =================================================================
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
 
-// Mendapatkan semua properti (dengan filter dan paginasi)
-router.get('/', PropertyController.getAll);
+  private initializeRoutes() {
+    const tenantOnly = authMiddleware([UserRole.TENANT]);
 
-router.get('/nearby', PropertyController.getNearbyProperties);
-// Mendapatkan detail satu properti
-router.get('/:id', PropertyController.getOne);
+    this.router.get("/", PropertyController.getAll.bind(PropertyController));
+    this.router.get(
+      "/nearby",
+      PropertyController.getNearbyProperties.bind(PropertyController)
+    );
+    this.router.get("/:id", PropertyController.getOne.bind(PropertyController));
+    this.router.get(
+      "/:id/availability",
+      PropertyController.getMonthlyAvailability.bind(PropertyController)
+    );
+    this.router.get(
+      "/:id/available-rooms",
+      PropertyController.getAvailableRooms.bind(PropertyController)
+    );
 
-// Mendapatkan ketersediaan bulanan untuk properti
-router.get('/:id/availability', PropertyController.getMonthlyAvailability);
+    this.router.use("/my-properties/:propertyId/rooms", tenantOnly, roomRouter);
 
-// Mendapatkan kamar yang tersedia berdasarkan tanggal
-router.get('/:id/available-rooms', PropertyController.getAvailableRooms);
+    this.router.post(
+      "/",
+      tenantOnly,
+      upload.fields([
+        { name: "mainImage", maxCount: 1 },
+        { name: "galleryImages", maxCount: 10 },
+      ]),
+      validate(PropertyValidator.create),
+      PropertyController.create.bind(PropertyController)
+    );
 
+    this.router.get(
+      "/my-properties/all",
+      tenantOnly,
+      PropertyController.getPropertiesByTenant.bind(PropertyController)
+    );
 
-// =================================================================
-//                  ENDPOINT KHUSUS TENANT
-// =================================================================
+    this.router.get(
+      "/my-properties/:id",
+      tenantOnly,
+      PropertyController.getPropertyByIdForTenant.bind(PropertyController)
+    );
 
-// Nested router untuk mengelola kamar dalam sebuah properti
-router.use('/my-properties/:propertyId/rooms', tenantOnly, roomRouter);
+    this.router.patch(
+      "/my-properties/:id",
+      tenantOnly,
+      upload.fields([
+        { name: "mainImage", maxCount: 1 },
+        { name: "galleryImages", maxCount: 10 },
+      ]),
+      validate(PropertyValidator.update),
+      PropertyController.update.bind(PropertyController)
+    );
 
-// --- Pengelolaan Properti oleh Tenant ---
+    this.router.delete(
+      "/my-properties/:id",
+      tenantOnly,
+      PropertyController.delete.bind(PropertyController)
+    );
 
-// Membuat properti baru (dengan upload gambar)
-router.post('/', 
-  tenantOnly, 
-  upload.fields([
-    { name: 'mainImage', maxCount: 1 },
-    { name: 'galleryImages', maxCount: 10 }
-  ]), 
-  PropertyController.create
-);
+    this.router.patch(
+      "/my-properties/:id/upload-image",
+      tenantOnly,
+      upload.single("propertyImage"),
+      PropertyController.uploadImage.bind(PropertyController)
+    );
 
-// Mendapatkan semua properti milik tenant yang sedang login
-router.get('/my-properties/all', tenantOnly, PropertyController.getPropertiesByTenant);
+    this.router.post(
+      "/my-properties/:id/gallery",
+      tenantOnly,
+      upload.array("galleryImages", 10),
+      PropertyController.uploadGallery.bind(PropertyController)
+    );
+  }
+}
 
-// Mendapatkan detail satu properti milik tenant
-router.get('/my-properties/:id', tenantOnly, PropertyController.getPropertyByIdForTenant);
-
-// Memperbarui detail properti (dengan upload gambar baru & penghapusan gambar lama)
-router.patch('/my-properties/:id', 
-  tenantOnly, 
-  upload.fields([
-    { name: 'mainImage', maxCount: 1 },
-    { name: 'galleryImages', maxCount: 10 }
-  ]),
-  PropertyController.update
-);
-
-// Menghapus (soft delete) properti
-router.delete('/my-properties/:id', tenantOnly, PropertyController.delete);
-
-router.patch(
-    '/my-properties/:id/upload-image',
-    tenantOnly,
-    upload.single('propertyImage'),
-    PropertyController.uploadImage
-);
-router.post(
-    '/my-properties/:id/gallery',
-    tenantOnly,
-    upload.array('galleryImages', 10),
-    PropertyController.uploadGallery
-);
-
-router.get('/nearby', PropertyController.getNearbyProperties);
-
-export default router;
+export default new PropertyRouter().router;

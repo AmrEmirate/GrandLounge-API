@@ -1,130 +1,194 @@
-import { PropertyRepository } from '../repositories/property.repository';
-import { Property } from '../../prisma/generated/client';
-import { uploadToCloudinary } from '../utils/cloudinary';
-import { Express } from 'express';
-import { prisma } from '../config/prisma';
+import PropertyRepository from "../repositories/property.repository";
+import { Property } from "@prisma/client";
+import { uploadToCloudinary } from "../utils/cloudinary";
+import { Express } from "express";
+import { prisma } from "../config/prisma";
 
-const _uploadMainImage = async (files: { [fieldname: string]: Express.Multer.File[] }) => {
+class TenantPropertyService {
+  private async uploadMainImage(files: {
+    [fieldname: string]: Express.Multer.File[];
+  }) {
     if (files.mainImage && files.mainImage[0]) {
-        const result = await uploadToCloudinary(files.mainImage[0].buffer, 'property_images');
-        return result.secure_url;
+      const result = await uploadToCloudinary(
+        files.mainImage[0].buffer,
+        "property_images"
+      );
+      return result.secure_url;
     }
     return undefined;
-};
+  }
 
-const _uploadGalleryImages = async (files: { [fieldname: string]: Express.Multer.File[] }) => {
+  private async uploadMultipleImages(files: {
+    [fieldname: string]: Express.Multer.File[];
+  }) {
     if (files.galleryImages && files.galleryImages.length > 0) {
-        const uploadPromises = files.galleryImages.map(file =>
-            uploadToCloudinary(file.buffer, 'property_gallery')
-        );
-        const galleryResults = await Promise.all(uploadPromises);
-        return galleryResults.map(result => result.secure_url);
+      const uploadPromises = files.galleryImages.map((file) =>
+        uploadToCloudinary(file.buffer, "property_gallery")
+      );
+      const galleryResults = await Promise.all(uploadPromises);
+      return galleryResults.map((result) => result.secure_url);
     }
     return [];
-};
+  }
 
-const _handleDeletedImages = async (deletedImageIds: string | string[] | undefined, propertyId: string) => {
+  private async handleDeletedImages(
+    deletedImageIds: string | string[] | undefined,
+    propertyId: string
+  ) {
     if (deletedImageIds) {
-        const idsToDelete = Array.isArray(deletedImageIds) ? deletedImageIds : [deletedImageIds];
-        if (idsToDelete.length > 0) {
-            await prisma.propertyImage.deleteMany({
-                where: { id: { in: idsToDelete }, propertyId: propertyId },
-            });
-        }
+      const idsToDelete = Array.isArray(deletedImageIds)
+        ? deletedImageIds
+        : [deletedImageIds];
+      if (idsToDelete.length > 0) {
+        await prisma.propertyImage.deleteMany({
+          where: { id: { in: idsToDelete }, propertyId: propertyId },
+        });
+      }
     }
-};
+  }
 
-export const TenantPropertyService = {
-    createProperty: async (
-        data: any,
-        tenantId: string,
-        files: { [fieldname: string]: Express.Multer.File[] }
-    ): Promise<Property> => {
-        const { name, categoryId, description, address, zipCode, amenityIds, cityId, latitude, longitude } = data;
-        
-        const mainImageUrl = await _uploadMainImage(files);
-        const galleryImageUrls = await _uploadGalleryImages(files);
+  public async createProperty(
+    data: any,
+    tenantId: string,
+    files: { [fieldname: string]: Express.Multer.File[] }
+  ): Promise<Property> {
+    const {
+      name,
+      categoryId,
+      description,
+      address,
+      zipCode,
+      amenityIds,
+      cityId,
+      latitude,
+      longitude,
+    } = data;
 
-        const propertyData = { 
-            name, 
-            description, 
-            address,
-            zipCode, 
-            mainImage: mainImageUrl,
-            latitude: latitude ? parseFloat(latitude) : undefined,
-            longitude: longitude ? parseFloat(longitude) : undefined,
-        };
+    const mainImageUrl = await this.uploadMainImage(files);
+    const galleryImageUrls = await this.uploadMultipleImages(files);
 
-        const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
+    const propertyData = {
+      name,
+      description,
+      address,
+      zipCode,
+      mainImage: mainImageUrl,
+      latitude: latitude ? parseFloat(latitude) : undefined,
+      longitude: longitude ? parseFloat(longitude) : undefined,
+    };
 
-        const newProperty = await PropertyRepository.create(
-            propertyData, tenantId, categoryId, cityId, amenityIdsArray
-        );
+    const amenityIdsArray = Array.isArray(amenityIds)
+      ? amenityIds
+      : amenityIds
+      ? [amenityIds]
+      : [];
 
-        if (galleryImageUrls.length > 0) {
-            await PropertyRepository.addGalleryImages(newProperty.id, galleryImageUrls);
-        }
+    const newProperty = await PropertyRepository.create(
+      propertyData,
+      tenantId,
+      categoryId,
+      cityId,
+      amenityIdsArray
+    );
 
-        return newProperty;
-    },
+    if (galleryImageUrls.length > 0) {
+      await PropertyRepository.addGalleryImages(
+        newProperty.id,
+        galleryImageUrls
+      );
+    }
 
-    getPropertiesByTenant: async (tenantId: string): Promise<Property[]> => {
-        return await PropertyRepository.findAllByTenantId(tenantId);
-    },
+    return newProperty;
+  }
 
-    getPropertyDetailForTenant: async (id: string, tenantId: string): Promise<Property> => {
-        const property = await PropertyRepository.findByIdAndTenantId(id, tenantId);
-        if (!property) {
-            throw new Error('Properti tidak ditemukan atau Anda tidak memiliki akses.');
-        }
-        return property;
-    },
+  public async getPropertiesByTenant(tenantId: string): Promise<Property[]> {
+    return await PropertyRepository.findAllByTenantId(tenantId);
+  }
 
-    updateProperty: async (
-        id: string,
-        tenantId: string,
-        data: any,
-        files?: { [fieldname: string]: Express.Multer.File[] }
-    ): Promise<Property> => {
-        await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
-        
-        const { amenityIds, deletedImageIds, latitude, longitude, address, ...propertyData } = data;
-        propertyData.address = address;
+  public async getPropertyDetailForTenant(
+    id: string,
+    tenantId: string
+  ): Promise<Property> {
+    const property = await PropertyRepository.findByIdAndTenantId(id, tenantId);
+    if (!property) {
+      throw new Error(
+        "Properti tidak ditemukan atau Anda tidak memiliki akses."
+      );
+    }
+    return property;
+  }
 
-        if (files) {
-            propertyData.mainImage = await _uploadMainImage(files) ?? propertyData.mainImage;
-            const newImageUrls = await _uploadGalleryImages(files);
-            if (newImageUrls.length > 0) {
-                await PropertyRepository.addGalleryImages(id, newImageUrls);
-            }
-        }
+  public async updateProperty(
+    id: string,
+    tenantId: string,
+    data: any,
+    files?: { [fieldname: string]: Express.Multer.File[] }
+  ): Promise<Property> {
+    await this.getPropertyDetailForTenant(id, tenantId);
 
-        if (latitude) {
-            propertyData.latitude = parseFloat(latitude);
-        }
-        if (longitude) {
-            propertyData.longitude = parseFloat(longitude);
-        }
+    const {
+      amenityIds,
+      deletedImageIds,
+      latitude,
+      longitude,
+      address,
+      ...propertyData
+    } = data;
+    propertyData.address = address;
 
-        await _handleDeletedImages(deletedImageIds, id);
-        const amenityIdsArray = Array.isArray(amenityIds) ? amenityIds : (amenityIds ? [amenityIds] : []);
-        return await PropertyRepository.update(id, propertyData, amenityIdsArray);
-    },
+    if (files) {
+      propertyData.mainImage =
+        (await this.uploadMainImage(files)) ?? propertyData.mainImage;
+      const newImageUrls = await this.uploadMultipleImages(files);
+      if (newImageUrls.length > 0) {
+        await PropertyRepository.addGalleryImages(id, newImageUrls);
+      }
+    }
 
-    deleteProperty: async (id: string, tenantId: string): Promise<Property> => {
-        await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
-        return await PropertyRepository.softDelete(id);
-    },
+    if (latitude) {
+      propertyData.latitude = parseFloat(latitude);
+    }
+    if (longitude) {
+      propertyData.longitude = parseFloat(longitude);
+    }
 
-    uploadPropertyImage: async (id: string, tenantId: string, file: Express.Multer.File): Promise<Property> => {
-        await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
-        const result = await uploadToCloudinary(file.buffer, 'property_images');
-        return await PropertyRepository.update(id, { mainImage: result.secure_url });
-    },
+    await this.handleDeletedImages(deletedImageIds, id);
+    const amenityIdsArray = Array.isArray(amenityIds)
+      ? amenityIds
+      : amenityIds
+      ? [amenityIds]
+      : [];
+    return await PropertyRepository.update(id, propertyData, amenityIdsArray);
+  }
 
-    uploadGalleryImages: async (id: string, tenantId: string, files: Express.Multer.File[]) => {
-        await TenantPropertyService.getPropertyDetailForTenant(id, tenantId);
-        const imageUrls = await _uploadGalleryImages({ galleryImages: files });
-        return await PropertyRepository.addGalleryImages(id, imageUrls);
-    },
-};
+  public async deleteProperty(id: string, tenantId: string): Promise<Property> {
+    await this.getPropertyDetailForTenant(id, tenantId);
+    return await PropertyRepository.softDelete(id);
+  }
+
+  public async uploadPropertyImage(
+    id: string,
+    tenantId: string,
+    file: Express.Multer.File
+  ): Promise<Property> {
+    await this.getPropertyDetailForTenant(id, tenantId);
+    const result = await uploadToCloudinary(file.buffer, "property_images");
+    return await PropertyRepository.update(id, {
+      mainImage: result.secure_url,
+    });
+  }
+
+  public async uploadGalleryImages(
+    id: string,
+    tenantId: string,
+    files: Express.Multer.File[]
+  ) {
+    await this.getPropertyDetailForTenant(id, tenantId);
+    const imageUrls = await this.uploadMultipleImages({
+      galleryImages: files,
+    });
+    return await PropertyRepository.addGalleryImages(id, imageUrls);
+  }
+}
+
+export default new TenantPropertyService();

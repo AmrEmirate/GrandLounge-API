@@ -1,8 +1,20 @@
-import { Router } from 'express';
-import { RoomAvailabilityController } from '../controllers/roomAvailability.controller';
+import { Router } from "express";
+import RoomAvailabilityController from "../controllers/roomAvailability.controller";
 
-const router = Router({ mergeParams: true });
+class RoomAvailabilityRouter {
+  public router: Router;
 
-router.post('/', RoomAvailabilityController.update);
+  constructor() {
+    this.router = Router({ mergeParams: true });
+    this.initializeRoutes();
+  }
 
-export default router;
+  private initializeRoutes() {
+    this.router.post(
+      "/",
+      RoomAvailabilityController.update.bind(RoomAvailabilityController)
+    );
+  }
+}
+
+export default new RoomAvailabilityRouter().router;

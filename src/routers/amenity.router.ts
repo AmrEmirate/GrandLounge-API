@@ -1,14 +1,24 @@
-import { Router } from 'express';
-import AmenityController from '../controllers/amenity.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '../../prisma/generated/client';
+import { Router } from "express";
+import AmenityController from "../controllers/amenity.controller";
+import { authMiddleware } from "../middleware/auth.middleware";
+import { UserRole } from "@prisma/client";
 
-const router = Router();
-const tenantOnly = authMiddleware([UserRole.TENANT]);
+class AmenityRouter {
+  public router: Router;
 
-router.post('/', tenantOnly, AmenityController.create);
-router.get('/', tenantOnly, AmenityController.getAll);
-router.patch('/:id', tenantOnly, AmenityController.update);
-router.delete('/:id', tenantOnly, AmenityController.delete);
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
 
-export default router;
+  private initializeRoutes() {
+    const tenantOnly = authMiddleware([UserRole.TENANT]);
+
+    this.router.post("/", tenantOnly, AmenityController.create);
+    this.router.get("/", tenantOnly, AmenityController.getAll);
+    this.router.patch("/:id", tenantOnly, AmenityController.update);
+    this.router.delete("/:id", tenantOnly, AmenityController.delete);
+  }
+}
+
+export default new AmenityRouter().router;

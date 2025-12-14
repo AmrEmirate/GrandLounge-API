@@ -1,22 +1,36 @@
-// src/routers/category.router.ts
-import { Router } from 'express';
-import CategoryController from '../controllers/category.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '../../prisma/generated/client';
+import { Router } from "express";
+import CategoryController from "../controllers/category.controller";
+import { authMiddleware } from "../middleware/auth.middleware";
+import { UserRole } from "@prisma/client";
+import { validate, CategoryValidator } from "../middleware/validators";
 
-const router = Router();
+class CategoryRouter {
+  public router: Router;
 
-const allAuthenticated = authMiddleware(); // Middleware untuk semua yang sudah login
-const tenantOnly = authMiddleware([UserRole.TENANT]); // Middleware khusus tenant
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
 
-// Endpoint ini sekarang bisa diakses semua user yang sudah login
-// Endpoint ini sekarang bisa diakses oleh publik
-router.get('/', CategoryController.getAll);
+  private initializeRoutes() {
+    const tenantOnly = authMiddleware([UserRole.TENANT]);
 
-// Endpoint ini tetap hanya untuk tenant
-router.post('/', tenantOnly, CategoryController.create);
-router.get('/:id', tenantOnly, CategoryController.getById);
-router.patch('/:id', tenantOnly, CategoryController.update);
-router.delete('/:id', tenantOnly, CategoryController.delete);
+    this.router.get("/", CategoryController.getAll);
+    this.router.post(
+      "/",
+      tenantOnly,
+      validate(CategoryValidator.create),
+      CategoryController.create
+    );
+    this.router.get("/:id", tenantOnly, CategoryController.getById);
+    this.router.patch(
+      "/:id",
+      tenantOnly,
+      validate(CategoryValidator.update),
+      CategoryController.update
+    );
+    this.router.delete("/:id", tenantOnly, CategoryController.delete);
+  }
+}
 
-export default router;
+export default new CategoryRouter().router;

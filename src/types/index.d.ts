@@ -1,15 +1,18 @@
 import { Request, Response, NextFunction } from "express";
-import { getAggregatedPropertyReport, getCalenderReport } from "../services/CalenderReport.service";
+import {
+  getAggregatedPropertyReport,
+  getCalenderReport,
+} from "../services/calenderReport.service";
 
 declare global {
   namespace Express {
     export interface User {
-      id: string; 
-      role: string; 
+      id: string;
+      role: string;
     }
 
     export interface Request {
-      user?: User; 
+      user?: User;
     }
   }
 }

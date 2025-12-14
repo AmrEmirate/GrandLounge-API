@@ -1,94 +1,97 @@
 import { Request, Response, NextFunction } from "express";
-import { getAggregatedPropertyReport, getCalenderReport } from "../services/CalenderReport.service";
+import CalenderReportService from "../services/calenderReport.service";
 import ApiError from "../utils/apiError";
 import { prisma } from "../config/prisma";
 
 export class CalenderReportController {
-    public async getAvailabilityReport(
-        req: Request,
-        res: Response,
-        next: NextFunction
-    ): Promise<void> {
-        try {
-            if (!res.locals.descript || !res.locals.descript.id) {
-                throw new ApiError(401, "Unauthorized: User data not found in token.");
-            }
-            
-            const userId = res.locals.descript.id;
-            const tenant = await prisma.tenant.findUnique({
-                where: { userId: userId },
-                select: { id: true }
-            });
+  public async getAvailabilityReport(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      if (!res.locals.descript || !res.locals.descript.id) {
+        throw new ApiError(401, "Unauthorized: User data not found in token.");
+      }
 
-            if (!tenant) {
-                throw new ApiError(403, "Tenant data not found for this user.");
-            }
-            const tenantId = tenant.id;
+      const userId = res.locals.descript.id;
+      const tenant = await prisma.tenant.findUnique({
+        where: { userId: userId },
+        select: { id: true },
+      });
 
-            const { propertyId, roomId } = req.params;
-            const { startDate, endDate } = req.query;
+      if (!tenant) {
+        throw new ApiError(403, "Tenant data not found for this user.");
+      }
+      const tenantId = tenant.id;
 
-            if (!startDate || !endDate) {
-                throw new ApiError(400, "startDate and endDate are required.");
-            }
+      const { propertyId, roomId } = req.params;
+      const { startDate, endDate } = req.query;
 
-            const reportData = await getCalenderReport(
-                tenantId,
-                propertyId as string,
-                roomId as string,
-                new Date(startDate as string),
-                new Date(endDate as string)
-            );
+      if (!startDate || !endDate) {
+        throw new ApiError(400, "startDate and endDate are required.");
+      }
 
-            res.status(200).json({
-                success: true,
-                message: "Laporan ketersediaan properti berhasil diambil.",
-                data: reportData
-            });
-        } catch (error) {
-            next(error);
-        }
+      const reportData = await CalenderReportService.getCalenderReport(
+        tenantId,
+        propertyId as string,
+        roomId as string,
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Laporan ketersediaan properti berhasil diambil.",
+        data: reportData,
+      });
+    } catch (error) {
+      next(error);
     }
+  }
 
-    public async getPropertyReport(req: Request, res: Response, next: NextFunction): Promise<void> {
-        try {
-            if (!res.locals.descript || !res.locals.descript.id) {
-                throw new ApiError(401, "Unauthorized: User data not found in token.");
-            }
+  public async getPropertyReport(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      if (!res.locals.descript || !res.locals.descript.id) {
+        throw new ApiError(401, "Unauthorized: User data not found in token.");
+      }
 
-            const userId = res.locals.descript.id;
-            const tenant = await prisma.tenant.findUnique({
-                where: { userId: userId }, // Gunakan userId, bukan seluruh objek user
-                select: { id: true }
-            });
+      const userId = res.locals.descript.id;
+      const tenant = await prisma.tenant.findUnique({
+        where: { userId: userId },
+        select: { id: true },
+      });
 
-            if (!tenant) {
-                throw new ApiError(403, "Tenant data not found for this user.");
-            }
-            const tenantId = tenant.id;
+      if (!tenant) {
+        throw new ApiError(403, "Tenant data not found for this user.");
+      }
+      const tenantId = tenant.id;
 
-            const { propertyId } = req.params;
-            const { startDate, endDate } = req.query;
+      const { propertyId } = req.params;
+      const { startDate, endDate } = req.query;
 
-            if (!startDate || !endDate) {
-                throw new ApiError(400, "startDate and endDate are required.");
-            }
+      if (!startDate || !endDate) {
+        throw new ApiError(400, "startDate and endDate are required.");
+      }
+      const reportData =
+        await CalenderReportService.getAggregatedPropertyReport(
+          tenant.id,
+          propertyId,
+          new Date(startDate as string),
+          new Date(endDate as string)
+        );
 
-            // Panggil service yang benar untuk data agregat
-            const reportData = await getAggregatedPropertyReport(
-                tenant.id,
-                propertyId,
-                new Date(startDate as string),
-                new Date(endDate as string)
-            );
-
-            res.status(200).json({
-                success: true,
-                message: "Laporan ketersediaan properti berhasil diambil.",
-                data: reportData
-            });
-        } catch (error) {
-            next(error);
-        }
+      res.status(200).json({
+        success: true,
+        message: "Laporan ketersediaan properti berhasil diambil.",
+        data: reportData,
+      });
+    } catch (error) {
+      next(error);
     }
+  }
 }

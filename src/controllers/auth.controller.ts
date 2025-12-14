@@ -12,7 +12,6 @@ class AuthController {
             next(error);
         }
     }
-//
     public async registerTenant(req: Request, res: Response, next: NextFunction) {
         try {
             const tenant = await AuthService.registerTenant(req.body);
@@ -54,7 +53,6 @@ class AuthController {
         try {
             await AuthService.requestPasswordReset(req.body.email);
         } catch (error) {
-            // Sengaja dikosongkan agar tidak memberitahu apakah email ada atau tidak
         } finally {
             res.status(200).json({ message: 'Jika email terdaftar dan menggunakan password, kami akan mengirimkan link reset.' });
         }

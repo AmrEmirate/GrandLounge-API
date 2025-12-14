@@ -1,76 +1,98 @@
-import { prisma } from '../config/prisma';
-import { comparePassword, hashPassword } from '../utils/hashing';
-import { uploadToCloudinary } from '../utils/cloudinary';
-import { TokenService } from './token.service';
+import { prisma } from "../config/prisma";
+import { comparePassword, hashPassword } from "../utils/hashing";
+import { uploadToCloudinary } from "../utils/cloudinary";
+import { TokenService } from "./token.service";
 
-const _buildUpdateData = async (data: any, file?: Express.Multer.File) => {
+class UserService {
+  private async buildUpdateData(data: any, file?: Express.Multer.File) {
     const updateData: any = {};
     if (data.fullName) {
-        updateData.fullName = data.fullName;
+      updateData.fullName = data.fullName;
     }
     if (file) {
-        const result = await uploadToCloudinary(file.buffer, 'profile_pictures');
-        updateData.profilePicture = result.secure_url;
+      const result = await uploadToCloudinary(file.buffer, "profile_pictures");
+      updateData.profilePicture = result.secure_url;
     }
     return updateData;
-};
+  }
 
-const _verifyOldPassword = async (userId: string, oldPass: string) => {
+  private async verifyOldPassword(userId: string, oldPass: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.password) {
-        throw new Error('User tidak ditemukan atau tidak menggunakan password.');
+      throw new Error("User tidak ditemukan atau tidak menggunakan password.");
     }
     const isPasswordValid = await comparePassword(oldPass, user.password);
     if (!isPasswordValid) {
-        throw new Error('Password lama salah.');
+      throw new Error("Password lama salah.");
     }
-};
+  }
 
-export const UserService = {
-    updateProfile: async (userId: string, data: any, file?: Express.Multer.File) => {
-        const updateData = await _buildUpdateData(data, file);
-        return await prisma.user.update({
-            where: { id: userId },
-            data: updateData,
-            select: {
-                id: true, fullName: true, email: true,
-                profilePicture: true, verified: true,
-            },
-        });
-    },
-
-    updatePassword: async (userId: string, data: any) => {
-        const { oldPassword, newPassword } = data;
-        await _verifyOldPassword(userId, oldPassword);
-        const hashedPassword = await hashPassword(newPassword);
-        await prisma.user.update({
-            where: { id: userId },
-            data: { password: hashedPassword },
-        });
-    },
-
-    requestEmailChange: async (userId: string, newEmail: string) => {
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (!user) throw new Error('User tidak ditemukan.');
-
-        const existingEmail = await prisma.user.findUnique({ where: { email: newEmail } });
-        if (existingEmail) throw new Error('Email baru sudah terdaftar oleh pengguna lain.');
-
-        const token = await TokenService.createToken(userId, 'EMAIL_CHANGE');
-        await TokenService.sendTokenEmail(user, token, 'EMAIL_CHANGE', { newEmail });
-    },
-
-    confirmEmailChange: async (token: string, newEmail: string) => {
-    const userId = await TokenService.validateAndUseToken(token, 'EMAIL_CHANGE');
-    const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: { email: newEmail, verified: false }, // Email diperbarui di sini
+  public async updateProfile(
+    userId: string,
+    data: any,
+    file?: Express.Multer.File
+  ) {
+    const updateData = await this.buildUpdateData(data, file);
+    return await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        profilePicture: true,
+        verified: true,
+      },
     });
+  }
 
-    // Membuat token baru untuk verifikasi email BARU
-    const verificationToken = await TokenService.createToken(userId, 'EMAIL_VERIFICATION');
-    await TokenService.sendTokenEmail(updatedUser, verificationToken, 'EMAIL_VERIFICATION');
+  public async updatePassword(userId: string, data: any) {
+    const { oldPassword, newPassword } = data;
+    await this.verifyOldPassword(userId, oldPassword);
+    const hashedPassword = await hashPassword(newPassword);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+  }
+
+  public async requestEmailChange(userId: string, newEmail: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("User tidak ditemukan.");
+
+    const existingEmail = await prisma.user.findUnique({
+      where: { email: newEmail },
+    });
+    if (existingEmail)
+      throw new Error("Email baru sudah terdaftar oleh pengguna lain.");
+
+    const token = await TokenService.createToken(userId, "EMAIL_CHANGE");
+    await TokenService.sendTokenEmail(user, token, "EMAIL_CHANGE", {
+      newEmail,
+    });
+  }
+
+  public async confirmEmailChange(token: string, newEmail: string) {
+    const userId = await TokenService.validateAndUseToken(
+      token,
+      "EMAIL_CHANGE"
+    );
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { email: newEmail, verified: false },
+    });
+    const verificationToken = await TokenService.createToken(
+      userId,
+      "EMAIL_VERIFICATION"
+    );
+    await TokenService.sendTokenEmail(
+      updatedUser,
+      verificationToken,
+      "EMAIL_VERIFICATION"
+    );
 
     return updatedUser;
-},
-};
+  }
+}
+
+export default new UserService();

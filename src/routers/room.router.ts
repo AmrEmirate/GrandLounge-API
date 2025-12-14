@@ -1,26 +1,45 @@
-// src/routers/room.router.ts
+import { Router } from "express";
+import RoomController from "../controllers/room.controller";
+import roomAvailabilityRouter from "./roomAvailability.router";
+import { authMiddleware } from "../middleware/auth.middleware";
+import { UserRole } from "@prisma/client";
+import { validate, RoomValidator } from "../middleware/validators";
 
-import { Router } from 'express';
-import RoomController from '../controllers/room.controller';
-import roomAvailabilityRouter from './roomAvailability.router';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '../../prisma/generated/client';
+class RoomRouter {
+  public router: Router;
 
-const router = Router({ mergeParams: true });
-const tenantOnly = authMiddleware([UserRole.TENANT]);
+  constructor() {
+    this.router = Router({ mergeParams: true });
+    this.initializeRoutes();
+  }
 
-router.get(
-  '/:roomId/availability-by-month',
-  tenantOnly,
-  RoomController.getMonthlyAvailability
-);
+  private initializeRoutes() {
+    const tenantOnly = authMiddleware([UserRole.TENANT]);
 
-router.post('/', tenantOnly, RoomController.create);
-router.get('/', tenantOnly, RoomController.getAllByProperty);
-router.get('/:roomId', tenantOnly, RoomController.getById);
-router.patch('/:roomId', tenantOnly, RoomController.update);
-router.delete('/:roomId', tenantOnly, RoomController.delete);
+    this.router.get(
+      "/:roomId/availability-by-month",
+      tenantOnly,
+      RoomController.getMonthlyAvailability
+    );
 
-router.use('/:roomId/availability', roomAvailabilityRouter);
+    this.router.post(
+      "/",
+      tenantOnly,
+      validate(RoomValidator.create),
+      RoomController.create
+    );
+    this.router.get("/", tenantOnly, RoomController.getAllByProperty);
+    this.router.get("/:roomId", tenantOnly, RoomController.getById);
+    this.router.patch(
+      "/:roomId",
+      tenantOnly,
+      validate(RoomValidator.update),
+      RoomController.update
+    );
+    this.router.delete("/:roomId", tenantOnly, RoomController.delete);
 
-export default router;
+    this.router.use("/:roomId/availability", roomAvailabilityRouter);
+  }
+}
+
+export default new RoomRouter().router;

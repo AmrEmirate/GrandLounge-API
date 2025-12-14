@@ -1,10 +1,14 @@
 import cron from "node-cron";
-import { sendDailyReminders } from "../services/OrderReminder.service";
+import OrderReminderService from "../services/orderReminder.service";
+import logger from "../utils/logger";
 
 export const startReminderScheduler = () => {
-    cron.schedule("0 8 * * *", async () => {
-        console.log("Running H-1 check-in reminders...");
-        try { await sendDailyReminders(); }
-        catch (error) { console.error("Error sending daily reminders:", error); }
-    });
+  cron.schedule("0 8 * * *", async () => {
+    logger.info("Running H-1 check-in reminders...");
+    try {
+      await OrderReminderService.sendDailyReminders();
+    } catch (error) {
+      logger.error(`Error sending daily reminders: ${error}`);
+    }
+  });
 };

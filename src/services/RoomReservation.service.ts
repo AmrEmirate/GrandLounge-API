@@ -1,95 +1,121 @@
-import { BookingStatus } from "../../prisma/generated/client";
-import ReservationRepositori from "../repositories/RoomReservation.repositori";
+import { BookingStatus } from "@prisma/client";
+import ReservationRepositori from "../repositories/roomReservation.repository";
 import ApiError from "../utils/apiError";
 import crypto from "crypto";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../config/prisma";
 
-const reservationRepo = new ReservationRepositori();
+class RoomReservationService {
+  private reservationRepo: ReservationRepositori;
 
-export const createReservationService = async (
+  constructor() {
+    this.reservationRepo = new ReservationRepositori();
+  }
+
+  public async createReservation(
     propertyId: string,
     roomName: string,
     checkIn: Date,
     checkOut: Date,
-    guestInfo: { name: string; email: string; password?: string; },
-) => {
+    guestInfo: { name: string; email: string; password?: string }
+  ) {
     if (checkOut <= checkIn) {
-        throw new ApiError(400, "End date must be after start date");
+      throw new ApiError(400, "End date must be after start date");
     }
 
-    console.log("--- DEBUGGING RESERVASI ---");
-    console.log("Mencari kamar dengan NAMA:", roomName);
-    console.log("Di dalam PROPERTI ID:", propertyId);
-
-    const room = await reservationRepo.findRoomByName(propertyId, roomName);
+    const room = await this.reservationRepo.findRoomByName(
+      propertyId,
+      roomName
+    );
     if (!room) {
-        throw new ApiError(404, `Kamar dengan nama "${roomName}" tidak ditemukan di properti ini.`);
+      throw new ApiError(
+        404,
+        `Kamar dengan nama "${roomName}" tidak ditemukan di properti ini.`
+      );
     }
 
-    const user = await reservationRepo.findOrCreateAccount(guestInfo);
+    const user = await this.reservationRepo.findOrCreateAccount(guestInfo);
 
-    const durationDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / 86_400_000);
+    const durationDays = Math.ceil(
+      (checkOut.getTime() - checkIn.getTime()) / 86_400_000
+    );
     const totalPrice = room.basePrice * durationDays;
-    const reservationId = uuidv4(); 
-    const invoiceNumber = `INV-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+    const reservationId = uuidv4();
+    const invoiceNumber = `INV-${Date.now()}-${crypto
+      .randomBytes(4)
+      .toString("hex")}`;
 
     const newBooking = await prisma.$transaction(async (tx) => {
-        const isAvailable = await reservationRepo.checkRoomAvailability(room.id, checkIn, checkOut, tx);
-        if (!isAvailable) {
-            throw new ApiError(400, "Kamar ini tidak tersedia pada tanggal yang dipilih.");
-        }
+      const isAvailable = await this.reservationRepo.checkRoomAvailability(
+        room.id,
+        checkIn,
+        checkOut,
+        tx
+      );
+      if (!isAvailable) {
+        throw new ApiError(
+          400,
+          "Kamar ini tidak tersedia pada tanggal yang dipilih."
+        );
+      }
 
-        const booking = await tx.booking.create({
-            data: {
-                invoiceNumber,
-                reservationId,
-                checkIn: checkIn,
-                checkOut: checkOut,
-                totalPrice,
-                status: BookingStatus.MENUNGGU_PEMBAYARAN,
-                paymentDeadline: new Date(Date.now() + 1 * 60 * 60 * 1000),
-                user: { connect: { id: user.id } },
-                property: { connect: { id: room.propertyId } },
-            },
-        });
+      const booking = await tx.booking.create({
+        data: {
+          invoiceNumber,
+          reservationId,
+          checkIn: checkIn,
+          checkOut: checkOut,
+          totalPrice,
+          status: BookingStatus.MENUNGGU_PEMBAYARAN,
+          paymentDeadline: new Date(Date.now() + 1 * 60 * 60 * 1000),
+          user: { connect: { id: user.id } },
+          property: { connect: { id: room.propertyId } },
+        },
+      });
 
-        await tx.bookingRoom.create({
-            data: {
-                bookingId: booking.id,
-                roomId: room.id,
-                guestCount: 1,
-                pricePerNight: room.basePrice,
-                numberOfNights: durationDays,
-                totalPrice: totalPrice,
-            },
-        });
+      await tx.bookingRoom.create({
+        data: {
+          bookingId: booking.id,
+          roomId: room.id,
+          guestCount: 1,
+          pricePerNight: room.basePrice,
+          numberOfNights: durationDays,
+          totalPrice: totalPrice,
+        },
+      });
 
-        return booking;
+      return booking;
     });
 
-        return newBooking;
-    
-};
+    return newBooking;
+  }
 
-export const getUserReservationsService = async (userId: string) => {
-    const reservation = await reservationRepo.findTransactionByAccountId(userId);
-    return reservation;
-};
+  public async getUserReservations(userId: string) {
+    return await this.reservationRepo.findTransactionByAccountId(userId);
+  }
 
-// dapat melihat detaol reservasi berdasarkan Nama
-export const getReservationByNameService = async (roomName: string, userId: string) => {
-    const reservation = await reservationRepo.findTransactionByRoomName(roomName, userId);
+  public async getReservationByName(roomName: string, userId: string) {
+    const reservation = await this.reservationRepo.findTransactionByRoomName(
+      roomName,
+      userId
+    );
     if (!reservation || reservation.userId !== userId) {
-        throw new ApiError(404, `Reservasi untuk kamar dengan nama "${roomName}" tidak ditemukan.`);
+      throw new ApiError(
+        404,
+        `Reservasi untuk kamar dengan nama "${roomName}" tidak ditemukan.`
+      );
     }
     return reservation;
-};
+  }
 
-// tenant dapat mengubah status reservasi
-export const updateReservationStatusService = async (
+  public async updateReservationStatus(
     bookingId: string,
-    newStatus: BookingStatus,
-) => {
-    return reservationRepo.updateTransaction(bookingId, { status: newStatus });
-};
+    newStatus: BookingStatus
+  ) {
+    return this.reservationRepo.updateTransaction(bookingId, {
+      status: newStatus,
+    });
+  }
+}
+
+export default new RoomReservationService();

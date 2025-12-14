@@ -1,64 +1,68 @@
-
 import { prisma } from "../config/prisma";
-import OrderListRepositroy from "../repositories/OrderList.repositori";
+import OrderListRepositroy from "../repositories/orderList.repository";
 import ApiError from "../utils/apiError";
 
-export const OrderListService = async (
+class OrderListService {
+  private orderRepo: OrderListRepositroy;
+
+  constructor() {
+    this.orderRepo = new OrderListRepositroy();
+  }
+
+  public async getOrderList(
     userId: string,
     filter: {
-        searchQuery?: string;
-        propertyName?: string;
-        checkIn?: Date;
+      searchQuery?: string;
+      propertyName?: string;
+      checkIn?: Date;
     }
-) => {
-    try {
-        const orderRepo = new OrderListRepositroy();
+  ) {
+    const orderList = await this.orderRepo.findReservationByFilter(
+      userId,
+      filter
+    );
+    return orderList;
+  }
 
-        const orderList = await orderRepo.findReservationByFilter(userId, filter);
-
-        return orderList;
-    } catch (error) {
-        throw error;
-    }
-}
-
-export const getTenantTransactionsService = async (
+  public async getTenantTransactions(
     tenantId: string,
     filter: {
-        checkIn?: Date;
-        searchQuery?: string;
-        status?: any;
-        propertyId?: string;
+      checkIn?: Date;
+      searchQuery?: string;
+      status?: any;
+      propertyId?: string;
     }
-) => {
-    try {
-        const orderRepo = new OrderListRepositroy();
-        const transactions = await orderRepo.findTransactionsByFilterForTenant(tenantId, filter);
-        return transactions;
-    } catch (error) {
-        throw error;
-    }
-};
+  ) {
+    const transactions = await this.orderRepo.findTransactionsByFilterForTenant(
+      tenantId,
+      filter
+    );
+    return transactions;
+  }
 
-export const completeOrderService = async (userId: string, bookingId: string) => {
-    const orderRepo = new OrderListRepositroy();
+  public async completeOrder(userId: string, bookingId: string) {
     const booking = await prisma.booking.findFirst({
-        where: { id: bookingId, userId: userId },
+      where: { id: bookingId, userId: userId },
     });
 
-    if (!booking) throw new ApiError(404, "Booking not found or you are not the owner.");
-    if (booking.status !== "DIPROSES") throw new ApiError(400, "Only in-process bookings can be completed.");
+    if (!booking)
+      throw new ApiError(404, "Booking not found or you are not the owner.");
+    if (booking.status !== "DIPROSES")
+      throw new ApiError(400, "Only in-process bookings can be completed.");
 
-    const updatedBooking = await orderRepo.updateBookingStatus(bookingId, "SELESAI");
+    const updatedBooking = await this.orderRepo.updateBookingStatus(
+      bookingId,
+      "SELESAI"
+    );
     return updatedBooking;
-};
+  }
 
-export const getPendingConfirmationService = async (tenantId: string) => {
-    try {
-        const orderRepo = new OrderListRepositroy();
-        const transactions = await orderRepo.findPendingConfirmationForTenant(tenantId);
-        return transactions;
-    } catch (error) {
-        throw error;
-    }
-};
+  public async getPendingConfirmation(tenantId: string) {
+    const transactions = await this.orderRepo.findPendingConfirmationForTenant(
+      tenantId
+    );
+    return transactions;
+  }
+}
+
+export default new OrderListService();

@@ -65,7 +65,7 @@ class PeakSeasonController {
   public async delete(req: Request, res: Response, next: NextFunction) {
       try {
           await PeakSeasonService.deleteSeason(req.params.id);
-          res.status(200).json({ message: 'Peak season berhasil dihapus.' }); // Mengubah dari 204 menjadi 200 dengan pesan
+          res.status(200).json({ message: 'Peak season berhasil dihapus.' });
       } catch (error) {
           next(error);
       }

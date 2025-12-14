@@ -1,25 +1,38 @@
-import { Router } from 'express';
-import { authMiddleware } from '../middleware/auth.middleware';
-import upload from '../middleware/upload.middleware';
-import { UserController } from '../controllers/user.controller';
+import { Router } from "express";
+import { authMiddleware } from "../middleware/auth.middleware";
+import upload from "../middleware/upload.middleware";
+import UserController from "../controllers/user.controller";
 
-const router = Router();
+class UserRouter {
+  public router: Router;
 
-// Endpoint untuk memperbarui data teks (JSON) atau gambar (form-data)
-router.patch(
-  '/profile',
-  authMiddleware(),
-  upload.single('profilePicture'),
-  UserController.updateProfile
-);
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
 
-// Endpoint khusus untuk memperbarui password
-router.patch('/password', authMiddleware(), UserController.updatePassword);
+  private initializeRoutes() {
+    this.router.patch(
+      "/profile",
+      authMiddleware(),
+      upload.single("profilePicture"),
+      UserController.updateProfile.bind(UserController)
+    );
+    this.router.patch(
+      "/password",
+      authMiddleware(),
+      UserController.updatePassword.bind(UserController)
+    );
+    this.router.post(
+      "/request-email-change",
+      authMiddleware(),
+      UserController.requestEmailChange.bind(UserController)
+    );
+    this.router.post(
+      "/confirm-email-change",
+      UserController.confirmEmailChange.bind(UserController)
+    );
+  }
+}
 
-// Endpoint untuk memulai proses ganti email
-router.post('/request-email-change', authMiddleware(), UserController.requestEmailChange);
-
-// Endpoint publik untuk mengkonfirmasi perubahan email via token
-router.post('/confirm-email-change', UserController.confirmEmailChange);
-
-export default router;
+export default new UserRouter().router;

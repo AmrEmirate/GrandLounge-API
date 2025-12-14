@@ -1,35 +1,35 @@
 import { Request, Response, NextFunction } from "express";
-import { uploadPaymentService } from "../services/UploadPayment.service";
+import UploadPaymentService from "../services/uploadPayment.service";
 import ApiError from "../utils/apiError";
 
 class UploadPaymentController {
-    public async uploadPaymentProof(
-        req: Request,
-        res: Response,
-        next: NextFunction
-    ): Promise<void> {
-        try {
-            const invoiceNumber = req.params.invoiceNumber;
-            const file = req.file;
+  public async uploadPaymentProof(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const invoiceNumber = req.params.invoiceNumber;
+      const file = req.file;
 
-            if (!invoiceNumber) {
-                throw new ApiError(400, "Invoice number is required");
-            }
+      if (!invoiceNumber) {
+        throw new ApiError(400, "Invoice number is required");
+      }
 
-            if (!file) {
-                throw new ApiError(400, "File is required")
-            }
+      if (!file) {
+        throw new ApiError(400, "File is required");
+      }
 
-            await uploadPaymentService(invoiceNumber, file);
+      await UploadPaymentService.uploadPayment(invoiceNumber, file);
 
-            res.status(200).json({
-                success: true,
-                message: "Payment proof uploaded successfully",
-            });
-        } catch (error: any) {
-            next(error);
-        }
+      res.status(200).json({
+        success: true,
+        message: "Payment proof uploaded successfully",
+      });
+    } catch (error: any) {
+      next(error);
     }
+  }
 }
 
 export default UploadPaymentController;

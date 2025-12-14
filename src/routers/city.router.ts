@@ -1,20 +1,24 @@
-// src/routers/city.router.ts
-import { Router } from 'express';
-import CityController from '../controllers/city.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { UserRole } from '../../prisma/generated/client';
+import { Router } from "express";
+import CityController from "../controllers/city.controller";
+import { authMiddleware } from "../middleware/auth.middleware";
+import { UserRole } from "@prisma/client";
 
-const router = Router();
+class CityRouter {
+  public router: Router;
 
-const allAuthenticated = authMiddleware(); // Middleware untuk semua yang sudah login
-const tenantOnly = authMiddleware([UserRole.TENANT]); // Middleware khusus tenant
+  constructor() {
+    this.router = Router();
+    this.initializeRoutes();
+  }
 
-// Endpoint publik untuk mengambil semua kota
-router.get('/', CityController.getAll);
+  private initializeRoutes() {
+    const tenantOnly = authMiddleware([UserRole.TENANT]);
 
-// Endpoint terproteksi hanya untuk tenant
-router.post('/', tenantOnly, CityController.create);
-router.patch('/:id', tenantOnly, CityController.update);
-router.delete('/:id', tenantOnly, CityController.delete);
+    this.router.get("/", CityController.getAll);
+    this.router.post("/", tenantOnly, CityController.create);
+    this.router.patch("/:id", tenantOnly, CityController.update);
+    this.router.delete("/:id", tenantOnly, CityController.delete);
+  }
+}
 
-export default router;
+export default new CityRouter().router;

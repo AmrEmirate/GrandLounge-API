@@ -1,9 +1,13 @@
-import { prisma } from '../config/prisma';
-import { RoomAvailability, Prisma } from '../../prisma/generated/client';
-import { startOfMonth, endOfMonth } from 'date-fns';
+import { prisma } from "../config/prisma";
+import { RoomAvailability, Prisma } from "@prisma/client";
+import { startOfMonth, endOfMonth } from "date-fns";
 
-export const RoomAvailabilityRepository = {
-  findForMonth: async (roomId: string, month: number, year: number): Promise<RoomAvailability[]> => {
+class RoomAvailabilityRepository {
+  async findForMonth(
+    roomId: string,
+    month: number,
+    year: number
+  ): Promise<RoomAvailability[]> {
     const startDate = startOfMonth(new Date(year, month - 1));
     const endDate = endOfMonth(new Date(year, month - 1));
 
@@ -16,11 +20,11 @@ export const RoomAvailabilityRepository = {
         },
       },
     });
-  },
+  }
 
-  upsertMany: async (
-    data: Prisma.RoomAvailabilityCreateManyInput[],
-  ): Promise<void> => {
+  async upsertMany(
+    data: Prisma.RoomAvailabilityCreateManyInput[]
+  ): Promise<void> {
     const operations = data.map((item) =>
       prisma.roomAvailability.upsert({
         where: {
@@ -39,16 +43,16 @@ export const RoomAvailabilityRepository = {
           price: item.price,
           isAvailable: item.isAvailable,
         },
-      }),
+      })
     );
     await prisma.$transaction(operations);
-  },
+  }
 
-  findManyByRoomIdAndDateRange: async (
+  async findManyByRoomIdAndDateRange(
     roomId: string,
     startDate: Date,
-    endDate: Date,
-  ): Promise<RoomAvailability[]> => {
+    endDate: Date
+  ): Promise<RoomAvailability[]> {
     return prisma.roomAvailability.findMany({
       where: {
         roomId: roomId,
@@ -58,8 +62,10 @@ export const RoomAvailabilityRepository = {
         },
       },
       orderBy: {
-        date: 'asc',
+        date: "asc",
       },
     });
-  },
-};
+  }
+}
+
+export default new RoomAvailabilityRepository();

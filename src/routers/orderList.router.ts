@@ -1,50 +1,48 @@
 import { Router } from "express";
-import OrderListController from "../controllers/OrderList.controller";
-import { verifyToken } from "../middleware/verifyToken";
-import { isUser } from "../middleware/isUser";
-import { isTenant } from "../middleware/isTenant";
+import OrderListController from "../controllers/orderList.controller";
+import { verifyToken, isUser, isTenant } from "../middleware/auth.middleware";
 
 export default class OrderListRouter {
-    private router: Router;
-    private orderList: OrderListController;
+  private router: Router;
+  private orderList: OrderListController;
 
-    constructor() {
-        this.router = Router();
-        this.orderList = new OrderListController();
-        this.initializeRoutes();
-    }
+  constructor() {
+    this.router = Router();
+    this.orderList = new OrderListController();
+    this.initializeRoutes();
+  }
 
-    private initializeRoutes() {
-        this.router.get(
-            "/order-list",
-            verifyToken,
-            isUser,
-            this.orderList.orderList
-        );
+  private initializeRoutes() {
+    this.router.get(
+      "/order-list",
+      verifyToken,
+      isUser,
+      this.orderList.orderList
+    );
 
-        this.router.get(
-            "/tenant-transactions/pending",
-            verifyToken,
-            isTenant,
-            this.orderList.pendingConfirmationList
-        );
+    this.router.get(
+      "/tenant-transactions/pending",
+      verifyToken,
+      isTenant,
+      this.orderList.pendingConfirmationList
+    );
 
-        this.router.patch(
-            "/:bookingId/complete",
-            verifyToken,
-            isUser,
-            this.orderList.completeOrder
-        );
+    this.router.patch(
+      "/:bookingId/complete",
+      verifyToken,
+      isUser,
+      this.orderList.completeOrder
+    );
 
-        this.router.get(
-            "/tenant-transactions", 
-            verifyToken,
-            isTenant,
-            this.orderList.tenantTransactionList
-        );
-    }
+    this.router.get(
+      "/tenant-transactions",
+      verifyToken,
+      isTenant,
+      this.orderList.tenantTransactionList
+    );
+  }
 
-    public getRouter(): Router {
-        return this.router;
-    }
+  public getRouter(): Router {
+    return this.router;
+  }
 }
