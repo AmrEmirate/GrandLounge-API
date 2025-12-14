@@ -63,5 +63,8 @@
   },
   "overrides": {
     "passport": "^0.7.0"
+  },
+  "prisma": {
+    "seed": "npx ts-node prisma/seed.ts"
   }
 }
