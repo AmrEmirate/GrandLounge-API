@@ -116,5 +116,4 @@ class TokenServiceClass {
   }
 }
 
-export const TokenService = new TokenServiceClass();
-export default TokenService;
+export default new TokenServiceClass();

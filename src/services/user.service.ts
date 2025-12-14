@@ -1,7 +1,7 @@
 import { prisma } from "../config/prisma";
 import { comparePassword, hashPassword } from "../utils/hashing";
 import { uploadToCloudinary } from "../utils/cloudinary";
-import { TokenService } from "./token.service";
+import TokenService from "./token.service";
 
 class UserService {
   private async buildUpdateData(data: any, file?: Express.Multer.File) {

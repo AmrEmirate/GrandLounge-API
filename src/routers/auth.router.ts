@@ -18,44 +18,48 @@ class AuthRouter {
     this.router.post(
       "/register/user",
       validate(AuthValidator.registerUser),
-      AuthController.register
+      AuthController.register.bind(AuthController)
     );
     this.router.post(
       "/register/tenant",
       validate(AuthValidator.registerTenant),
-      AuthController.registerTenant
+      AuthController.registerTenant.bind(AuthController)
     );
     this.router.post(
       "/verify",
       validate(AuthValidator.verify),
-      AuthController.verifyAndSetPassword
+      AuthController.verifyAndSetPassword.bind(AuthController)
     );
     this.router.post(
       "/resend-verification",
       validate(AuthValidator.resendVerification),
-      AuthController.resendVerification
+      AuthController.resendVerification.bind(AuthController)
     );
     this.router.post(
       "/login",
       authLimiter,
       validate(AuthValidator.login),
-      AuthController.login
+      AuthController.login.bind(AuthController)
     );
     this.router.post(
       "/password-reset/request",
       validate(AuthValidator.requestPasswordReset),
-      AuthController.requestPasswordReset
+      AuthController.requestPasswordReset.bind(AuthController)
     );
     this.router.post(
       "/password-reset/confirm",
       validate(AuthValidator.confirmPasswordReset),
-      AuthController.resetPassword
+      AuthController.resetPassword.bind(AuthController)
     );
     this.router.post(
       "/confirm-email-change",
-      AuthController.confirmEmailChange
+      AuthController.confirmEmailChange.bind(AuthController)
     );
-    this.router.get("/profile", authMiddleware(), AuthController.getProfile);
+    this.router.get(
+      "/profile",
+      authMiddleware(),
+      AuthController.getProfile.bind(AuthController)
+    );
     this.router.get(
       "/google",
       passport.authenticate("google", { scope: ["profile", "email"] })

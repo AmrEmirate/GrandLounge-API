@@ -19,24 +19,36 @@ class RoomRouter {
     this.router.get(
       "/:roomId/availability-by-month",
       tenantOnly,
-      RoomController.getMonthlyAvailability
+      RoomController.getMonthlyAvailability.bind(RoomController)
     );
 
     this.router.post(
       "/",
       tenantOnly,
       validate(RoomValidator.create),
-      RoomController.create
+      RoomController.create.bind(RoomController)
     );
-    this.router.get("/", tenantOnly, RoomController.getAllByProperty);
-    this.router.get("/:roomId", tenantOnly, RoomController.getById);
+    this.router.get(
+      "/",
+      tenantOnly,
+      RoomController.getAllByProperty.bind(RoomController)
+    );
+    this.router.get(
+      "/:roomId",
+      tenantOnly,
+      RoomController.getById.bind(RoomController)
+    );
     this.router.patch(
       "/:roomId",
       tenantOnly,
       validate(RoomValidator.update),
-      RoomController.update
+      RoomController.update.bind(RoomController)
     );
-    this.router.delete("/:roomId", tenantOnly, RoomController.delete);
+    this.router.delete(
+      "/:roomId",
+      tenantOnly,
+      RoomController.delete.bind(RoomController)
+    );
 
     this.router.use("/:roomId/availability", roomAvailabilityRouter);
   }

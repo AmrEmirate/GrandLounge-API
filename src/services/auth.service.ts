@@ -2,7 +2,7 @@ import { prisma } from "../config/prisma";
 import { User, UserRole } from "@prisma/client";
 import { hashPassword, comparePassword } from "../utils/hashing";
 import { generateToken } from "../utils/jwt";
-import { TokenService } from "./token.service";
+import TokenService from "./token.service";
 import ApiError from "../utils/apiError";
 
 class AuthService {

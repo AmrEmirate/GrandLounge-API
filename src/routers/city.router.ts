@@ -14,10 +14,22 @@ class CityRouter {
   private initializeRoutes() {
     const tenantOnly = authMiddleware([UserRole.TENANT]);
 
-    this.router.get("/", CityController.getAll);
-    this.router.post("/", tenantOnly, CityController.create);
-    this.router.patch("/:id", tenantOnly, CityController.update);
-    this.router.delete("/:id", tenantOnly, CityController.delete);
+    this.router.get("/", CityController.getAll.bind(CityController));
+    this.router.post(
+      "/",
+      tenantOnly,
+      CityController.create.bind(CityController)
+    );
+    this.router.patch(
+      "/:id",
+      tenantOnly,
+      CityController.update.bind(CityController)
+    );
+    this.router.delete(
+      "/:id",
+      tenantOnly,
+      CityController.delete.bind(CityController)
+    );
   }
 }
 

@@ -15,21 +15,29 @@ class CategoryRouter {
   private initializeRoutes() {
     const tenantOnly = authMiddleware([UserRole.TENANT]);
 
-    this.router.get("/", CategoryController.getAll);
+    this.router.get("/", CategoryController.getAll.bind(CategoryController));
     this.router.post(
       "/",
       tenantOnly,
       validate(CategoryValidator.create),
-      CategoryController.create
+      CategoryController.create.bind(CategoryController)
     );
-    this.router.get("/:id", tenantOnly, CategoryController.getById);
+    this.router.get(
+      "/:id",
+      tenantOnly,
+      CategoryController.getById.bind(CategoryController)
+    );
     this.router.patch(
       "/:id",
       tenantOnly,
       validate(CategoryValidator.update),
-      CategoryController.update
+      CategoryController.update.bind(CategoryController)
     );
-    this.router.delete("/:id", tenantOnly, CategoryController.delete);
+    this.router.delete(
+      "/:id",
+      tenantOnly,
+      CategoryController.delete.bind(CategoryController)
+    );
   }
 }
 

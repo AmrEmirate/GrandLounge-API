@@ -14,10 +14,26 @@ class AmenityRouter {
   private initializeRoutes() {
     const tenantOnly = authMiddleware([UserRole.TENANT]);
 
-    this.router.post("/", tenantOnly, AmenityController.create);
-    this.router.get("/", tenantOnly, AmenityController.getAll);
-    this.router.patch("/:id", tenantOnly, AmenityController.update);
-    this.router.delete("/:id", tenantOnly, AmenityController.delete);
+    this.router.post(
+      "/",
+      tenantOnly,
+      AmenityController.create.bind(AmenityController)
+    );
+    this.router.get(
+      "/",
+      tenantOnly,
+      AmenityController.getAll.bind(AmenityController)
+    );
+    this.router.patch(
+      "/:id",
+      tenantOnly,
+      AmenityController.update.bind(AmenityController)
+    );
+    this.router.delete(
+      "/:id",
+      tenantOnly,
+      AmenityController.delete.bind(AmenityController)
+    );
   }
 }
 

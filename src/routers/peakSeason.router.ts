@@ -18,21 +18,25 @@ class PeakSeasonRouter {
     this.router.get(
       "/by-room/:roomId",
       tenantOnly,
-      PeakSeasonController.getByRoom
+      PeakSeasonController.getByRoom.bind(PeakSeasonController)
     );
     this.router.post(
       "/",
       tenantOnly,
       validate(PeakSeasonValidator.create),
-      PeakSeasonController.create
+      PeakSeasonController.create.bind(PeakSeasonController)
     );
     this.router.put(
       "/:id",
       tenantOnly,
       validate(PeakSeasonValidator.update),
-      PeakSeasonController.update
+      PeakSeasonController.update.bind(PeakSeasonController)
     );
-    this.router.delete("/:id", tenantOnly, PeakSeasonController.delete);
+    this.router.delete(
+      "/:id",
+      tenantOnly,
+      PeakSeasonController.delete.bind(PeakSeasonController)
+    );
   }
 }
 
