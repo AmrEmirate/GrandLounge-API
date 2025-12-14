@@ -4,7 +4,7 @@ import logger from "../utils/logger";
 import EmailNotificationService from "./sendEmailNotification.service";
 
 class OrderReminderService {
-  // private reminderRepo: OrderReminderRepository;
+  
 
   public async sendOrderConfirmationByInvoice(invoiceNumber: string) {
     const booking = await OrderReminderRepository.findBookingById(

@@ -3,7 +3,7 @@ import CancelOrderRepository from "../repositories/cancelOrder.repository";
 import ApiError from "../utils/apiError";
 
 class CancelOrderService {
-  // private cancelOrderRepo: CancelOrderRepository;
+  
 
   public async cancelOrder(
     invoiceNumber: string,

@@ -11,7 +11,7 @@ class ConfirmPaymentService {
     isAccepted: boolean
   ) {
     const updatedBooking = await prisma.$transaction(async (tx) => {
-      // Use the imported singleton instance and pass the transaction client
+      
       const booking = await ConfirmPaymentRepository.findBookingByInvoice(
         invoiceNumber,
         tx

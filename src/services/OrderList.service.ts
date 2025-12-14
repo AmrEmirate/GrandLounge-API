@@ -1,9 +1,10 @@
 import { prisma } from "../config/prisma";
 import OrderListRepositroy from "../repositories/orderList.repository";
+import TenantOrderRepository from "../repositories/tenantOrder.repository";
 import ApiError from "../utils/apiError";
 
 class OrderListService {
-  // private orderRepo: OrderListRepositroy;
+  
 
   public async getOrderList(
     userId: string,
@@ -30,7 +31,7 @@ class OrderListService {
     }
   ) {
     const transactions =
-      await OrderListRepositroy.findTransactionsByFilterForTenant(
+      await TenantOrderRepository.findTransactionsByFilterForTenant(
         tenantId,
         filter
       );
@@ -56,7 +57,7 @@ class OrderListService {
 
   public async getPendingConfirmation(tenantId: string) {
     const transactions =
-      await OrderListRepositroy.findPendingConfirmationForTenant(tenantId);
+      await TenantOrderRepository.findPendingConfirmationForTenant(tenantId);
     return transactions;
   }
 }

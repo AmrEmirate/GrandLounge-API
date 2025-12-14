@@ -1,74 +1,14 @@
 import { prisma } from "../config/prisma";
 import { User, UserRole } from "@prisma/client";
-import { hashPassword, comparePassword } from "../utils/hashing";
+import { hashPassword } from "../utils/hashing";
 import { generateToken } from "../utils/jwt";
 import TokenService from "./token.service";
 import ApiError from "../utils/apiError";
+import { AuthUtils } from "../utils/auth.utils";
 
 class AuthService {
-  private async checkIfUserExists(email: string): Promise<void> {
-    const existingUser = await prisma.user.findFirst({
-      where: { email, deletedAt: null },
-    });
-    if (existingUser) {
-      throw new ApiError(409, "Email sudah terdaftar.");
-    }
-  }
-
-  private createUserAndTenant(data: any, tx: any) {
-    return tx.user.create({
-      data: {
-        fullName: data.fullName,
-        email: data.email,
-        role: UserRole.TENANT,
-      },
-    });
-  }
-
-  private createTenantProfile(data: any, userId: string, tx: any) {
-    return tx.tenant.create({
-      data: {
-        userId: userId,
-        companyName: data.companyName,
-        addressCompany: data.addressCompany,
-        phoneNumberCompany: data.phoneNumberCompany,
-      },
-    });
-  }
-
-  private async validateLoginAttempt(
-    user: User | null,
-    pass: string
-  ): Promise<void> {
-    if (!user || !user.password)
-      throw new ApiError(401, "Email atau password salah.");
-    if (!user.verified)
-      throw new ApiError(
-        403,
-        "Akun belum diverifikasi. Silakan cek email Anda."
-      );
-
-    const isPasswordValid = await comparePassword(pass, user.password);
-    if (!isPasswordValid) throw new ApiError(401, "Email atau password salah.");
-  }
-
-  private validateUserRole(loginType: string, userRole: UserRole): void {
-    if (loginType === "tenant" && userRole !== UserRole.TENANT) {
-      throw new ApiError(
-        403,
-        "Akses ditolak. Anda bukan tenant. Silakan login sebagai pengguna biasa."
-      );
-    }
-    if (loginType === "user" && userRole !== UserRole.USER) {
-      throw new ApiError(
-        403,
-        "Akses ditolak. Silakan login melalui halaman login untuk tenant."
-      );
-    }
-  }
-
   public async registerUser(data: any): Promise<User> {
-    await this.checkIfUserExists(data.email);
+    await AuthUtils.checkIfUserExists(data.email);
     const user = await prisma.user.create({
       data: { fullName: data.fullName, email: data.email, role: UserRole.USER },
     });
@@ -87,11 +27,11 @@ class AuthService {
   }
 
   public async registerTenant(data: any): Promise<User> {
-    await this.checkIfUserExists(data.email);
+    await AuthUtils.checkIfUserExists(data.email);
 
     const user = await prisma.$transaction(async (tx) => {
-      const newUser = await this.createUserAndTenant(data, tx);
-      await this.createTenantProfile(data, newUser.id, tx);
+      const newUser = await AuthUtils.createUserAndTenant(data, tx);
+      await AuthUtils.createTenantProfile(data, newUser.id, tx);
       const token = await TokenService.createToken(
         newUser.id,
         "EMAIL_VERIFICATION",
@@ -137,8 +77,8 @@ class AuthService {
       where: { email, deletedAt: null },
     });
 
-    await this.validateLoginAttempt(user, password);
-    this.validateUserRole(loginType, user!.role);
+    await AuthUtils.validateLoginAttempt(user, password);
+    AuthUtils.validateUserRole(loginType, user!.role);
 
     const token = generateToken({
       id: user!.id,

@@ -4,7 +4,7 @@ import ApiError from "../utils/apiError";
 import { prisma } from "../config/prisma";
 import ReportRepositori from "../repositories/report.repository";
 
-// Repository is imported as instance
+
 
 class ReportController {
   public async getDashboardWidgetData(

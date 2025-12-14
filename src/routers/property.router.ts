@@ -1,5 +1,6 @@
 import { Router } from "express";
 import PropertyController from "../controllers/property.controller";
+import TenantPropertyController from "../controllers/tenantProperty.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { UserRole } from "@prisma/client";
 import roomRouter from "./room.router";
@@ -42,19 +43,23 @@ class PropertyRouter {
         { name: "galleryImages", maxCount: 10 },
       ]),
       validate(PropertyValidator.create),
-      PropertyController.create.bind(PropertyController)
+      TenantPropertyController.create.bind(TenantPropertyController)
     );
 
     this.router.get(
       "/my-properties/all",
       tenantOnly,
-      PropertyController.getPropertiesByTenant.bind(PropertyController)
+      TenantPropertyController.getPropertiesByTenant.bind(
+        TenantPropertyController
+      )
     );
 
     this.router.get(
       "/my-properties/:id",
       tenantOnly,
-      PropertyController.getPropertyByIdForTenant.bind(PropertyController)
+      TenantPropertyController.getPropertyByIdForTenant.bind(
+        TenantPropertyController
+      )
     );
 
     this.router.patch(
@@ -65,27 +70,27 @@ class PropertyRouter {
         { name: "galleryImages", maxCount: 10 },
       ]),
       validate(PropertyValidator.update),
-      PropertyController.update.bind(PropertyController)
+      TenantPropertyController.update.bind(TenantPropertyController)
     );
 
     this.router.delete(
       "/my-properties/:id",
       tenantOnly,
-      PropertyController.delete.bind(PropertyController)
+      TenantPropertyController.delete.bind(TenantPropertyController)
     );
 
     this.router.patch(
       "/my-properties/:id/upload-image",
       tenantOnly,
       upload.single("propertyImage"),
-      PropertyController.uploadImage.bind(PropertyController)
+      TenantPropertyController.uploadImage.bind(TenantPropertyController)
     );
 
     this.router.post(
       "/my-properties/:id/gallery",
       tenantOnly,
       upload.array("galleryImages", 10),
-      PropertyController.uploadGallery.bind(PropertyController)
+      TenantPropertyController.uploadGallery.bind(TenantPropertyController)
     );
   }
 }

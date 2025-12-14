@@ -3,7 +3,7 @@ import RoomReservationRepository from "../repositories/roomReservation.repositor
 import ApiError from "../utils/apiError";
 import RoomReservationService from "../services/roomReservation.service";
 
-// Repository is imported as instance
+
 
 class RoomReservationController {
   public async createReservationController(

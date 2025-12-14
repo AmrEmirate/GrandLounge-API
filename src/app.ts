@@ -27,10 +27,11 @@ import reportRouter from "./routers/report.router";
 import calenderRouter from "./routers/calenderReport.router";
 import { startSchedulers } from "./scheduler/index";
 import reviewRouter from "./routers/review.router";
+import paymentRouter from "./routers/payment.router";
 
 const PORT = process.env.PORT;
 
-class App {
+export class App {
   public app: Application;
 
   constructor() {
@@ -71,6 +72,7 @@ class App {
     this.app.use("/api/payment-confirm", confirmPaymentRouter);
     this.app.use("/api/send-reminder", orderReminderRouter);
     this.app.use("/api/reviews", reviewRouter);
+    this.app.use("/api/payment", paymentRouter);
     this.app.use("/api/report", reportRouter);
     this.app.use("/api/reports/availability", calenderRouter);
     this.app.get("/", (req: Request, res: Response) => {

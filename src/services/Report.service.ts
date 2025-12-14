@@ -3,7 +3,7 @@ import ReportRepositori from "../repositories/report.repository";
 import { startOfDay, endOfDay } from "date-fns";
 
 class ReportService {
-  // private reportRepo: ReportRepositori;
+  
 
   public async getDashboardWidgets(tenantId: string) {
     const endDate = new Date();

@@ -5,7 +5,7 @@ import ApiError from "../utils/apiError";
 import { BookingStatus } from "@prisma/client";
 
 class CalenderReportService {
-  // private calenderRepo: CalenderReportRepositori;
+  
 
   public async getCalenderReport(
     tenantId: string,
