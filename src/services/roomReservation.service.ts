@@ -1,13 +1,13 @@
 import { BookingStatus } from "@prisma/client";
 import ReservationRepositori from "../repositories/roomReservation.repository";
+import RoomAvailabilityRepository from "../repositories/roomAvailability.repository";
+import UserAccountRepository from "../repositories/userAccount.repository";
 import ApiError from "../utils/apiError";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { prisma } from "../config/prisma";
 
 class RoomReservationService {
-  
-
   public async createReservation(
     propertyId: string,
     roomName: string,
@@ -30,7 +30,7 @@ class RoomReservationService {
       );
     }
 
-    const user = await ReservationRepositori.findOrCreateAccount(guestInfo);
+    const user = await UserAccountRepository.findOrCreateAccount(guestInfo);
 
     const durationDays = Math.ceil(
       (checkOut.getTime() - checkIn.getTime()) / 86_400_000
@@ -42,12 +42,86 @@ class RoomReservationService {
       .toString("hex")}`;
 
     const newBooking = await prisma.$transaction(async (tx) => {
-      const isAvailable = await ReservationRepositori.checkRoomAvailability(
-        room.id,
-        checkIn,
-        checkOut,
-        tx
-      );
+      const isAvailable =
+        await RoomAvailabilityRepository.checkRoomAvailability(
+          room.id,
+          checkIn,
+          checkOut,
+          tx
+        );
+      if (!isAvailable) {
+        throw new ApiError(
+          400,
+          "Kamar ini tidak tersedia pada tanggal yang dipilih."
+        );
+      }
+
+      const booking = await tx.booking.create({
+        data: {
+          invoiceNumber,
+          reservationId,
+          checkIn: checkIn,
+          checkOut: checkOut,
+          totalPrice,
+          status: BookingStatus.MENUNGGU_PEMBAYARAN,
+          paymentDeadline: new Date(Date.now() + 1 * 60 * 60 * 1000),
+          user: { connect: { id: user.id } },
+          property: { connect: { id: room.propertyId } },
+        },
+      });
+
+      await tx.bookingRoom.create({
+        data: {
+          bookingId: booking.id,
+          roomId: room.id,
+          guestCount: 1,
+          pricePerNight: room.basePrice,
+          numberOfNights: durationDays,
+          totalPrice: totalPrice,
+        },
+      });
+
+      return booking;
+    });
+
+    return newBooking;
+  }
+
+  public async createReservationWithId(
+    roomId: string,
+    checkIn: Date,
+    checkOut: Date,
+    guestInfo: { name: string; email: string; password?: string }
+  ) {
+    if (checkOut <= checkIn) {
+      throw new ApiError(400, "End date must be after start date");
+    }
+
+    const room = await ReservationRepositori.findRoomById(roomId);
+    if (!room) {
+      throw new ApiError(404, "Kamar tidak ditemukan.");
+    }
+
+    // Reuse account logic
+    const user = await UserAccountRepository.findOrCreateAccount(guestInfo);
+
+    const durationDays = Math.ceil(
+      (checkOut.getTime() - checkIn.getTime()) / 86_400_000
+    );
+    const totalPrice = room.basePrice * durationDays;
+    const reservationId = uuidv4();
+    const invoiceNumber = `INV-${Date.now()}-${crypto
+      .randomBytes(4)
+      .toString("hex")}`;
+
+    const newBooking = await prisma.$transaction(async (tx) => {
+      const isAvailable =
+        await RoomAvailabilityRepository.checkRoomAvailability(
+          room.id,
+          checkIn,
+          checkOut,
+          tx
+        );
       if (!isAvailable) {
         throw new ApiError(
           400,

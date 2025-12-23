@@ -29,6 +29,15 @@ class RoomReservationRouter {
         RoomReversationController
       )
     );
+    this.router.post(
+      "/",
+      verifyToken,
+      isUser,
+      // validate(ReservationValidator.create), // Optional: Reuse validator if payload matches or create new one
+      RoomReversationController.createReservationController.bind(
+        RoomReversationController
+      )
+    );
     this.router.get(
       "/reservations",
       verifyToken,

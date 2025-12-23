@@ -1,6 +1,6 @@
 import { prisma } from "../config/prisma";
 import { startOfMonth, endOfMonth, addDays } from "date-fns";
-import RoomReservationRepository from "../repositories/roomReservation.repository";
+import RoomAvailabilityRepository from "../repositories/roomAvailability.repository";
 import { Property } from "@prisma/client";
 import PropertyRepository from "../repositories/property.repository";
 import { PropertyQueryUtils } from "../utils/propertyQuery.utils";
@@ -42,7 +42,7 @@ class PublicPropertyService {
     checkIn: Date,
     checkOut: Date
   ) {
-    const availableRoomIds = await RoomReservationRepository.getAvailableRooms(
+    const availableRoomIds = await RoomAvailabilityRepository.getAvailableRooms(
       propertyId,
       checkIn,
       checkOut

@@ -1,70 +1,92 @@
+import { Prisma, BookingStatus, PrismaClient } from "@prisma/client";
 import { prisma } from "../config/prisma";
-import { RoomAvailability, Prisma } from "@prisma/client";
-import { startOfMonth, endOfMonth } from "date-fns";
+import { DefaultArgs } from "@prisma/client/runtime/library";
+import { eachDayOfInterval } from "date-fns";
 
 class RoomAvailabilityRepository {
-  async findForMonth(
+  async checkRoomAvailability(
     roomId: string,
-    month: number,
-    year: number
-  ): Promise<RoomAvailability[]> {
-    const startDate = startOfMonth(new Date(year, month - 1));
-    const endDate = endOfMonth(new Date(year, month - 1));
-
-    return prisma.roomAvailability.findMany({
+    newStartDate: Date,
+    newEndDate: Date,
+    tx: Omit<
+      PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
+      "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends"
+    >
+  ) {
+    const existingBookings = await tx.bookingRoom.count({
       where: {
         roomId: roomId,
-        date: {
-          gte: startDate,
-          lte: endDate,
+        booking: {
+          status: {
+            in: [BookingStatus.MENUNGGU_PEMBAYARAN, BookingStatus.DIPROSES],
+          },
+          checkOut: { gt: newStartDate },
+          checkIn: { lt: newEndDate },
         },
       },
     });
+
+    if (existingBookings > 0) {
+      return false;
+    }
+
+    const datesInRange = eachDayOfInterval({
+      start: newStartDate,
+      end: new Date(newEndDate.getTime() - 1),
+    });
+
+    const unavailableDatesCount = await tx.roomAvailability.count({
+      where: {
+        roomId: roomId,
+        date: { in: datesInRange },
+        isAvailable: false,
+      },
+    });
+    return unavailableDatesCount === 0;
+  }
+
+  async getAvailableRooms(propertyId: string, checkIn: Date, checkOut: Date) {
+    const rooms = await prisma.room.findMany({ where: { propertyId } });
+    const availableRooms: string[] = [];
+
+    for (const room of rooms) {
+      const isAvailable = await this.checkRoomAvailability(
+        room.id,
+        checkIn,
+        checkOut,
+        prisma
+      );
+      if (isAvailable) availableRooms.push(room.id);
+    }
+
+    return availableRooms;
   }
 
   async upsertMany(
-    data: Prisma.RoomAvailabilityCreateManyInput[]
-  ): Promise<void> {
-    const operations = data.map((item) =>
-      prisma.roomAvailability.upsert({
-        where: {
-          roomId_date: {
-            roomId: item.roomId,
-            date: new Date(item.date),
+    data: { roomId: string; date: Date; price: number; isAvailable: boolean }[]
+  ) {
+    return prisma.$transaction(
+      data.map((item) =>
+        prisma.roomAvailability.upsert({
+          where: {
+            roomId_date: {
+              roomId: item.roomId,
+              date: item.date,
+            },
           },
-        },
-        update: {
-          price: item.price,
-          isAvailable: item.isAvailable,
-        },
-        create: {
-          roomId: item.roomId,
-          date: new Date(item.date),
-          price: item.price,
-          isAvailable: item.isAvailable,
-        },
-      })
+          update: {
+            price: item.price,
+            isAvailable: item.isAvailable,
+          },
+          create: {
+            roomId: item.roomId,
+            date: item.date,
+            price: item.price,
+            isAvailable: item.isAvailable,
+          },
+        })
+      )
     );
-    await prisma.$transaction(operations);
-  }
-
-  async findManyByRoomIdAndDateRange(
-    roomId: string,
-    startDate: Date,
-    endDate: Date
-  ): Promise<RoomAvailability[]> {
-    return prisma.roomAvailability.findMany({
-      where: {
-        roomId: roomId,
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      orderBy: {
-        date: "asc",
-      },
-    });
   }
 }
 

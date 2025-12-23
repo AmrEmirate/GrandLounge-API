@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import RoomReservationRepository from "../repositories/roomReservation.repository";
+import RoomAvailabilityRepository from "../repositories/roomAvailability.repository";
 import ApiError from "../utils/apiError";
 import RoomReservationService from "../services/roomReservation.service";
-
-
 
 class RoomReservationController {
   public async createReservationController(
@@ -12,15 +11,55 @@ class RoomReservationController {
     next: NextFunction
   ) {
     try {
-      const { propertyId, roomName, checkIn, checkOut, guestInfo } = req.body;
-
-      const newBooking = await RoomReservationService.createReservation(
+      const {
         propertyId,
         roomName,
-        new Date(checkIn),
-        new Date(checkOut),
-        guestInfo
-      );
+        roomId,
+        checkIn,
+        checkOut,
+        checkInDate,
+        checkOutDate,
+        guestInfo,
+      } = req.body;
+      const user = (req as any).user;
+
+      // Normalize Dates
+      const start = new Date(checkIn || checkInDate);
+      const end = new Date(checkOut || checkOutDate);
+
+      // Resolve Guest Info
+      const finalGuestInfo =
+        guestInfo ||
+        (user
+          ? {
+              name: user.fullName,
+              email: user.email,
+            }
+          : null);
+
+      if (!finalGuestInfo) {
+        throw new ApiError(401, "Guest information is required.");
+      }
+
+      let newBooking;
+      if (roomId) {
+        // ID-based creation (Frontend default)
+        newBooking = await RoomReservationService.createReservationWithId(
+          roomId,
+          start,
+          end,
+          finalGuestInfo
+        );
+      } else {
+        // Legacy Name-based creation
+        newBooking = await RoomReservationService.createReservation(
+          propertyId,
+          roomName,
+          start,
+          end,
+          finalGuestInfo
+        );
+      }
 
       res.status(201).json({
         success: true,
@@ -116,7 +155,7 @@ class RoomReservationController {
         throw new ApiError(400, "Missing required data");
       }
 
-      const availableRooms = await RoomReservationRepository.getAvailableRooms(
+      const availableRooms = await RoomAvailabilityRepository.getAvailableRooms(
         propertyId,
         new Date(checkIn),
         new Date(checkOut)
