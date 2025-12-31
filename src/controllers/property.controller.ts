@@ -107,6 +107,26 @@ class PropertyController {
         .json({ message: "Gagal mengambil data properti terdekat." });
     }
   }
+
+  public async getPublicStats(_req: Request, res: Response) {
+    try {
+      const stats = await PublicPropertyService.getPublicStats();
+      res.status(200).json({ data: stats });
+    } catch (error: any) {
+      res.status(500).json({ message: "Gagal mengambil data statistik." });
+    }
+  }
+
+  public async getPopularDestinations(_req: Request, res: Response) {
+    try {
+      const destinations = await PublicPropertyService.getPopularDestinations();
+      res.status(200).json({ data: destinations });
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({ message: "Gagal mengambil data destinasi populer." });
+    }
+  }
 }
 
 export default new PropertyController();

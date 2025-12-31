@@ -23,6 +23,14 @@ class PropertyRouter {
       "/nearby",
       PropertyController.getNearbyProperties.bind(PropertyController)
     );
+    this.router.get(
+      "/stats",
+      PropertyController.getPublicStats.bind(PropertyController)
+    );
+    this.router.get(
+      "/popular-destinations",
+      PropertyController.getPopularDestinations.bind(PropertyController)
+    );
     this.router.get("/:id", PropertyController.getOne.bind(PropertyController));
     this.router.get(
       "/:id/availability",

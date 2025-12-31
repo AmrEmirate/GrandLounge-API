@@ -170,9 +170,12 @@ class PublicPropertyService {
   }
 
   public async findNearby(lat: number, lon: number, radius: number = 10000) {
+    // Convert radius from meters to kilometers for Haversine formula
+    const radiusKm = radius / 1000;
+
     const properties = await prisma.$queryRaw<Property[]>`
         SELECT
-          p.id, p.name, p."mainImage",
+          p.id, p.name, p."mainImage", p.latitude, p.longitude,
           json_build_object('id', c.id::text, 'name', c.name::text) as category,
           json_build_object('id', ct.id::text, 'name', ct.name::text) as city,
           (
@@ -184,18 +187,99 @@ class PublicPropertyService {
               ORDER BY r_inner."basePrice" ASC
               LIMIT 1
             ) as r
-          ) as rooms
+          ) as rooms,
+          (
+            6371 * acos(
+              cos(radians(${lat})) * cos(radians(p.latitude)) *
+              cos(radians(p.longitude) - radians(${lon})) +
+              sin(radians(${lat})) * sin(radians(p.latitude))
+            )
+          ) as distance
         FROM "Property" as p
         LEFT JOIN "Category" as c ON p."categoryId" = c.id
         LEFT JOIN "City" as ct ON p."cityId" = ct.id
-        WHERE ST_DWithin(
-          ST_MakePoint(p.longitude::double precision, p.latitude::double precision)::geography,
-          ST_MakePoint(${lon}, ${lat})::geography,
-          ${radius}
-        ) AND p."deletedAt" IS NULL
+        WHERE p."deletedAt" IS NULL
+          AND p.latitude IS NOT NULL
+          AND p.longitude IS NOT NULL
+          AND (
+            6371 * acos(
+              cos(radians(${lat})) * cos(radians(p.latitude)) *
+              cos(radians(p.longitude) - radians(${lon})) +
+              sin(radians(${lat})) * sin(radians(p.latitude))
+            )
+          ) <= ${radiusKm}
+        ORDER BY distance ASC
         LIMIT 15;
       `;
     return properties;
+  }
+
+  public async getPublicStats() {
+    // Count total properties
+    const totalProperties = await prisma.property.count({
+      where: { deletedAt: null },
+    });
+
+    // Count total completed bookings (as proxy for guests)
+    const totalBookings = await prisma.booking.count({
+      where: { status: "SELESAI" },
+    });
+
+    // Calculate average rating from reviews
+    const avgRating = await prisma.review.aggregate({
+      _avg: { rating: true },
+    });
+
+    // Count total rooms
+    const totalRooms = await prisma.room.count({
+      where: { deletedAt: null },
+    });
+
+    return {
+      totalProperties,
+      totalGuests: totalBookings, // Each booking = 1 guest party
+      averageRating: avgRating._avg.rating
+        ? Number(avgRating._avg.rating.toFixed(1))
+        : 4.5,
+      totalRooms,
+    };
+  }
+
+  public async getPopularDestinations() {
+    // Get destinations with most bookings and highest ratings
+    const popularDestinations = await prisma.$queryRaw<
+      Array<{
+        cityId: string;
+        cityName: string;
+        categoryName: string;
+        bookingCount: bigint;
+        avgRating: number | null;
+      }>
+    >`
+      SELECT 
+        c.id as "cityId",
+        c.name as "cityName",
+        cat.name as "categoryName",
+        COUNT(b.id) as "bookingCount",
+        AVG(r.rating) as "avgRating"
+      FROM "Property" p
+      INNER JOIN "City" c ON p."cityId" = c.id
+      INNER JOIN "Category" cat ON p."categoryId" = cat.id
+      LEFT JOIN "Booking" b ON b."propertyId" = p.id AND b.status = 'SELESAI'
+      LEFT JOIN "Review" r ON r."propertyId" = p.id
+      WHERE p."deletedAt" IS NULL
+      GROUP BY c.id, c.name, cat.name
+      ORDER BY COUNT(b.id) DESC, AVG(r.rating) DESC NULLS LAST
+      LIMIT 6
+    `;
+
+    return popularDestinations.map((dest) => ({
+      cityId: dest.cityId,
+      cityName: dest.cityName,
+      categoryName: dest.categoryName,
+      bookingCount: Number(dest.bookingCount),
+      avgRating: dest.avgRating ? Number(dest.avgRating.toFixed(1)) : null,
+    }));
   }
 }
 
