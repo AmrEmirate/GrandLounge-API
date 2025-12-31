@@ -5,15 +5,17 @@ import {
   RoomCategory,
   BedOption,
   AdjustmentType,
-  TokenPurpose,
 } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { addDays, startOfDay } from "date-fns";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Starting Seeding (20 Data Version)...");
+  console.log("🌱 Starting Comprehensive Seeding...");
 
+  // 1. Clean Database
+  console.log("🧹 Cleaning database...");
   await prisma.review.deleteMany();
   await prisma.bookingRoom.deleteMany();
   await prisma.booking.deleteMany();
@@ -29,17 +31,18 @@ async function main() {
   await prisma.tenant.deleteMany();
   await prisma.user.deleteMany();
 
-  console.log("🧹 Database cleaned.");
-
-  const categoriesData = ["Hotel", "Villa", "Apartment", "Resort", "Cabin"];
+  // 2. Master Data
+  console.log("🏗️ Creating Master Data...");
+  const categoriesData = [
+    "Hotel",
+    "Villa",
+    "Apartment",
+    "Resort",
+    "Cabin",
+    "Cottage",
+  ];
   const categories = await Promise.all(
-    categoriesData.map((name) =>
-      prisma.category.upsert({
-        where: { name },
-        update: {},
-        create: { name },
-      })
-    )
+    categoriesData.map((name) => prisma.category.create({ data: { name } }))
   );
 
   const amenitiesData = [
@@ -65,238 +68,302 @@ async function main() {
     "Terrace",
   ];
   const amenities = await Promise.all(
-    amenitiesData.map((name) =>
-      prisma.amenity.upsert({
-        where: { name },
-        update: {},
-        create: { name },
-      })
-    )
+    amenitiesData.map((name) => prisma.amenity.create({ data: { name } }))
   );
 
   const cities = [];
-  for (let i = 1; i <= 20; i++) {
+  const cityNames = [
+    "Jakarta",
+    "Bali",
+    "Bandung",
+    "Surabaya",
+    "Yogyakarta",
+    "Semarang",
+    "Medan",
+    "Makassar",
+    "Palembang",
+    "Balikpapan",
+  ];
+  for (let i = 0; i < cityNames.length; i++) {
     cities.push(
       await prisma.city.create({
         data: {
-          name: `City ${i}`,
-          provinsi: `Province ${Math.ceil(i / 5)}`,
-          latitude: -6.2 + i * 0.01,
-          longitude: 106.8 + i * 0.01,
+          name: cityNames[i],
+          provinsi: "Indonesia", // Simplified
+          latitude: -6.2 + i * 0.5,
+          longitude: 106.8 + i * 0.5,
         },
       })
     );
   }
-  console.log("✅ 20 Cities created.");
 
+  // 3. Users (Demo Accounts)
+  console.log("👤 Creating Users...");
   const hashedPassword = await bcrypt.hash("password123", 10);
-  const tenants = [];
-  const customers = [];
 
-  for (let i = 1; i <= 20; i++) {
-    const tenantUser = await prisma.user.create({
+  // Demo Tenant
+  const demoTenantUser = await prisma.user.create({
+    data: {
+      fullName: "Demo Tenant",
+      email: "tenant@demo.com",
+      password: hashedPassword,
+      role: UserRole.TENANT,
+      verified: true,
+      profilePicture: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+    },
+  });
+  const demoTenantProfile = await prisma.tenant.create({
+    data: {
+      userId: demoTenantUser.id,
+      companyName: "Grand Demo Corp",
+      addressCompany: "Jl. Demo Raya No. 1",
+      phoneNumberCompany: "081234567890",
+    },
+  });
+
+  // Demo Customer
+  const demoCustomerUser = await prisma.user.create({
+    data: {
+      fullName: "Demo Customer",
+      email: "user@demo.com",
+      password: hashedPassword,
+      role: UserRole.USER,
+      verified: true,
+      profilePicture: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+    },
+  });
+
+  // Additional Random Users
+  const randomTenants = [];
+  const randomCustomers = [];
+  for (let i = 1; i <= 5; i++) {
+    const tUser = await prisma.user.create({
       data: {
         fullName: `Tenant ${i}`,
         email: `tenant${i}@example.com`,
         password: hashedPassword,
         role: UserRole.TENANT,
         verified: true,
-        profilePicture: `https://via.placeholder.com/150?text=Tenant${i}`,
+        profilePicture: `https://api.dicebear.com/7.x/avataaars/svg?seed=Tenant${i}`,
       },
     });
-
-    const tenantProfile = await prisma.tenant.create({
+    const tProfile = await prisma.tenant.create({
       data: {
-        userId: tenantUser.id,
-        companyName: `Tenant Corp ${i}`,
-        addressCompany: `Jl. Tenant No. ${i}`,
-        phoneNumberCompany: `081${i.toString().padStart(8, "0")}`,
+        userId: tUser.id,
+        companyName: `Company ${i}`,
+        addressCompany: `Address ${i}`,
+        phoneNumberCompany: `08110000${i}`,
       },
     });
+    randomTenants.push({ user: tUser, tenant: tProfile });
 
-    tenants.push({ ...tenantUser, tenant: tenantProfile });
-
-    const customerUser = await prisma.user.create({
+    const cUser = await prisma.user.create({
       data: {
         fullName: `Customer ${i}`,
-        email: `user${i}@example.com`,
+        email: `customer${i}@example.com`,
         password: hashedPassword,
         role: UserRole.USER,
         verified: true,
-        profilePicture: `https://via.placeholder.com/150?text=User${i}`,
+        profilePicture: `https://api.dicebear.com/7.x/avataaars/svg?seed=Customer${i}`,
       },
     });
-    customers.push(customerUser);
+    randomCustomers.push(cUser);
   }
 
-  console.log("✅ 20 Tenants & 20 Customers created.");
+  const allTenants = [
+    { user: demoTenantUser, tenant: demoTenantProfile },
+    ...randomTenants,
+  ];
+  const allCustomers = [demoCustomerUser, ...randomCustomers];
 
+  // 4. Properties & Rooms
+  console.log("hotel Creating Properties & Rooms...");
   const properties = [];
-  for (let i = 1; i <= 20; i++) {
-    const tenantOwner = tenants[i - 1];
-    const cityLoc = cities[i - 1];
-
-    const randomAmenities = amenities
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 5)
-      .map((a) => ({ id: a.id }));
-
-    const prop = await prisma.property.create({
-      data: {
-        tenantId: tenantOwner.tenant.id,
-        name: `Grand Property ${i}`,
-        description: `This is dummy property description number ${i}. Luxury and comfort combined.`,
-        address: `Jl. Property No. ${i}`,
-        zipCode: `123${i.toString().padStart(2, "0")}`,
-        cityId: cityLoc.id,
-        categoryId: categories[i % categories.length].id,
-        mainImage: `https://via.placeholder.com/600x400?text=Property${i}`,
-        latitude: -6.2 + Math.random() * 0.1,
-        longitude: 106.8 + Math.random() * 0.1,
-        amenities: {
-          connect: randomAmenities,
-        },
-      },
-    });
-
-    await prisma.propertyImage.createMany({
-      data: [
-        {
-          propertyId: prop.id,
-          imageUrl: `https://via.placeholder.com/600x400?text=Prop${i}-1`,
-        },
-        {
-          propertyId: prop.id,
-          imageUrl: `https://via.placeholder.com/600x400?text=Prop${i}-2`,
-        },
-      ],
-    });
-
-    properties.push(prop);
-  }
-  console.log("✅ 20 Properties created.");
-
   const rooms = [];
-  for (const prop of properties) {
-    rooms.push(
-      await prisma.room.create({
-        data: {
-          propertyId: prop.id,
-          name: `Standard Room ${prop.name.split(" ").pop()}`,
-          description: "Standard comfort room",
-          category: RoomCategory.STANDARD,
-          bedOption: BedOption.DOUBLE,
-          capacity: 2,
-          basePrice: 500000,
-        },
-      })
-    );
-    rooms.push(
-      await prisma.room.create({
-        data: {
-          propertyId: prop.id,
-          name: `Deluxe Room ${prop.name.split(" ").pop()}`,
-          description: "Deluxe spacious room",
-          category: RoomCategory.DELUXE,
-          bedOption: BedOption.TWIN,
-          capacity: 4,
-          basePrice: 1000000,
-        },
-      })
-    );
-  }
-  console.log("✅ 40 Rooms created.");
 
-  const today = new Date();
-  for (const room of rooms) {
-    await prisma.roomAvailability.create({
-      data: {
-        roomId: room.id,
-        date: new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate() + 1
-        ),
-        price: room.basePrice,
-        isAvailable: true,
-      },
-    });
+  for (const { tenant } of allTenants) {
+    // Each tenant gets 2-3 properties
+    const numProps = 2 + Math.floor(Math.random() * 2);
 
-    if (Math.random() > 0.8) {
-      await prisma.peakSeason.create({
+    for (let i = 0; i < numProps; i++) {
+      const city = cities[Math.floor(Math.random() * cities.length)];
+      const category =
+        categories[Math.floor(Math.random() * categories.length)];
+      const randomAmenities = amenities
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 8);
+
+      const prop = await prisma.property.create({
         data: {
-          roomId: room.id,
-          name: "High Season",
-          startDate: new Date(today.getFullYear(), today.getMonth() + 1, 1),
-          endDate: new Date(today.getFullYear(), today.getMonth() + 1, 7),
-          adjustmentType: AdjustmentType.PERCENTAGE,
-          adjustmentValue: 20,
+          tenantId: tenant.id,
+          name: `${tenant.companyName} ${category.name} ${i + 1}`,
+          description: `Enjoy a luxurious stay at our ${category.name}. Located in the heart of ${city.name}, ensuring a memorable experience.`,
+          address: `Jl. Property No. ${Math.floor(Math.random() * 100)}`,
+          zipCode: `1000${i}`,
+          cityId: city.id,
+          categoryId: category.id,
+          mainImage: `https://picsum.photos/seed/${category.name}${i}/800/600`,
+          latitude: city.latitude + (Math.random() - 0.5) * 0.1,
+          longitude: city.longitude + (Math.random() - 0.5) * 0.1,
+          amenities: { connect: randomAmenities.map((a) => ({ id: a.id })) },
         },
       });
+      properties.push(prop);
+
+      // Property Images
+      await prisma.propertyImage.createMany({
+        data: [1, 2, 3].map((idx) => ({
+          propertyId: prop.id,
+          imageUrl: `https://picsum.photos/seed/${prop.id}${idx}/800/600`,
+        })),
+      });
+
+      // Rooms (Standard, Deluxe, Suite)
+      const roomTypes = [
+        {
+          cat: RoomCategory.STANDARD,
+          name: "Standard Room",
+          price: 500000,
+          cap: 2,
+          bed: BedOption.DOUBLE,
+        },
+        {
+          cat: RoomCategory.DELUXE,
+          name: "Deluxe Room",
+          price: 1000000,
+          cap: 3,
+          bed: BedOption.TWIN,
+        },
+        {
+          cat: RoomCategory.SUITE,
+          name: "Executive Suite",
+          price: 2500000,
+          cap: 4,
+          bed: BedOption.DOUBLE,
+        },
+      ];
+
+      for (const type of roomTypes) {
+        const room = await prisma.room.create({
+          data: {
+            propertyId: prop.id,
+            name: type.name,
+            description: `A spacious ${type.name.toLowerCase()} with great view.`,
+            category: type.cat,
+            bedOption: type.bed,
+            capacity: type.cap,
+            basePrice: type.price,
+          },
+        });
+        rooms.push(room);
+
+        // 5. Availability & Peak Seasons
+        // Generate availability for next 60 days
+        const today = startOfDay(new Date());
+        const availabilityData = [];
+
+        for (let d = 0; d < 60; d++) {
+          const date = addDays(today, d);
+          // Randomize price slightly for realism
+          const flow = Math.floor(Math.random() * 50000);
+          const price = type.price + (Math.random() > 0.5 ? flow : -flow);
+
+          availabilityData.push({
+            roomId: room.id,
+            date: date,
+            price: price,
+            isAvailable: true, // Default true, bookings will occupy logic
+          });
+        }
+        await prisma.roomAvailability.createMany({ data: availabilityData });
+
+        // Add a Peak Season
+        if (Math.random() > 0.7) {
+          await prisma.peakSeason.create({
+            data: {
+              roomId: room.id,
+              name: "Holiday Season",
+              startDate: addDays(today, 15),
+              endDate: addDays(today, 20),
+              adjustmentType: AdjustmentType.PERCENTAGE,
+              adjustmentValue: 25,
+            },
+          });
+        }
+      }
     }
   }
 
-  const bookings = [];
-  for (let i = 1; i <= 20; i++) {
-    const cust = customers[i - 1];
-    const room = rooms[i - 1];
-    const prop = properties.find((p) => p.id === room.propertyId)!;
+  // 6. Bookings & Reviews
+  console.log("📅 Creating Bookings & Reviews...");
+  const bookingStatuses = Object.values(BookingStatus);
 
-    const checkIn = new Date();
-    checkIn.setDate(checkIn.getDate() + 10 + i);
-    const checkOut = new Date(checkIn);
-    checkOut.setDate(checkOut.getDate() + 2);
+  for (let i = 0; i < 50; i++) {
+    const customer =
+      allCustomers[Math.floor(Math.random() * allCustomers.length)];
+    const room = rooms[Math.floor(Math.random() * rooms.length)];
 
-    const statuses = Object.values(BookingStatus);
-    const status = statuses[i % statuses.length];
+    // Random dates within next 60 days
+    const startDayOffset = Math.floor(Math.random() * 50);
+    const stayDuration = 1 + Math.floor(Math.random() * 5); // 1-5 nights
+
+    const checkIn = addDays(startOfDay(new Date()), startDayOffset);
+    const checkOut = addDays(checkIn, stayDuration);
+
+    const status =
+      bookingStatuses[Math.floor(Math.random() * bookingStatuses.length)];
+    const totalPrice = room.basePrice * stayDuration;
 
     const booking = await prisma.booking.create({
       data: {
-        userId: cust.id,
-        propertyId: prop.id,
-        invoiceNumber: `INV-2025-${i.toString().padStart(4, "0")}`,
-        reservationId: `RES-2025-${i.toString().padStart(4, "0")}`,
-        checkIn: checkIn,
-        checkOut: checkOut,
-        totalPrice: room.basePrice * 2,
-        status: status,
-        paymentDeadline: new Date(checkIn.getTime() - 24 * 60 * 60 * 1000),
+        userId: customer.id,
+        propertyId: room.propertyId,
+        invoiceNumber: `INV-${Date.now()}-${i}`,
+        reservationId: `RES-${Date.now()}-${i}`,
+        checkIn,
+        checkOut,
+        totalPrice,
+        status,
+        paymentDeadline: addDays(new Date(), 1), // Dummy
         paymentProof:
           status !== BookingStatus.MENUNGGU_PEMBAYARAN
-            ? "https://via.placeholder.com/proof"
+            ? "https://placehold.co/600x400?text=Payment+Proof"
             : null,
         bookingRooms: {
           create: {
             roomId: room.id,
+            guestCount: room.capacity,
             pricePerNight: room.basePrice,
-            numberOfNights: 2,
-            guestCount: 2,
-            totalPrice: room.basePrice * 2,
+            numberOfNights: stayDuration,
+            totalPrice: totalPrice,
           },
         },
       },
     });
-    bookings.push(booking);
-  }
-  console.log("✅ 20 Bookings created.");
 
-  for (const b of bookings) {
-    if (b.status === BookingStatus.SELESAI) {
+    // Create Review if completed
+    if (status === BookingStatus.SELESAI && Math.random() > 0.3) {
       await prisma.review.create({
         data: {
-          userId: b.userId,
-          propertyId: b.propertyId,
-          bookingId: b.id,
-          rating: Math.floor(Math.random() * 2) + 4,
-          comment: "Great stay! Data dummy generated.",
-          tenantReply: Math.random() > 0.5 ? "Thank you!" : null,
+          userId: customer.id,
+          propertyId: room.propertyId,
+          bookingId: booking.id,
+          rating: 3 + Math.floor(Math.random() * 3), // 3-5 stars
+          comment:
+            "Pengalaman menginap yang cukup menyenangkan, fasilitas oke.",
+          tenantReply:
+            Math.random() > 0.5 ? "Terima kasih atas ulasannya!" : null,
         },
       });
     }
   }
-  console.log("✅ Reviews created for completed bookings.");
 
-  console.log("🚀 Seeding completed successfully (20 Data Version)!");
+  console.log("✅ Seeding Completed!");
+  console.log("-----------------------------------------");
+  console.log("🔑 Demo Accounts:");
+  console.log("Tenant: tenant@demo.com / password123");
+  console.log("User  : user@demo.com / password123");
+  console.log("-----------------------------------------");
 }
 
 main()
